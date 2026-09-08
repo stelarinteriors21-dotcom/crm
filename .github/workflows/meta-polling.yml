@@ -1,0 +1,15 @@
+﻿name: Meta Leads Polling
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping-vercel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Vercel Cron Endpoint
+        run: |
+          curl -X GET "https://telecrm-clone.vercel.app/api/cron/meta-leads" \
+          -H "Authorization: Bearer stelar_secure_cron_2026"
