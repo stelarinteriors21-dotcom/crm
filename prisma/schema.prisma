@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Organization {
+  id               String            @id @default(cuid())
+  name             String
+  users               User[]
+  leads               Lead[]
+  automationRules     AutomationRule[]
+  messageTemplates    MessageTemplate[]
+  permissionTemplates PermissionTemplate[]
+  createdAt           DateTime          @default(now())
+}
+
+model User {
+  id             String       @id @default(cuid())
+  name           String
+  email          String       @unique
+  password       String
+  role           String       @default("TELECALLER") // Deprecated: moving to template
+  permissionTemplateId String?
+  permissionTemplate PermissionTemplate? @relation(fields: [permissionTemplateId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  assignedLeads  Lead[]
+  calls          CallLog[]
+  tasks          Task[]
+  fileAttachments FileAttachment[]
+  emailLogs       EmailLog[]
+}
+
+model PermissionTemplate {
+  id             String       @id @default(cuid())
+  name           String       // e.g., "Senior Caller", "Restricted Intern"
+  canExportData  Boolean      @default(false)
+  canDeleteLeads Boolean      @default(false)
+  canViewAllData Boolean      @default(false)
+  canManageTeam  Boolean      @default(false)
+  users          User[]
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+model Lead {
+  id             String       @id @default(cuid())
+  name           String
+  phone          String
+  email          String?
+  source         String       // e.g., FACEBOOK, WEBSITE, MANUAL
+  status         String       @default("NEW")
+  tag            String?
+  budget         String?
+  city           String?
+  fbAd           String?
+  capturedOn     DateTime?
+  assignedToId   String?
+  assignedTo     User?        @relation(fields: [assignedToId], references: [id])
+  assignedStatus String       @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  assignedAt     DateTime?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  calls          CallLog[]
+  tasks          Task[]
+  whatsAppLogs   WhatsAppLog[]
+  fileAttachments FileAttachment[]
+  emailLogs       EmailLog[]
+  createdAt      DateTime     @default(now())
+
+  escalationLevel Int     @default(0)
+  previousAssigneeId String?
+
+  // Stelar Lead Scoring — Stagewise
+  scoreEngagement  String  @default("None")      // None | Low | Medium | High | Strong
+  scoreLocation    String  @default("Outside")   // Outside | Kerala | Near TVM | TVM
+  scoreBudget      String  @default("Unknown")   // Unknown | Poor | Possible | Good | Strong
+  scoreTimeline    String  @default("None")      // None | 6M+ | 3-6M | 1-3M | <30D
+  scoreFullHome    String  @default("Room")      // Room | Limited | Multiple | Major | Full Home
+  scoreFloorPlan   String  @default("None")      // None | Pending | Partial | Received
+  scoreMoodBoard   String  @default("None")      // None | Style | References | Direction | Received
+  scoreSiteVisit   String  @default("None")      // None | Discussed | Scheduled | Done
+  scoreQuotation   String  @default("None")      // None | Discussed | Requested | Shared | Review
+}
+
+model CallLog {
+  id           String   @id @default(cuid())
+  leadId       String
+  lead         Lead     @relation(fields: [leadId], references: [id])
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  duration     Int      // in seconds
+  recordingUrl String?
+  notes        String?
+  createdAt    DateTime @default(now())
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  dueDate     DateTime
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  isCompleted Boolean  @default(false)
+}
+
+model AutomationRule {
+  id             String       @id @default(cuid())
+  name           String
+  triggerOn      String       // e.g., "STATUS_CHANGE", "TIME_DELAY"
+  condition      String?      // e.g., "STATUS == 'NEW'"
+  actionType     String       // e.g., "SEND_WHATSAPP"
+  actionPayload  String       // JSON payload containing template id or message
+  isActive       Boolean      @default(true)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+}
+
+model MessageTemplate {
+  id             String       @id @default(cuid())
+  name           String
+  content        String
+  type           String       @default("WHATSAPP")
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+model WhatsAppLog {
+  id             String       @id @default(cuid())
+  leadId         String
+  lead           Lead         @relation(fields: [leadId], references: [id])
+  direction      String       // "OUTBOUND" or "INBOUND"
+  message        String
+  status         String       @default("SENT") // SENT, DELIVERED, READ, FAILED
+  createdAt      DateTime     @default(now())
+}
+
+model FileAttachment {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  name      String
+  url       String
+  size      Int?     
+  type      String?  
+  createdAt DateTime @default(now())
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  subject   String
+  body      String
+  direction String   
+  status    String   @default("SENT")
+  createdAt DateTime @default(now())
+}

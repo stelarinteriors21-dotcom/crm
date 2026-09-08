@@ -1,0 +1,596 @@
+[debug] [2026-09-05T12:39:22.921Z] ----------------------------------------------------------------------
+[debug] [2026-09-05T12:39:22.922Z] Command:       C:\node-v24.15.0-win-x64\node.exe C:\node-v24.15.0-win-x64\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2026-09-05T12:39:22.922Z] CLI Version:   15.24.0
+[debug] [2026-09-05T12:39:22.923Z] Platform:      win32
+[debug] [2026-09-05T12:39:22.923Z] Node Version:  v24.15.0
+[debug] [2026-09-05T12:39:22.923Z] Detected Agent: antigravity
+[debug] [2026-09-05T12:39:22.923Z] Time:          Sat Sep 05 2026 18:09:22 GMT+0530 (India Standard Time)
+[debug] [2026-09-05T12:39:22.923Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-09-05T12:39:23.745Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-09-05T12:39:23.746Z] > authorizing via signed-in user (fame6474@gmail.com)
+[debug] [2026-09-05T12:39:23.746Z] [iam] checking project crm-27b07 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-09-05T12:39:23.753Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:39:23.753Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:39:23.754Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions [none]
+[debug] [2026-09-05T12:39:23.754Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions  x-goog-user-project=crm-27b07
+[debug] [2026-09-05T12:39:23.754Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-09-05T12:39:25.137Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions 200
+[debug] [2026-09-05T12:39:25.137Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-09-05T12:39:25.137Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:39:25.137Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:39:25.137Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/crm-27b07 [none]
+[debug] [2026-09-05T12:39:25.724Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/crm-27b07 200
+[debug] [2026-09-05T12:39:25.724Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/crm-27b07 {"projectId":"crm-27b07","projectNumber":"912275719670","displayName":"Crm ","name":"projects/crm-27b07","resources":{"hostingSite":"crm-27b07"},"state":"ACTIVE","labels":{"firebase":"enabled"},"etag":"1_256ebf4d-0d8d-404b-964b-dffbc316782b"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2026-09-05T12:39:29.681Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:39:29.681Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:39:29.681Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/crm-27b07/sites/crm-27b07 [none]
+[debug] [2026-09-05T12:39:31.058Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/crm-27b07/sites/crm-27b07 200
+[debug] [2026-09-05T12:39:31.058Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/crm-27b07/sites/crm-27b07 {"name":"projects/crm-27b07/sites/crm-27b07","defaultUrl":"https://crm-27b07.web.app","appId":"1:912275719670:web:737b71afe92af86a2db3d7","type":"DEFAULT_SITE"}
+[info]   ▲ Next.js 14.2.35
+
+[info]   - Environments: .env.production, .env
+
+
+[info]    Creating an optimized production build ...
+
+[info]  ✓ Compiled successfully
+
+[info]    Skipping validation of types
+
+[info]    Skipping linting
+
+[info]    Collecting page data ...
+
+[info]    Generating static pages (0/41) ...
+
+[info]    Generating static pages (10/41) 
+
+[info]    Generating static pages (20/41) 
+
+[info]    Generating static pages (30/41) 
+
+[info]  ✓ Generating static pages (41/41)
+
+[info]    Finalizing page optimization ...
+   Collecting build traces ...
+
+[info] 
+
+[info] Route (app)                              Size     First Load JS
+┌ ƒ /                                    147 B          87.9 kB
+├ ƒ /_not-found                          880 B          88.6 kB
+├ ƒ /add/excel                           401 B          88.2 kB
+├ ƒ /add/single                          4.18 kB        91.9 kB
+├ ƒ /ai-suite                            4.21 kB          92 kB
+├ ƒ /ai-suite/call-iq                    879 B          88.6 kB
+├ ƒ /ai-suite/mcp                        879 B          88.6 kB
+├ ƒ /all-custom-api-templates            886 B          97.4 kB
+├ ƒ /all-custom-api-templates/create     2.75 kB        90.5 kB
+├ ƒ /all-salesform                       886 B          97.4 kB
+├ ƒ /all-salesform/create                2.24 kB          90 kB
+├ ƒ /analytics                           879 B          88.6 kB
+├ ƒ /api/auth/[...nextauth]              0 B                0 B
+├ ƒ /api/auth/login                      0 B                0 B
+├ ƒ /api/automations                     0 B                0 B
+├ ƒ /api/leads/[id]                      0 B                0 B
+├ ƒ /api/mobile/call-logs                0 B                0 B
+├ ƒ /api/mobile/leads                    0 B                0 B
+├ ƒ /api/webhooks/meta                   0 B                0 B
+├ ƒ /automation                          3.25 kB          91 kB
+├ ƒ /billing                             879 B          88.6 kB
+├ ƒ /calls                               12 kB          99.7 kB
+├ ƒ /dashboard                           5.97 kB         102 kB
+├ ƒ /duplicates                          879 B          88.6 kB
+├ ƒ /flowcharts/schedules                886 B          97.4 kB
+├ ƒ /flowcharts/workflows                886 B          97.4 kB
+├ ƒ /flowcharts/workflows/create         3.09 kB        90.8 kB
+├ ƒ /getting-started                     3.2 kB           91 kB
+├ ƒ /inbox                               879 B          88.6 kB
+├ ƒ /integrations                        886 B          97.4 kB
+├ ƒ /integrations/facebook               886 B          97.4 kB
+├ ƒ /leaderboard                         3.41 kB        91.2 kB
+├ ƒ /leads                               103 kB          199 kB
+├ ƒ /leads/[id]                          4.24 kB         101 kB
+├ ƒ /leads/[id]/edit                     179 B          96.7 kB
+├ ƒ /login                               1.24 kB          89 kB
+├ ƒ /mentions                            881 B          88.6 kB
+├ ƒ /reports                             147 B          87.9 kB
+├ ƒ /reports/download                    882 B          88.6 kB
+├ ƒ /search                              886 B          97.4 kB
+├ ƒ /tasks                               882 B          88.6 kB
+├ ƒ /team                                4.06 kB         101 kB
+├ ƒ /team/permissions                    3.12 kB        99.6 kB
+└ ƒ /team/permissions/[id]               879 B          88.6 kB
++ First Load JS shared by all            87.8 kB
+  ├ chunks/2117-4f0739a0774652db.js      31.9 kB
+  ├ chunks/fd9d1056-586fdace2dcd0d42.js  53.6 kB
+  └ other shared chunks (total)          2.21 kB
+
+
+
+[info] ƒ  (Dynamic)  server-rendered on demand
+
+
+[info] Building a Cloud Function to run this application. This is needed due to:
+[info]  • non-static component /_not-found/page
+[info]  • non-static component /api/auth/login/route
+[info]  • non-static component /api/auth/[...nextauth]/route
+[info]  • non-static component /api/automations/route
+[info]  • non-static component /api/mobile/call-logs/route
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /api/webhooks/meta/route
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /login/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /api/leads/[id]/route
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /api/mobile/leads/route
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/ai-suite/call-iq/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/add/excel/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/all-salesform/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/ai-suite/mcp/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/all-custom-api-templates/create/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/add/single/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/analytics/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/billing/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/all-custom-api-templates/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/all-salesform/create/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/automation/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/dashboard/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/ai-suite/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/flowcharts/workflows/create/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/flowcharts/schedules/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/flowcharts/workflows/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/getting-started/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/inbox/page
+[debug] [2026-09-05T12:39:41.894Z]  • non-static component /(dashboard)/integrations/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/calls/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/integrations/facebook/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/leaderboard/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/duplicates/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/leads/[id]/edit/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/leads/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/leads/[id]/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/reports/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/reports/download/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/search/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/mentions/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/tasks/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/team/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/team/permissions/page
+[debug] [2026-09-05T12:39:41.895Z]  • non-static component /(dashboard)/team/permissions/[id]/page
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /login
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /ai-suite/call-iq
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /add/excel
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /all-salesform
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /ai-suite/mcp
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /all-custom-api-templates/create
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /add/single
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /analytics
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /billing
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /all-custom-api-templates
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /all-salesform/create
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /automation
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /dashboard
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /ai-suite
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /flowcharts/workflows/create
+[debug] [2026-09-05T12:39:41.895Z]  • route with server action /flowcharts/schedules
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /flowcharts/workflows
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /getting-started
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /inbox
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /integrations
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /calls
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /integrations/facebook
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /leaderboard
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /duplicates
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /leads/[id]/edit
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /leads/[id]
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /reports
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /reports/download
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /search
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /mentions
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /tasks
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /team
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /team/permissions
+[debug] [2026-09-05T12:39:41.896Z]  • route with server action /team/permissions/[id]
+[info]  • and 73 other reasons, use --debug to see more
+[info] 
+[debug] [2026-09-05T12:39:48.157Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:39:48.157Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:39:48.157Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/crm-27b07/sites/crm-27b07 [none]
+[debug] [2026-09-05T12:39:49.569Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/crm-27b07/sites/crm-27b07 200
+[debug] [2026-09-05T12:39:49.570Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/crm-27b07/sites/crm-27b07 {"name":"projects/crm-27b07/sites/crm-27b07","defaultUrl":"https://crm-27b07.web.app","appId":"1:912275719670:web:737b71afe92af86a2db3d7","type":"DEFAULT_SITE"}
+[debug] [2026-09-05T12:40:09.132Z] [web frameworks] effective firebase.json:  {
+  "hosting": [
+    {
+      "source": ".",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "frameworksBackend": {
+        "region": "us-central1"
+      },
+      "site": "crm-27b07",
+      "rewrites": [
+        {
+          "source": "**",
+          "function": {
+            "functionId": "ssrcrm27b07",
+            "region": "us-central1",
+            "pinTag": true
+          }
+        }
+      ],
+      "redirects": [],
+      "headers": [
+        {
+          "source": "/favicon.ico",
+          "headers": [
+            {
+              "key": "cache-control",
+              "value": "public, max-age=0, must-revalidate"
+            },
+            {
+              "key": "content-type",
+              "value": "image/x-icon"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/favicon.ico/layout,_N_T_/favicon.ico/route,_N_T_/favicon.ico"
+            }
+          ]
+        }
+      ],
+      "cleanUrls": true,
+      "trailingSlash": false,
+      "public": ".firebase\\crm-27b07\\hosting",
+      "webFramework": "next_ssr"
+    }
+  ],
+  "functions": [
+    {
+      "source": ".firebase\\crm-27b07\\functions",
+      "codebase": "firebase-frameworks-crm-27b07"
+    }
+  ]
+}
+[debug] [2026-09-05T12:40:09.133Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-09-05T12:40:09.133Z] > authorizing via signed-in user (fame6474@gmail.com)
+[debug] [2026-09-05T12:40:09.133Z] [iam] checking project crm-27b07 for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2026-09-05T12:40:09.133Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:40:09.133Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:40:09.133Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions [none]
+[debug] [2026-09-05T12:40:09.134Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions  x-goog-user-project=crm-27b07
+[debug] [2026-09-05T12:40:09.134Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-09-05T12:40:10.551Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions 200
+[debug] [2026-09-05T12:40:10.551Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-09-05T12:40:10.551Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:40:10.551Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:40:10.551Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/crm-27b07/locations/-/functions [none]
+[debug] [2026-09-05T12:40:11.174Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/crm-27b07/locations/-/functions 403
+[debug] [2026-09-05T12:40:11.174Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/crm-27b07/locations/-/functions {"error":{"code":403,"message":"Cloud Functions API has not been used in project crm-27b07 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=crm-27b07 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED","domain":"googleapis.com","metadata":{"containerInfo":"crm-27b07","activationUrl":"https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=crm-27b07","serviceTitle":"Cloud Functions API","consumer":"projects/crm-27b07","service":"cloudfunctions.googleapis.com"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Cloud Functions API has not been used in project crm-27b07 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=crm-27b07 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developers console API activation","url":"https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=crm-27b07"}]}]}}
+[debug] [2026-09-05T12:40:11.174Z] [functions] failed to list functions for crm-27b07
+[debug] [2026-09-05T12:40:11.174Z] [functions] Request to https://cloudfunctions.googleapis.com/v1/projects/crm-27b07/locations/-/functions had HTTP Error: 403, Cloud Functions API has not been used in project crm-27b07 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=crm-27b07 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+[debug] [2026-09-05T12:40:52.966Z] ----------------------------------------------------------------------
+[debug] [2026-09-05T12:40:52.968Z] Command:       C:\node-v24.15.0-win-x64\node.exe C:\node-v24.15.0-win-x64\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting --debug
+[debug] [2026-09-05T12:40:52.968Z] CLI Version:   15.24.0
+[debug] [2026-09-05T12:40:52.968Z] Platform:      win32
+[debug] [2026-09-05T12:40:52.968Z] Node Version:  v24.15.0
+[debug] [2026-09-05T12:40:52.968Z] Detected Agent: antigravity
+[debug] [2026-09-05T12:40:52.968Z] Time:          Sat Sep 05 2026 18:10:52 GMT+0530 (India Standard Time)
+[debug] [2026-09-05T12:40:52.968Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-09-05T12:40:53.752Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-09-05T12:40:53.753Z] > authorizing via signed-in user (fame6474@gmail.com)
+[debug] [2026-09-05T12:40:53.753Z] [iam] checking project crm-27b07 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-09-05T12:40:53.761Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:40:53.761Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:40:53.762Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions [none]
+[debug] [2026-09-05T12:40:53.762Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions  x-goog-user-project=crm-27b07
+[debug] [2026-09-05T12:40:53.762Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-09-05T12:40:55.357Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions 200
+[debug] [2026-09-05T12:40:55.357Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-09-05T12:40:55.357Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:40:55.357Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:40:55.358Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/crm-27b07 [none]
+[debug] [2026-09-05T12:40:56.041Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/crm-27b07 200
+[debug] [2026-09-05T12:40:56.041Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/crm-27b07 {"projectId":"crm-27b07","projectNumber":"912275719670","displayName":"Crm ","name":"projects/crm-27b07","resources":{"hostingSite":"crm-27b07"},"state":"ACTIVE","labels":{"firebase":"enabled"},"etag":"1_256ebf4d-0d8d-404b-964b-dffbc316782b"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2026-09-05T12:40:59.957Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:40:59.957Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:40:59.957Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/crm-27b07/sites/crm-27b07 [none]
+[debug] [2026-09-05T12:41:01.453Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/crm-27b07/sites/crm-27b07 200
+[debug] [2026-09-05T12:41:01.453Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/crm-27b07/sites/crm-27b07 {"name":"projects/crm-27b07/sites/crm-27b07","defaultUrl":"https://crm-27b07.web.app","appId":"1:912275719670:web:737b71afe92af86a2db3d7","type":"DEFAULT_SITE"}
+[info]   ▲ Next.js 14.2.35
+
+[info]   - Environments: .env.production, .env
+
+
+[info]    Creating an optimized production build ...
+
+[info] 
+
+
+[info] Source path: D:\cattle\telecrm-clone\src\app\globals.css
+
+[info] Setting up new context...
+
+[info] Finding changed files: 6.225ms
+
+[info] Reading changed files: 91.463ms
+
+[info] Sorting candidates: 2.122ms
+
+[info] Generate rules: 67.941ms
+
+[info] Build stylesheet: 2.261ms
+
+[info] Potential classes:  4816
+
+[info] Active contexts:  1
+
+[info] JIT TOTAL: 267.543ms
+
+
+
+[info]  ✓ Compiled successfully
+
+[info]    Skipping validation of types
+
+[info]    Skipping linting
+
+[info]    Collecting page data ...
+
+[info]    Generating static pages (0/41) ...
+
+[info]    Generating static pages (10/41) 
+
+[info]    Generating static pages (20/41) 
+
+[info]    Generating static pages (30/41) 
+
+[info]  ✓ Generating static pages (41/41)
+
+[info]    Finalizing page optimization ...
+   Collecting build traces ...
+
+[info] 
+
+[info] Route (app)                              Size     First Load JS
+┌ ƒ /                                    147 B          87.9 kB
+├ ƒ /_not-found                          880 B          88.6 kB
+├ ƒ /add/excel                           401 B          88.2 kB
+├ ƒ /add/single                          4.18 kB        91.9 kB
+├ ƒ /ai-suite                            4.21 kB          92 kB
+├ ƒ /ai-suite/call-iq                    880 B          88.6 kB
+├ ƒ /ai-suite/mcp                        880 B          88.6 kB
+├ ƒ /all-custom-api-templates            886 B          97.4 kB
+├ ƒ /all-custom-api-templates/create     2.75 kB        90.5 kB
+├ ƒ /all-salesform                       886 B          97.4 kB
+├ ƒ /all-salesform/create                2.24 kB          90 kB
+├ ƒ /analytics                           880 B          88.6 kB
+├ ƒ /api/auth/[...nextauth]              0 B                0 B
+├ ƒ /api/auth/login                      0 B                0 B
+├ ƒ /api/automations                     0 B                0 B
+├ ƒ /api/leads/[id]                      0 B                0 B
+├ ƒ /api/mobile/call-logs                0 B                0 B
+├ ƒ /api/mobile/leads                    0 B                0 B
+├ ƒ /api/webhooks/meta                   0 B                0 B
+├ ƒ /automation                          3.25 kB          91 kB
+├ ƒ /billing                             880 B          88.6 kB
+├ ƒ /calls                               12 kB          99.7 kB
+├ ƒ /dashboard                           5.97 kB         102 kB
+├ ƒ /duplicates                          880 B          88.6 kB
+├ ƒ /flowcharts/schedules                886 B          97.4 kB
+├ ƒ /flowcharts/workflows                886 B          97.4 kB
+├ ƒ /flowcharts/workflows/create         3.09 kB        90.8 kB
+├ ƒ /getting-started                     3.2 kB           91 kB
+├ ƒ /inbox                               880 B          88.6 kB
+├ ƒ /integrations                        886 B          97.4 kB
+├ ƒ /integrations/facebook               886 B          97.4 kB
+├ ƒ /leaderboard                         3.41 kB        91.2 kB
+├ ƒ /leads                               103 kB          199 kB
+├ ƒ /leads/[id]                          4.24 kB         101 kB
+├ ƒ /leads/[id]/edit                     179 B          96.7 kB
+├ ƒ /login                               1.24 kB          89 kB
+├ ƒ /mentions                            879 B          88.6 kB
+├ ƒ /reports                             147 B          87.9 kB
+├ ƒ /reports/download                    882 B          88.6 kB
+├ ƒ /search                              886 B          97.4 kB
+├ ƒ /tasks                               882 B          88.6 kB
+├ ƒ /team                                4.06 kB         101 kB
+├ ƒ /team/permissions                    3.12 kB        99.6 kB
+└ ƒ /team/permissions/[id]               879 B          88.6 kB
++ First Load JS shared by all            87.8 kB
+  ├ chunks/2117-4f0739a0774652db.js      31.9 kB
+  ├ chunks/fd9d1056-586fdace2dcd0d42.js  53.6 kB
+  └ other shared chunks (total)          2.21 kB
+
+
+
+[info] ƒ  (Dynamic)  server-rendered on demand
+
+
+[info] Building a Cloud Function to run this application. This is needed due to:
+[info]  • non-static component /_not-found/page
+[info]  • non-static component /api/automations/route
+[info]  • non-static component /api/leads/[id]/route
+[info]  • non-static component /api/auth/[...nextauth]/route
+[info]  • non-static component /api/mobile/call-logs/route
+[debug] [2026-09-05T12:41:12.261Z]  • non-static component /api/webhooks/meta/route
+[debug] [2026-09-05T12:41:12.261Z]  • non-static component /login/page
+[debug] [2026-09-05T12:41:12.261Z]  • non-static component /api/auth/login/route
+[debug] [2026-09-05T12:41:12.261Z]  • non-static component /page
+[debug] [2026-09-05T12:41:12.261Z]  • non-static component /api/mobile/leads/route
+[debug] [2026-09-05T12:41:12.261Z]  • non-static component /(dashboard)/add/single/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/all-salesform/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/ai-suite/mcp/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/ai-suite/call-iq/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/analytics/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/all-custom-api-templates/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/ai-suite/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/automation/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/all-custom-api-templates/create/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/add/excel/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/all-salesform/create/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/billing/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/calls/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/duplicates/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/dashboard/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/flowcharts/schedules/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/flowcharts/workflows/create/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/getting-started/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/flowcharts/workflows/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/inbox/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/leads/[id]/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/integrations/facebook/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/leads/[id]/edit/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/integrations/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/leaderboard/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/leads/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/reports/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/reports/download/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/mentions/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/team/permissions/[id]/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/tasks/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/search/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/team/permissions/page
+[debug] [2026-09-05T12:41:12.262Z]  • non-static component /(dashboard)/team/page
+[debug] [2026-09-05T12:41:12.262Z]  • route with server action /login
+[debug] [2026-09-05T12:41:12.262Z]  • route with server action /add/single
+[debug] [2026-09-05T12:41:12.262Z]  • route with server action /all-salesform
+[debug] [2026-09-05T12:41:12.262Z]  • route with server action /ai-suite/mcp
+[debug] [2026-09-05T12:41:12.262Z]  • route with server action /ai-suite/call-iq
+[debug] [2026-09-05T12:41:12.262Z]  • route with server action /analytics
+[debug] [2026-09-05T12:41:12.262Z]  • route with server action /all-custom-api-templates
+[debug] [2026-09-05T12:41:12.262Z]  • route with server action /ai-suite
+[debug] [2026-09-05T12:41:12.262Z]  • route with server action /automation
+[debug] [2026-09-05T12:41:12.262Z]  • route with server action /all-custom-api-templates/create
+[debug] [2026-09-05T12:41:12.262Z]  • route with server action /add/excel
+[debug] [2026-09-05T12:41:12.262Z]  • route with server action /all-salesform/create
+[debug] [2026-09-05T12:41:12.262Z]  • route with server action /billing
+[debug] [2026-09-05T12:41:12.262Z]  • route with server action /calls
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /duplicates
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /dashboard
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /flowcharts/schedules
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /flowcharts/workflows/create
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /getting-started
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /flowcharts/workflows
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /inbox
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /leads/[id]
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /integrations/facebook
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /leads/[id]/edit
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /integrations
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /leaderboard
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /reports
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /reports/download
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /mentions
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /team/permissions/[id]
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /tasks
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /search
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /team/permissions
+[debug] [2026-09-05T12:41:12.263Z]  • route with server action /team
+[info] 
+[debug] [2026-09-05T12:41:14.320Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:41:14.320Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:41:14.320Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/crm-27b07/sites/crm-27b07 [none]
+[debug] [2026-09-05T12:41:15.686Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/crm-27b07/sites/crm-27b07 200
+[debug] [2026-09-05T12:41:15.686Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/crm-27b07/sites/crm-27b07 {"name":"projects/crm-27b07/sites/crm-27b07","defaultUrl":"https://crm-27b07.web.app","appId":"1:912275719670:web:737b71afe92af86a2db3d7","type":"DEFAULT_SITE"}
+[debug] [2026-09-05T12:41:17.719Z] [web frameworks] effective firebase.json:  {
+  "hosting": [
+    {
+      "source": ".",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "frameworksBackend": {
+        "region": "us-central1"
+      },
+      "site": "crm-27b07",
+      "rewrites": [
+        {
+          "source": "**",
+          "function": {
+            "functionId": "ssrcrm27b07",
+            "region": "us-central1",
+            "pinTag": true
+          }
+        }
+      ],
+      "redirects": [],
+      "headers": [
+        {
+          "source": "/favicon.ico",
+          "headers": [
+            {
+              "key": "cache-control",
+              "value": "public, max-age=0, must-revalidate"
+            },
+            {
+              "key": "content-type",
+              "value": "image/x-icon"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/favicon.ico/layout,_N_T_/favicon.ico/route,_N_T_/favicon.ico"
+            }
+          ]
+        }
+      ],
+      "cleanUrls": true,
+      "trailingSlash": false,
+      "public": ".firebase\\crm-27b07\\hosting",
+      "webFramework": "next_ssr"
+    }
+  ],
+  "functions": [
+    {
+      "source": ".firebase\\crm-27b07\\functions",
+      "codebase": "firebase-frameworks-crm-27b07"
+    }
+  ]
+}
+[debug] [2026-09-05T12:41:17.720Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-09-05T12:41:17.720Z] > authorizing via signed-in user (fame6474@gmail.com)
+[debug] [2026-09-05T12:41:17.720Z] [iam] checking project crm-27b07 for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2026-09-05T12:41:17.720Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:41:17.720Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:41:17.720Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions [none]
+[debug] [2026-09-05T12:41:17.720Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions  x-goog-user-project=crm-27b07
+[debug] [2026-09-05T12:41:17.720Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-09-05T12:41:19.271Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions 200
+[debug] [2026-09-05T12:41:19.271Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crm-27b07:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-09-05T12:41:19.271Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:41:19.272Z] Checked if tokens are valid: true, expires at: 1788615073999
+[debug] [2026-09-05T12:41:19.272Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/crm-27b07/locations/-/functions [none]
+[debug] [2026-09-05T12:41:19.782Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/crm-27b07/locations/-/functions 403
+[debug] [2026-09-05T12:41:19.783Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/crm-27b07/locations/-/functions {"error":{"code":403,"message":"Cloud Functions API has not been used in project crm-27b07 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=crm-27b07 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED","domain":"googleapis.com","metadata":{"activationUrl":"https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=crm-27b07","consumer":"projects/crm-27b07","service":"cloudfunctions.googleapis.com","serviceTitle":"Cloud Functions API","containerInfo":"crm-27b07"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Cloud Functions API has not been used in project crm-27b07 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=crm-27b07 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developers console API activation","url":"https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=crm-27b07"}]}]}}
+[debug] [2026-09-05T12:41:19.783Z] [functions] failed to list functions for crm-27b07
+[debug] [2026-09-05T12:41:19.783Z] [functions] Request to https://cloudfunctions.googleapis.com/v1/projects/crm-27b07/locations/-/functions had HTTP Error: 403, Cloud Functions API has not been used in project crm-27b07 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=crm-27b07 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+[debug] [2026-09-05T12:41:20.295Z] FirebaseError: Request to https://cloudfunctions.googleapis.com/v1/projects/crm-27b07/locations/-/functions had HTTP Error: 403, Cloud Functions API has not been used in project crm-27b07 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=crm-27b07 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+    at responseToError (C:\node-v24.15.0-win-x64\node_modules\firebase-tools\lib\responseToError.js:53:12)
+    at RetryOperation._fn (C:\node-v24.15.0-win-x64\node_modules\firebase-tools\lib\apiv2.js:415:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[error] 
+[error] Error: Failed to list functions for crm-27b07
