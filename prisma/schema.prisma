@@ -58,6 +58,7 @@ model Lead {
   tag            String?
   budget         String?
   city           String?
+  propertyStatus String?
   fbAd           String?
   capturedOn     DateTime?
   assignedToId   String?
@@ -76,7 +77,7 @@ model Lead {
   escalationLevel Int     @default(0)
   previousAssigneeId String?
 
-  // Stelar Lead Scoring — Stagewise
+  // Stelar Lead Scoring â€” Stagewise
   scoreEngagement  String  @default("None")      // None | Low | Medium | High | Strong
   scoreLocation    String  @default("Outside")   // Outside | Kerala | Near TVM | TVM
   scoreBudget      String  @default("Unknown")   // Unknown | Poor | Possible | Good | Strong

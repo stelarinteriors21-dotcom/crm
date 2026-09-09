@@ -58,12 +58,14 @@ export async function POST(request: Request) {
                 let phone = '';
                 let email = null;
                 let city = null;
+                let propertyStatus = null;
                 
                 leadData.field_data.forEach((field: { name: string; values: string[] }) => {
                   if (field.name === 'full_name' || field.name === 'first_name') name = field.values[0];
                   if (field.name === 'phone_number') phone = field.values[0];
                   if (field.name === 'email') email = field.values[0];
                   if (field.name === 'city') city = field.values[0];
+                  if (field.name === 'property_status' || field.name === 'status_of_property') propertyStatus = field.values[0];
                 });
 
                 // Clean phone number
@@ -107,6 +109,7 @@ export async function POST(request: Request) {
                           phone,
                           email,
                           city,
+                          propertyStatus,
                           source: 'META ADS',
                           status: 'Fresh',
                           fbAd: leadData.campaign_name || 'Facebook Ad',

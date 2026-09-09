@@ -471,7 +471,7 @@ export default function LeadsTableClient({ leads, totalLeads }: { leads: Lead[],
                 {isCol('propertyStatus') && (
                   <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
                     <span className="inline-flex px-2 py-0.5 rounded bg-orange-50 text-orange-800 text-xs font-medium">
-                      Renovation
+                      {lead.propertyStatus || 'Not specified'}
                     </span>
                   </td>
                 )}
