@@ -37,7 +37,7 @@ export async function GET(request: Request) {
 
     const callers = await prisma.user.findMany({
       where: { organizationId: org.id, role: "TELECALLER" },
-      orderBy: { createdAt: 'asc' }
+      orderBy: { id: 'asc' }
     });
 
     // 2. Iterate through each form

@@ -87,7 +87,7 @@ export async function createLead(data: any) {
     if (!assignedToId) {
       const callers = await prisma.user.findMany({
         where: { organizationId: user.organizationId, role: "TELECALLER" },
-        orderBy: { createdAt: 'asc' }
+        orderBy: { id: 'asc' }
       });
       
       if (callers.length > 0) {
