@@ -235,7 +235,7 @@ export async function escalateLead(leadId: string) {
 
   const callers = await prisma.user.findMany({
     where: { organizationId: lead.organizationId, role: "TELECALLER" },
-    orderBy: { createdAt: "asc" }
+    orderBy: { id: "asc" }
   });
 
   const escalationLevel = lead.escalationLevel + 1;
@@ -257,7 +257,7 @@ export async function escalateLead(leadId: string) {
     // Escalate to Admin (Unassigned but marked as escalated)
     const admin = await prisma.user.findFirst({
       where: { organizationId: lead.organizationId, role: { in: ["ADMIN", "ROOT"] } },
-      orderBy: { createdAt: "asc" }
+      orderBy: { id: "asc" }
     });
     
     nextAssigneeId = admin ? admin.id : null;

@@ -49,7 +49,7 @@ export async function deleteEmployee(userId: string) {
     // Find the admin to reassign leads to
     const admin = await prisma.user.findFirst({
       where: { organizationId: currentUser.organizationId, role: { in: ["ADMIN", "ROOT"] } },
-      orderBy: { createdAt: "asc" }
+      orderBy: { id: "asc" }
     });
     
     // We must handle relations before deleting the user.
