@@ -218,7 +218,7 @@ export async function getPendingLeadForUser() {
       assignedStatus: 'PENDING',
       assignedToId: user.id
     },
-    orderBy: { assignedAt: 'asc' }
+    orderBy: { assignedAt: 'desc' }
   });
   
   return lead;
