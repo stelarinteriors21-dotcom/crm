@@ -47,8 +47,8 @@ export default function AddSingleLeadPage() {
     <div className="h-full bg-[#FDFDFD] flex flex-col -m-3 md:-m-6 relative">
       
       {/* Top Header */}
-      <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
-        <div className="relative w-72">
+      <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white shrink-0">
+        <div className="relative w-full sm:w-72">
           <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input 
             type="text" 
@@ -56,7 +56,7 @@ export default function AddSingleLeadPage() {
             className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border-none rounded text-xs focus:outline-none"
           />
         </div>
-        <button className="flex items-center text-[#613cbc] border border-purple-200 bg-purple-50 px-4 py-1.5 rounded-full text-[11px] font-bold hover:bg-purple-100 transition-colors">
+        <button className="flex items-center justify-center text-[#613cbc] border border-purple-200 bg-purple-50 px-4 py-2 sm:py-1.5 rounded-full text-[11px] font-bold hover:bg-purple-100 transition-colors w-full sm:w-auto">
           <ExternalLink className="w-3.5 h-3.5 mr-2" /> Previously uploaded leads
         </button>
       </div>
