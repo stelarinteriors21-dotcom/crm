@@ -62,9 +62,15 @@ export default async function DashboardPage() {
     // Team activity — count calls on leads assigned to each person
     const members = await prisma.user.findMany({
       where: { organizationId: user.organizationId },
-      include: {
+      select: {
+        id: true,
+        name: true,
         assignedLeads: {
-          include: { calls: true }
+          select: {
+            calls: {
+              select: { duration: true }
+            }
+          }
         }
       }
     });
