@@ -16,6 +16,7 @@ model Organization {
   automationRules     AutomationRule[]
   messageTemplates    MessageTemplate[]
   permissionTemplates PermissionTemplate[]
+  escalationEmails    String?           @default("stelarinteriors21@gmail.com,shaji2222222@gmail.com")
   createdAt           DateTime          @default(now())
 }
 

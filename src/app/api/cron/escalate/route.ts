@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import nodemailer from 'nodemailer';
 
@@ -34,20 +34,21 @@ export async function GET(request: Request) {
       }
     });
 
-    // Email recipients (Root Admins)
-    const adminEmails = [
-      'stelarinteriors21@gmail.com', // Primary Admin
-      'shaji2222222@gmail.com'       // Testing/Fallback Admin
-    ];
-
     let emailedCount = 0;
 
     for (const lead of ignoredLeads) {
+      // Get org emails
+      const org = lead.assignedTo?.organizationId 
+        ? await prisma.organization.findUnique({ where: { id: lead.assignedTo.organizationId } })
+        : await prisma.organization.findFirst();
+
+      const adminEmails = org?.escalationEmails || 'stelarinteriors21@gmail.com,shaji2222222@gmail.com';
+
       // 1. Send Email
       const assigneeName = lead.assignedTo?.name || 'Unknown Agent';
       const mailOptions = {
         from: `"Stelar CRM Alerts" <${process.env.SMTP_USER || 'shaji2222222@gmail.com'}>`,
-        to: adminEmails.join(','),
+        to: adminEmails,
         subject: `🚨 URGENT: Lead Ignored by ${assigneeName} for > 20 Mins!`,
         html: `
           <h2 style="color: #d93025;">Lead Escalation Alert</h2>
