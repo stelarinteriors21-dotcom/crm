@@ -70,7 +70,10 @@ export async function login(formData: FormData) {
     return { error: "Incorrect password. Please try again." };
   }
   
-  cookies().set("mock_user_email", user.email, { path: "/" });
+  cookies().set("mock_user_email", user.email, { 
+    path: "/", 
+    maxAge: 60 * 60 * 24 * 30 // 30 days
+  });
   return { success: true };
 }
 
