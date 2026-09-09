@@ -37,22 +37,25 @@ export default function PendingLeadsBanner({ initialLeads }: { initialLeads: any
                 Accept within 10 minutes or it will be reassigned.
               </div>
             </div>
-            <div className="flex space-x-2">
-              <button 
-                onClick={() => handleAccept(lead.id)}
-                disabled={loadingId === lead.id}
-                className="flex items-center px-3 py-1.5 bg-green-600 text-white text-[12px] font-bold rounded hover:bg-green-700 disabled:opacity-50"
-              >
-                <CheckCircle className="w-4 h-4 mr-1.5" /> Accept
-              </button>
-              <button 
-                onClick={() => handleReject(lead.id)}
-                disabled={loadingId === lead.id}
-                className="flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 border border-gray-200 text-[12px] font-bold rounded hover:bg-gray-200 disabled:opacity-50"
-              >
-                <XCircle className="w-4 h-4 mr-1.5" /> Reject
-              </button>
-            </div>
+              <div className="flex space-x-2 shrink-0">
+                <button
+                  onClick={() => {
+                    handleAccept(lead.id);
+                    window.location.href = `tel:${lead.phone}`;
+                  }}
+                  disabled={loadingId === lead.id}
+                  className="flex items-center px-3 py-1.5 bg-green-600 text-white text-[11px] font-bold rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
+                >
+                  <CheckCircle className="w-3.5 h-3.5 mr-1" /> Call
+                </button>
+                <button
+                  onClick={() => handleReject(lead.id)}
+                  disabled={loadingId === lead.id}
+                  className="flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 border border-gray-200 text-[11px] font-bold rounded hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50 transition-colors"
+                >
+                  <XCircle className="w-3.5 h-3.5 mr-1" /> Pass
+                </button>
+              </div>
           </div>
         ))}
       </div>

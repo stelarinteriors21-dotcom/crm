@@ -214,29 +214,32 @@ export default function PendingLeadWatcher() {
             </div>
           ) : null}
 
-          <div className="grid grid-cols-3 gap-3 mt-4">
-            <button 
-              onClick={() => handleReject(pendingLead.id)}
-              disabled={processing}
-              className="col-span-1 bg-white border-2 border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-3 rounded-xl transition-colors disabled:opacity-50 text-xs sm:text-sm"
-            >
-              {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'REJECT'}
-            </button>
-            <button 
-              onClick={handleCallIn15}
-              disabled={processing}
-              className="col-span-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 transition-colors disabled:opacity-50 text-xs sm:text-sm"
-            >
-              {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'CALL IN 15M'}
-            </button>
-            <button 
-              onClick={handleAccept}
-              disabled={processing}
-              className="col-span-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-500/30 transition-colors disabled:opacity-50 text-xs sm:text-sm"
-            >
-              {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'ACCEPT'}
-            </button>
-          </div>
+            <div className="grid grid-cols-3 gap-3">
+              <button 
+                onClick={() => handleReject(pendingLead.id)}
+                disabled={processing}
+                className="col-span-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold py-3 rounded-xl transition-colors disabled:opacity-50 text-xs sm:text-sm border border-red-200"
+              >
+                {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'PASS'}
+              </button>
+              <button 
+                onClick={handleCallIn15}
+                disabled={processing}
+                className="col-span-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 transition-colors disabled:opacity-50 text-xs sm:text-sm"
+              >
+                {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'SNOOZE'}
+              </button>
+              <button 
+                onClick={() => {
+                  handleAccept();
+                  window.location.href = `tel:${pendingLead.phone}`;
+                }}
+                disabled={processing}
+                className="col-span-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-500/30 transition-colors disabled:opacity-50 text-xs sm:text-sm"
+              >
+                {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'CALL'}
+              </button>
+            </div>
         </div>
 
       </div>
