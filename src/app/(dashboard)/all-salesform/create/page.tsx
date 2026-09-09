@@ -45,7 +45,7 @@ export default function SalesformCreatePage() {
           </div>
 
           {/* Search */}
-          <div className="p-4 px-6 relative">
+          <div className="p-4 px-4 md:px-6 relative">
             <input 
               type="text" 
               placeholder="Search for event e.g. b" 
@@ -55,7 +55,7 @@ export default function SalesformCreatePage() {
           </div>
 
           {/* Event List */}
-          <div className="flex-1 overflow-y-auto px-6 py-2">
+          <div className="flex-1 overflow-y-auto px-4 md:px-6 py-2">
             <ul className="space-y-1">
               <li>
                 <button className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg">
@@ -97,7 +97,7 @@ export default function SalesformCreatePage() {
 
           {/* Footer */}
           <div className="p-6 border-t border-gray-100 flex justify-end">
-            <button className="bg-[#b8a6eb] text-white px-6 py-2 rounded text-sm font-medium opacity-70 cursor-not-allowed">
+            <button className="bg-[#b8a6eb] text-white px-4 md:px-6 py-2 rounded text-sm font-medium opacity-70 cursor-not-allowed">
               Next
             </button>
           </div>

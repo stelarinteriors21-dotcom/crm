@@ -44,10 +44,10 @@ export default function AddSingleLeadPage() {
   };
 
   return (
-    <div className="h-full bg-[#FDFDFD] flex flex-col -m-6 relative">
+    <div className="h-full bg-[#FDFDFD] flex flex-col -m-3 md:-m-6 relative">
       
       {/* Top Header */}
-      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+      <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
         <div className="relative w-72">
           <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input 
@@ -62,7 +62,7 @@ export default function AddSingleLeadPage() {
       </div>
 
       {/* Form Area */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 pb-24">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 pb-24">
         <div className="max-w-4xl mx-auto space-y-6">
           
           {success && (
@@ -163,7 +163,7 @@ export default function AddSingleLeadPage() {
       </div>
 
       {/* Sticky Bottom Action Bar */}
-      <div className="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-between shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <div className="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 px-4 md:px-6 py-3 flex items-center justify-between shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="flex items-center">
           <input type="checkbox" className="w-4 h-4 rounded border-gray-300 mr-3" />
           <span className="text-[13px] font-bold text-gray-700">Auto Assign rules</span>

@@ -80,7 +80,7 @@ export default function AutomationPage() {
 
       {/* Table */}
       <div className="bg-white rounded-md border border-gray-200 overflow-hidden shadow-sm">
-        <div className="flex bg-gray-50/50 text-xs text-gray-500 py-3 border-b border-gray-200 px-6">
+        <div className="flex bg-gray-50/50 text-xs text-gray-500 py-3 border-b border-gray-200 px-4 md:px-6">
           <div className="w-1/3">Name</div>
           <div className="w-1/6">Events</div>
           <div className="w-1/6 text-center font-medium text-gray-700 bg-gray-100 py-1 -my-1 rounded px-2 flex items-center justify-center">Status ≡</div>
@@ -90,7 +90,7 @@ export default function AutomationPage() {
         </div>
         
         <div className="divide-y divide-gray-100">
-          <div className="text-xs text-gray-400 bg-gray-50/50 px-6 py-2 flex justify-between items-center border-b border-gray-100">
+          <div className="text-xs text-gray-400 bg-gray-50/50 px-4 md:px-6 py-2 flex justify-between items-center border-b border-gray-100">
             <div className="flex space-x-2 items-center">
               <button className="w-5 h-5 flex items-center justify-center border border-gray-200 rounded text-gray-300">‹</button>
               <span>1 - 2 of 2</span>
@@ -99,7 +99,7 @@ export default function AutomationPage() {
           </div>
 
           {workflows.map((wf, i) => (
-            <div key={i} className="flex items-center px-6 py-4 hover:bg-gray-50 transition-colors">
+            <div key={i} className="flex items-center px-4 md:px-6 py-4 hover:bg-gray-50 transition-colors">
               <div className="w-1/3">
                 <p className="text-sm font-medium text-gray-800">{wf.name}</p>
                 {wf.isDraft && <span className="text-[10px] text-[#613cbc] border-b border-[#613cbc] border-dashed cursor-pointer">View Draft</span>}

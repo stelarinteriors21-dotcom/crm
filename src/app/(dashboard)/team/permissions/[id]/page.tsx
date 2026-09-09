@@ -86,23 +86,23 @@ export default async function PermissionTemplateDetailsPage({ params }: { params
           <table className="min-w-full">
             <thead className="bg-white border-b border-gray-100">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-bold text-gray-700 w-1/3">Name</th>
-                <th className="px-6 py-4 text-left text-sm font-bold text-gray-700 w-1/3">Email</th>
-                <th className="px-6 py-4 text-left text-sm font-bold text-gray-700 w-1/3">Role</th>
+                <th className="px-4 md:px-6 py-4 text-left text-sm font-bold text-gray-700 w-1/3">Name</th>
+                <th className="px-4 md:px-6 py-4 text-left text-sm font-bold text-gray-700 w-1/3">Email</th>
+                <th className="px-4 md:px-6 py-4 text-left text-sm font-bold text-gray-700 w-1/3">Role</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {template.users && template.users.length > 0 ? (
                 template.users.map(user => (
                   <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-800">{user.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{template.name.replace('Default ', '').replace(' Permissions', '')}</td>
+                    <td className="px-4 md:px-6 py-4 text-sm text-gray-800">{user.name}</td>
+                    <td className="px-4 md:px-6 py-4 text-sm text-gray-600">{user.email}</td>
+                    <td className="px-4 md:px-6 py-4 text-sm text-gray-600">{template.name.replace('Default ', '').replace(' Permissions', '')}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={3} className="px-6 py-16 text-center text-[15px] text-gray-500">
+                  <td colSpan={3} className="px-4 md:px-6 py-16 text-center text-[15px] text-gray-500">
                     Not assigned to user
                   </td>
                 </tr>
@@ -111,7 +111,7 @@ export default async function PermissionTemplateDetailsPage({ params }: { params
           </table>
           
           {template.users && template.users.length > 0 && (
-            <div className="px-6 py-3 border-t border-gray-100 flex justify-end text-xs text-gray-400 font-medium">
+            <div className="px-4 md:px-6 py-3 border-t border-gray-100 flex justify-end text-xs text-gray-400 font-medium">
               &lt; 1 - {template.users.length} of {template.users.length} &gt;
             </div>
           )}

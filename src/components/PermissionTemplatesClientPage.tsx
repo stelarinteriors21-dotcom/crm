@@ -52,28 +52,28 @@ export default function PermissionTemplatesClientPage({ templates }: { templates
           <table className="min-w-full">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">Name</th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500">Assigned to</th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500">Last modified on ≡</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500">Actions</th>
+                <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-500">Name</th>
+                <th className="px-4 md:px-6 py-3 text-center text-xs font-semibold text-gray-500">Assigned to</th>
+                <th className="px-4 md:px-6 py-3 text-center text-xs font-semibold text-gray-500">Last modified on ≡</th>
+                <th className="px-4 md:px-6 py-3 text-right text-xs font-semibold text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {templates.map(template => (
                 <tr key={template.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 flex items-center">
+                  <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-800 flex items-center">
                     <ShieldAlert className="w-4 h-4 mr-2 text-gray-400" />
                     <Link href={`/team/permissions/${template.id}`} className="hover:text-[#613cbc]">
                       {template.name}
                     </Link>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-700">
+                  <td className="px-4 md:px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-700">
                     {template._count?.users || 0}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                  <td className="px-4 md:px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
                     3M ago
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                  <td className="px-4 md:px-6 py-4 whitespace-nowrap text-right text-sm">
                     <div className="flex justify-end space-x-3">
                       {template.name === 'Default Root Permissions' ? (
                          <button className="text-gray-400 hover:text-gray-600"><Eye className="w-4 h-4" /></button>
@@ -124,7 +124,7 @@ export default function PermissionTemplatesClientPage({ templates }: { templates
                   Cancel
                 </button>
                 <button 
-                  className="px-6 py-2 bg-[#b8a6eb] text-white text-sm font-medium rounded-lg hover:bg-[#613cbc] transition-colors"
+                  className="px-4 md:px-6 py-2 bg-[#b8a6eb] text-white text-sm font-medium rounded-lg hover:bg-[#613cbc] transition-colors"
                 >
                   Proceed
                 </button>

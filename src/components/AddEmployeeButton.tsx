@@ -64,7 +64,7 @@ export default function AddEmployeeButton() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
             
             {/* Modal Header */}
-            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-[#613cbc]/5 to-transparent">
+            <div className="px-4 md:px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-[#613cbc]/5 to-transparent">
               <div>
                 <h2 className="text-[16px] font-black text-gray-900">Add New Employee</h2>
                 <p className="text-[12px] text-gray-400 mt-0.5">Create a login for a new team member</p>
@@ -75,7 +75,7 @@ export default function AddEmployeeButton() {
             </div>
 
             {/* Form */}
-            <form ref={formRef} onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+            <form ref={formRef} onSubmit={handleSubmit} className="px-4 md:px-6 py-5 space-y-4">
               
               {/* Name */}
               <div>

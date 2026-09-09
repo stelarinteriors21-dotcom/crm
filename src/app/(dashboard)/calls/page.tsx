@@ -41,10 +41,10 @@ export default async function CallsPage({ searchParams }: { searchParams: { [key
   });
 
   return (
-    <div className="h-full bg-white flex flex-col -m-6 relative overflow-hidden">
+    <div className="h-full bg-white flex flex-col -m-3 md:-m-6 relative overflow-hidden">
       
       {/* Sub-header Toolbar */}
-      <div className="h-14 px-6 border-b border-gray-100 flex items-center shrink-0 justify-between gap-4">
+      <div className="h-14 px-4 md:px-6 border-b border-gray-100 flex items-center shrink-0 justify-between gap-4">
         <h1 className="text-[17px] font-bold text-gray-800 flex items-center whitespace-nowrap">
           My Calls <RefreshCw className="w-4 h-4 ml-3 text-[#613cbc] cursor-pointer" />
         </h1>

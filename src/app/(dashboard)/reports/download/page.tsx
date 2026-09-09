@@ -20,10 +20,10 @@ export default function ReportDownloadPage() {
   ];
 
   return (
-    <div className="h-full bg-white flex flex-col -m-6 relative overflow-hidden">
+    <div className="h-full bg-white flex flex-col -m-3 md:-m-6 relative overflow-hidden">
       
       {/* Header */}
-      <div className="h-16 px-6 flex items-center border-b border-gray-100 shrink-0">
+      <div className="h-16 px-4 md:px-6 flex items-center border-b border-gray-100 shrink-0">
         <h1 className="text-[17px] font-bold text-gray-800 flex items-center">
           Report Download <RefreshCw className="w-4 h-4 ml-2 text-[#613cbc] cursor-pointer" />
         </h1>
@@ -52,18 +52,18 @@ export default function ReportDownloadPage() {
         <table className="min-w-full">
           <thead className="sticky top-0 bg-white shadow-sm z-10 border-b border-gray-100">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 w-[35%]">Name</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 w-[10%]">Filter</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 w-[15%]">Status</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 w-[15%]">Completed On</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 w-[15%]">Created by</th>
-              <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 w-[10%]">Actions</th>
+              <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-700 w-[35%]">Name</th>
+              <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-700 w-[10%]">Filter</th>
+              <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-700 w-[15%]">Status</th>
+              <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-700 w-[15%]">Completed On</th>
+              <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-700 w-[15%]">Created by</th>
+              <th className="px-4 md:px-6 py-4 text-center text-xs font-bold text-gray-700 w-[10%]">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {reports.map((report, i) => (
               <tr key={i} className="hover:bg-purple-50/30 transition-colors group">
-                <td className="px-6 py-3">
+                <td className="px-4 md:px-6 py-3">
                   <div className="flex items-start">
                     <FileSpreadsheet className="w-4 h-4 text-green-600 mr-3 mt-0.5 shrink-0" />
                     <div>
@@ -74,19 +74,19 @@ export default function ReportDownloadPage() {
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-3 text-gray-400">
+                <td className="px-4 md:px-6 py-3 text-gray-400">
                   <Filter className={`w-4 h-4 ${report.isLeaderboard ? 'text-gray-400' : 'text-gray-400'}`} />
                   {/* Note: Leaderboard rows have a slightly different filter icon, but using Filter for all to match standard lucide */}
                 </td>
-                <td className="px-6 py-3">
+                <td className="px-4 md:px-6 py-3">
                   <span className="bg-green-50 text-green-600 font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">
                     Completed
                   </span>
                 </td>
-                <td className="px-6 py-3 text-[13px] text-gray-700 font-medium whitespace-nowrap">
+                <td className="px-4 md:px-6 py-3 text-[13px] text-gray-700 font-medium whitespace-nowrap">
                   {report.date}
                 </td>
-                <td className="px-6 py-3">
+                <td className="px-4 md:px-6 py-3">
                   <div className="flex items-center">
                     <div className="w-5 h-5 rounded-full bg-purple-100 text-[#613cbc] flex items-center justify-center text-[9px] font-bold mr-2">
                       SI
@@ -94,7 +94,7 @@ export default function ReportDownloadPage() {
                     <span className="text-[13px] text-gray-600">Stelar Interiors</span>
                   </div>
                 </td>
-                <td className="px-6 py-3 text-center">
+                <td className="px-4 md:px-6 py-3 text-center">
                   <button className="text-[#613cbc] hover:bg-purple-50 p-1.5 rounded-full transition-colors opacity-80 hover:opacity-100">
                     <Download className="w-4 h-4" />
                   </button>
@@ -106,7 +106,7 @@ export default function ReportDownloadPage() {
       </div>
 
       {/* Pagination Footer */}
-      <div className="h-12 border-t border-gray-100 flex items-center justify-between px-6 bg-white shrink-0">
+      <div className="h-12 border-t border-gray-100 flex items-center justify-between px-4 md:px-6 bg-white shrink-0">
         <div className="text-[11px] font-bold text-gray-500">1-15 of 15</div>
         <div className="flex items-center space-x-1">
           <button className="text-gray-400 hover:text-gray-600 p-1"><ChevronRight className="w-4 h-4 rotate-180" /></button>

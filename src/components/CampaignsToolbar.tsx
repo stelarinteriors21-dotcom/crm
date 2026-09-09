@@ -10,7 +10,7 @@ export default function CampaignsToolbar() {
   const [createdByOpen, setCreatedByOpen] = useState(false);
 
   return (
-    <div className="px-6 py-4 border-b border-gray-100 flex items-center space-x-4 shrink-0 bg-[#FDFDFD]">
+    <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex items-center space-x-4 shrink-0 bg-[#FDFDFD]">
       <div className="relative flex-1 max-w-sm">
         <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         <input 

@@ -59,7 +59,7 @@ export default function EditPasswordModal({ userId, userName }: EditPasswordModa
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             
             {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-amber-50/50">
+            <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-amber-50/50">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
                   <KeyRound className="w-4 h-4" />

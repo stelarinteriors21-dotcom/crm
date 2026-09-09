@@ -71,10 +71,10 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
   const scoreColor = getScoreColor(total);
 
   return (
-    <div className="h-full bg-[#F8F9FA] -m-6 overflow-y-auto">
+    <div className="h-full bg-[#F8F9FA] -m-3 md:-m-6 overflow-y-auto">
       
       {/* Top Bar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center">
           <Link href="/leads" className="flex items-center text-[13px] text-gray-500 hover:text-[#613cbc] mr-4 transition-colors">
             <ArrowLeft className="w-4 h-4 mr-1" /> Leads

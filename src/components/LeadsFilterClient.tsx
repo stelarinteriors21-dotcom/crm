@@ -61,7 +61,7 @@ export default function LeadsFilterClient() {
   };
 
   return (
-    <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-gray-50/30">
+    <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-gray-100 bg-gray-50/30">
       <div className="flex items-center flex-1 max-w-2xl bg-white border border-gray-200 rounded-md shadow-sm">
         <div className="flex items-center px-3 py-1.5 border-r border-gray-200 cursor-pointer">
           <Search className="w-4 h-4 text-gray-400 mr-2" />
@@ -153,7 +153,7 @@ export default function LeadsFilterClient() {
           {/* Drawer */}
           <div className="absolute right-0 top-0 bottom-0 w-[400px] bg-white shadow-2xl flex flex-col transform transition-transform duration-300">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-bold text-gray-800">Custom filter</h2>
               <div className="flex items-center space-x-4">
                 <button onClick={() => updateUrl('status', '')} className="text-sm font-medium text-gray-500 hover:text-gray-800">Clear All</button>

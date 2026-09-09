@@ -28,18 +28,18 @@ export default function APITemplatesPage() {
           <table className="min-w-full">
             <thead className="bg-white border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-[13px] font-bold text-gray-800 w-1/6">Template Name</th>
-                <th className="px-6 py-3 text-left text-[13px] font-bold text-gray-800 w-1/4">Endpoint URL</th>
-                <th className="px-6 py-3 text-center text-[13px] font-bold text-gray-800 w-1/6">Variables Used</th>
-                <th className="px-6 py-3 text-center text-[13px] font-bold text-gray-800 w-1/6">Workflow</th>
-                <th className="px-6 py-3 text-center text-[13px] font-bold text-gray-800 bg-gray-100 flex items-center justify-center">Last Modified <span className="ml-1 text-gray-400">=</span></th>
-                <th className="px-6 py-3 text-center text-[13px] font-bold text-gray-800">Last Modified By</th>
-                <th className="px-6 py-3 text-center text-[13px] font-bold text-gray-800">Actions</th>
+                <th className="px-4 md:px-6 py-3 text-left text-[13px] font-bold text-gray-800 w-1/6">Template Name</th>
+                <th className="px-4 md:px-6 py-3 text-left text-[13px] font-bold text-gray-800 w-1/4">Endpoint URL</th>
+                <th className="px-4 md:px-6 py-3 text-center text-[13px] font-bold text-gray-800 w-1/6">Variables Used</th>
+                <th className="px-4 md:px-6 py-3 text-center text-[13px] font-bold text-gray-800 w-1/6">Workflow</th>
+                <th className="px-4 md:px-6 py-3 text-center text-[13px] font-bold text-gray-800 bg-gray-100 flex items-center justify-center">Last Modified <span className="ml-1 text-gray-400">=</span></th>
+                <th className="px-4 md:px-6 py-3 text-center text-[13px] font-bold text-gray-800">Last Modified By</th>
+                <th className="px-4 md:px-6 py-3 text-center text-[13px] font-bold text-gray-800">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center bg-[#F8F9FA]">
+                <td colSpan={7} className="px-4 md:px-6 py-12 text-center bg-[#F8F9FA]">
                   <div className="flex items-center justify-center text-[17px] text-gray-400 italic">
                     No API templates found, 
                     <Link href="/all-custom-api-templates/create" className="text-[#613cbc] font-medium ml-1 flex items-center hover:underline">

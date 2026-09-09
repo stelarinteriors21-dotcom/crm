@@ -6,7 +6,7 @@ export default function IntegrationDetailsPage() {
     <div className="h-full bg-white flex flex-col overflow-y-auto">
       
       {/* Top Header */}
-      <div className="h-[60px] border-b border-gray-100 flex items-center px-6 shrink-0">
+      <div className="h-[60px] border-b border-gray-100 flex items-center px-4 md:px-6 shrink-0">
         <Link href="/integrations" className="text-sm font-semibold text-gray-500 hover:text-gray-800 flex items-center">
           <ChevronLeft className="w-4 h-4 mr-1" /> Back to Integrations
         </Link>

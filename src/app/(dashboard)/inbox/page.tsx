@@ -58,7 +58,7 @@ export default function InboxPage() {
         <div className="p-4 border-t border-gray-200 bg-white">
           <div className="flex space-x-2">
             <input type="text" placeholder="Type a message..." className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#613cbc]" />
-            <button className="bg-[#613cbc] text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700">Send</button>
+            <button className="bg-[#613cbc] text-white px-4 md:px-6 py-2 rounded-lg font-medium hover:bg-purple-700">Send</button>
           </div>
         </div>
       </div>

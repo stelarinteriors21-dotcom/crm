@@ -207,7 +207,7 @@ export default function PendingLeadWatcher() {
               <button 
                 onClick={handleAssign}
                 disabled={processing}
-                className="bg-[#613cbc] hover:bg-purple-800 text-white font-bold py-2.5 px-6 rounded-lg transition-colors disabled:opacity-50"
+                className="bg-[#613cbc] hover:bg-purple-800 text-white font-bold py-2.5 px-4 md:px-6 rounded-lg transition-colors disabled:opacity-50"
               >
                 {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Assign'}
               </button>

@@ -81,7 +81,7 @@ export default function CampaignsTable() {
       </div>
       
       {/* Footer */}
-      <div className="h-12 border-t border-gray-100 flex items-center justify-between px-6 bg-white shrink-0 absolute bottom-0 w-full">
+      <div className="h-12 border-t border-gray-100 flex items-center justify-between px-4 md:px-6 bg-white shrink-0 absolute bottom-0 w-full">
         <div className="text-[11px] text-gray-500">1-{campaigns.length} of {campaigns.length}</div>
         <div className="flex items-center space-x-1">
           <button className="text-gray-400 hover:text-gray-600 p-1 font-bold disabled:opacity-50" disabled><ChevronLeft className="w-4 h-4" /></button>

@@ -2,10 +2,10 @@ import { Save, Plus, ArrowLeft, X, Calendar as CalendarIcon, Clock, Phone, FileT
 
 export default function ReportsPage() {
   return (
-    <div className="h-full bg-white flex flex-col -m-6 relative overflow-hidden">
+    <div className="h-full bg-white flex flex-col -m-3 md:-m-6 relative overflow-hidden">
       
       {/* Top Header */}
-      <div className="h-16 border-b border-gray-100 flex items-center px-6 shrink-0">
+      <div className="h-16 border-b border-gray-100 flex items-center px-4 md:px-6 shrink-0">
         <h1 className="text-[17px] font-bold text-gray-800 flex items-center">
           Reports <span className="ml-2 bg-purple-100 text-[#613cbc] text-xs px-2 py-0.5 rounded-full font-bold">ZUSH+1</span>
         </h1>

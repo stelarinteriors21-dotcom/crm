@@ -18,7 +18,7 @@ export default function APITemplateManagerPage() {
       <div className="absolute inset-x-0 inset-y-0 mx-auto w-[90%] max-w-5xl my-8 bg-[#F8F9FA] shadow-2xl rounded-xl flex flex-col z-50 overflow-hidden">
         
         {/* Top Navbar */}
-        <div className="h-16 bg-white border-b border-gray-200 flex items-center px-6 shrink-0 justify-between">
+        <div className="h-16 bg-white border-b border-gray-200 flex items-center px-4 md:px-6 shrink-0 justify-between">
           <h2 className="text-lg font-bold text-gray-800">API Template Manager</h2>
         </div>
 
@@ -130,7 +130,7 @@ export default function APITemplateManagerPage() {
                 </div>
 
                 <div className="flex justify-end">
-                  <button className="bg-[#b8a6eb] text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-[#613cbc] transition-colors">
+                  <button className="bg-[#b8a6eb] text-white px-4 md:px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-[#613cbc] transition-colors">
                     Test Template
                   </button>
                 </div>

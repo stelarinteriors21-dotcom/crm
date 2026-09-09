@@ -62,17 +62,17 @@ export default function AutomationsDashboard() {
 
         {/* Automations List */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+          <div className="px-4 md:px-6 py-4 border-b border-gray-100 bg-gray-50/50">
             <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Your Automations</h2>
           </div>
           <table className="min-w-full">
             <thead className="bg-white border-b border-gray-100">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Trigger</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Runs</th>
-                <th className="px-6 py-3 text-right"></th>
+                <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Trigger</th>
+                <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-4 md:px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Runs</th>
+                <th className="px-4 md:px-6 py-3 text-right"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -95,22 +95,22 @@ function AutomationRow({ name, trigger, status, runs }: any) {
   const isPublished = status === 'Published';
   return (
     <tr className="hover:bg-gray-50 transition-colors group">
-      <td className="px-6 py-4">
+      <td className="px-4 md:px-6 py-4">
         <div className="text-sm font-bold text-gray-900">{name}</div>
       </td>
-      <td className="px-6 py-4">
+      <td className="px-4 md:px-6 py-4">
         <div className="text-sm text-gray-600 bg-gray-100 px-2.5 py-1 rounded-md inline-block">{trigger}</div>
       </td>
-      <td className="px-6 py-4">
+      <td className="px-4 md:px-6 py-4">
         <div className={`flex items-center text-sm font-medium ${isPublished ? 'text-green-600' : 'text-gray-500'}`}>
           {isPublished ? <PlayCircle className="w-4 h-4 mr-1.5" /> : <Circle className="w-4 h-4 mr-1.5" />}
           {status}
         </div>
       </td>
-      <td className="px-6 py-4 text-center">
+      <td className="px-4 md:px-6 py-4 text-center">
         <div className="text-sm font-bold text-gray-700">{runs}</div>
       </td>
-      <td className="px-6 py-4 text-right">
+      <td className="px-4 md:px-6 py-4 text-right">
         <button className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-all">
           <MoreVertical className="w-5 h-5" />
         </button>

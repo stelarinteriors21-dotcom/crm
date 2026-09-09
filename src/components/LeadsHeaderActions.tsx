@@ -37,7 +37,7 @@ export default function LeadsHeaderActions() {
   };
 
   return (
-    <div className="px-6 py-4 border-b border-gray-100 flex items-center shrink-0">
+    <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex items-center shrink-0">
       <div className="relative" ref={dropdownRef}>
         <button 
           onClick={() => setIsViewOpen(!isViewOpen)}

@@ -151,7 +151,7 @@ export default function LeadsTableClient({ leads, totalLeads }: { leads: Lead[],
 
   return (
     <>
-      <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100 bg-white">
+      <div className="flex items-center justify-between px-4 md:px-6 py-2 border-b border-gray-100 bg-white">
         <div className="flex items-center space-x-4 text-sm text-gray-600">
           <input 
             type="checkbox" 

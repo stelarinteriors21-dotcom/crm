@@ -53,17 +53,17 @@ export default function SalesformsPage() {
           <table className="min-w-full">
             <thead className="bg-white border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 w-1/4">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 w-1/5">Events</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 w-1/6">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 flex items-center">Status Updated On <span className="ml-1 text-[10px]">▼</span></th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">Status Updated by</th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500">Actions</th>
+                <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-500 w-1/4">Name</th>
+                <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-500 w-1/5">Events</th>
+                <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-500 w-1/6">Status</th>
+                <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-500 flex items-center">Status Updated On <span className="ml-1 text-[10px]">▼</span></th>
+                <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-500">Status Updated by</th>
+                <th className="px-4 md:px-6 py-3 text-center text-xs font-semibold text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center bg-[#F8F9FA]">
+                <td colSpan={6} className="px-4 md:px-6 py-12 text-center bg-[#F8F9FA]">
                   <div className="text-[17px] font-semibold text-gray-800 mb-1">No Salesform found!</div>
                   <Link href="/all-salesform/create" className="text-sm font-medium text-[#613cbc] hover:underline flex items-center justify-center">
                     <Plus className="w-3.5 h-3.5 mr-1" /> Create New Salesform

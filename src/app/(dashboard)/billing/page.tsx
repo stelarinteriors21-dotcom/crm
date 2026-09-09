@@ -42,12 +42,12 @@ export default function BillingPage() {
           <table className="min-w-full">
             <thead className="border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700">Order ID</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-[#613cbc] bg-[#f8f6fd]">Date ⬇</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700">Amount ⇅</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700">Billing Cycle</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700">Actions</th>
+                <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-700">Order ID</th>
+                <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-[#613cbc] bg-[#f8f6fd]">Date ⬇</th>
+                <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-700">Amount ⇅</th>
+                <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-700">Billing Cycle</th>
+                <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-700">Status</th>
+                <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-700">Actions</th>
               </tr>
             </thead>
             <tbody>

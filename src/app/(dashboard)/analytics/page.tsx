@@ -71,23 +71,23 @@ export default async function AnalyticsPage() {
 
       {/* Leaderboard Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+        <div className="px-4 md:px-6 py-4 border-b border-gray-200 bg-gray-50">
           <h2 className="text-lg font-medium text-gray-900">Agent Performance Leaderboard</h2>
         </div>
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-white">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Telecaller</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Assigned Leads</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Calls</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Avg Duration</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Talk Time</th>
+              <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Telecaller</th>
+              <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Assigned Leads</th>
+              <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Calls</th>
+              <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Avg Duration</th>
+              <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Talk Time</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {teamStats.map((agent, i) => (
               <tr key={agent.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold mr-3 text-xs">
                       {i + 1}
@@ -95,25 +95,25 @@ export default async function AnalyticsPage() {
                     <div className="text-sm font-medium text-gray-900">{agent.name}</div>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {agent.leadsAssigned}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                   {agent.totalCalls}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                     <Clock className="w-3 h-3 mr-1" /> {agent.avgDurationFormatted}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {agent.totalDurationFormatted}
                 </td>
               </tr>
             ))}
             {teamStats.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">No agent data available</td>
+                <td colSpan={5} className="px-4 md:px-6 py-12 text-center text-gray-500">No agent data available</td>
               </tr>
             )}
           </tbody>

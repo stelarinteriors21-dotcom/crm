@@ -93,17 +93,17 @@ export default function SchedulesPage() {
           <table className="min-w-full">
             <thead className="bg-white border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 w-1/4">Name</th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 w-1/5">Events</th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 bg-gray-100 flex items-center justify-center">Status <span className="ml-1 text-gray-400">=</span></th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500">Last run</th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500">Last run status</th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500">Actions</th>
+                <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-500 w-1/4">Name</th>
+                <th className="px-4 md:px-6 py-3 text-center text-xs font-semibold text-gray-500 w-1/5">Events</th>
+                <th className="px-4 md:px-6 py-3 text-center text-xs font-semibold text-gray-500 bg-gray-100 flex items-center justify-center">Status <span className="ml-1 text-gray-400">=</span></th>
+                <th className="px-4 md:px-6 py-3 text-center text-xs font-semibold text-gray-500">Last run</th>
+                <th className="px-4 md:px-6 py-3 text-center text-xs font-semibold text-gray-500">Last run status</th>
+                <th className="px-4 md:px-6 py-3 text-center text-xs font-semibold text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center bg-[#F8F9FA]">
+                <td colSpan={6} className="px-4 md:px-6 py-12 text-center bg-[#F8F9FA]">
                   <div className="text-[15px] font-bold text-gray-400">No Flowcharts Found</div>
                 </td>
               </tr>

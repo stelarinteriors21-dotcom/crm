@@ -4,7 +4,7 @@ import { Download, HelpCircle, ExternalLink, MessageSquare, PlayCircle, Rocket }
 
 export default function GettingStartedPage() {
   return (
-    <div className="h-full bg-white flex -m-6 relative overflow-hidden">
+    <div className="h-full bg-white flex -m-3 md:-m-6 relative overflow-hidden">
       
       {/* Left Sidebar Menu */}
       <div className="w-[280px] bg-white border-r border-gray-100 flex flex-col shrink-0">

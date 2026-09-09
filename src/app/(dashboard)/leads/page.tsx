@@ -19,12 +19,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
   const dbLeads = await getLeads(query, status, source, assigned, active, startDate, endDate, tag);
 
   return (
-    <div className="h-full bg-white flex flex-col -m-6">
+    <div className="h-full bg-white flex flex-col -m-3 md:-m-6">
       
       <LeadsHeaderActions />
 
       {/* Search & Filters */}
-      <div className="px-6 py-3 border-b border-gray-100 flex items-center justify-between shrink-0 bg-[#FDFDFD]">
+      <div className="px-4 md:px-6 py-3 border-b border-gray-100 flex items-center justify-between shrink-0 bg-[#FDFDFD]">
         <SearchBar />
         <div className="flex items-center space-x-3 ml-4">
           <LeadsFilterDropdowns />

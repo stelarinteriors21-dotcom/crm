@@ -38,7 +38,7 @@ export default function AddTeamMemberClient() {
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+            <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex justify-between items-center">
               <h3 className="text-lg font-bold text-gray-900">Add New Team Member</h3>
               <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />

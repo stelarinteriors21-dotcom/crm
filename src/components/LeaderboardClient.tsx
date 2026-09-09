@@ -52,7 +52,7 @@ export default function LeaderboardClient({ team }: Props) {
   const rankBg = ["bg-yellow-50 border-yellow-200", "bg-gray-50 border-gray-200", "bg-orange-50 border-orange-200"];
 
   return (
-    <div className="h-full bg-white flex flex-col -m-6 relative overflow-hidden">
+    <div className="h-full bg-white flex flex-col -m-3 md:-m-6 relative overflow-hidden">
       <div className="flex flex-1 overflow-hidden">
 
         {/* Left Panel */}

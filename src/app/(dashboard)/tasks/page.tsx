@@ -6,10 +6,10 @@ export default async function TasksPage() {
   const dbTasks = await getTasks();
 
   return (
-    <div className="h-full bg-white flex flex-col -m-6 relative overflow-hidden">
+    <div className="h-full bg-white flex flex-col -m-3 md:-m-6 relative overflow-hidden">
       
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+      <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
         <div>
           <h1 className="text-[17px] font-bold text-gray-800 flex items-center">
             Tasks <RefreshCw className="w-4 h-4 ml-2 text-[#613cbc] cursor-pointer" />
@@ -24,7 +24,7 @@ export default async function TasksPage() {
       </div>
 
       {/* Tabs */}
-      <div className="px-6 pt-2 border-b border-gray-100 flex items-center space-x-6 shrink-0 bg-white">
+      <div className="px-4 md:px-6 pt-2 border-b border-gray-100 flex items-center space-x-6 shrink-0 bg-white">
         <button className="text-[#613cbc] text-[13px] font-bold border-b-[3px] border-[#613cbc] pb-3 -mb-[2px]">
           Call Followups <SettingsIcon className="w-3.5 h-3.5 ml-1 inline text-gray-400" />
         </button>
@@ -34,7 +34,7 @@ export default async function TasksPage() {
       </div>
 
       {/* Filters */}
-      <div className="px-6 py-3 border-b border-gray-100 flex items-center space-x-3 shrink-0 bg-[#FDFDFD]">
+      <div className="px-4 md:px-6 py-3 border-b border-gray-100 flex items-center space-x-3 shrink-0 bg-[#FDFDFD]">
         
         <div className="relative flex-1 max-w-[280px]">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -63,7 +63,7 @@ export default async function TasksPage() {
       </div>
 
       {/* Table Toolbar */}
-      <div className="px-6 py-2 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
+      <div className="px-4 md:px-6 py-2 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
         <div className="text-[11px] font-bold text-gray-800">{dbTasks.length} matching tasks</div>
         <div className="flex items-center space-x-4">
           <button className="flex items-center text-gray-500 hover:text-gray-700 text-[11px] font-bold">
@@ -134,7 +134,7 @@ export default async function TasksPage() {
       </div>
       
       {/* Footer */}
-      <div className="h-12 border-t border-gray-100 flex items-center justify-end px-6 bg-white shrink-0 absolute bottom-0 w-full space-x-2">
+      <div className="h-12 border-t border-gray-100 flex items-center justify-end px-4 md:px-6 bg-white shrink-0 absolute bottom-0 w-full space-x-2">
         <div className="text-[11px] text-gray-500 mr-2">1-1 of 1</div>
         <button className="w-6 h-6 rounded border border-gray-200 bg-white text-gray-400 flex items-center justify-center hover:bg-gray-50">&lt;</button>
         <button className="w-6 h-6 rounded border border-gray-200 bg-white text-gray-400 flex items-center justify-center hover:bg-gray-50">&gt;</button>

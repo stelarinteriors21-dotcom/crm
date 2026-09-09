@@ -66,14 +66,14 @@ export default async function UserManagementPage() {
           <table className="min-w-full">
             <thead className="bg-gray-50/80 border-b border-gray-100">
               <tr>
-                <th className="px-6 py-3.5 w-12 text-left">
+                <th className="px-4 md:px-6 py-3.5 w-12 text-left">
                   <input type="checkbox" className="rounded border-gray-300 w-4 h-4" />
                 </th>
-                <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wide">Name</th>
-                <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wide">Role</th>
-                <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wide">Permission Template</th>
-                <th className="px-6 py-3.5 text-center text-xs font-bold text-gray-600 uppercase tracking-wide">2FA</th>
-                <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wide">Actions</th>
+                <th className="px-4 md:px-6 py-3.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wide">Name</th>
+                <th className="px-4 md:px-6 py-3.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wide">Role</th>
+                <th className="px-4 md:px-6 py-3.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wide">Permission Template</th>
+                <th className="px-4 md:px-6 py-3.5 text-center text-xs font-bold text-gray-600 uppercase tracking-wide">2FA</th>
+                <th className="px-4 md:px-6 py-3.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -87,10 +87,10 @@ export default async function UserManagementPage() {
                   "bg-gray-100 text-gray-600";
                 return (
                   <tr key={user.id} className="hover:bg-gray-50 transition-colors group">
-                    <td className="px-6 py-4">
+                    <td className="px-4 md:px-6 py-4">
                       <input type="checkbox" className="rounded border-gray-300 w-4 h-4" />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-9 h-9 rounded-full bg-[#E8E2F7] flex items-center justify-center text-[#613cbc] font-black text-xs mr-3 flex-shrink-0">
                           {initials}
@@ -101,18 +101,18 @@ export default async function UserManagementPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${roleColor}`}>
                         {roleLabel}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-[12px] text-gray-500">
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap text-[12px] text-gray-500">
                       {user.permissionTemplate?.name ?? `Default ${roleLabel} Permissions`}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap text-center">
                       <Shield className="w-4 h-4 mx-auto text-gray-300" />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Link
                           href={`/team/permissions/${user.id}`}
