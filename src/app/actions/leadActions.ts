@@ -224,12 +224,13 @@ export async function getPendingLeadForUser() {
   return lead;
 }
 
-export async function escalateLead(leadId: string) {
+export async function escalateLead(leadId: string, isManualPass: boolean = true) {
   const user = await getCurrentUser();
   if (!user) return { error: "Unauthorized" };
 
   const lead = await prisma.lead.findUnique({
-    where: { id: leadId }
+    where: { id: leadId },
+    include: { assignedTo: true }
   });
   if (!lead) return { error: "Not found" };
 
@@ -274,6 +275,48 @@ export async function escalateLead(leadId: string) {
       assignedAt: new Date() // Reset the 20-min timer for the next person
     }
   });
+
+  // If this was a manual pass by the employee, send an email to admins
+  if (isManualPass) {
+    try {
+      const nodemailer = require('nodemailer');
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.SMTP_USER || 'shaji2222222@gmail.com',
+          pass: process.env.SMTP_PASS || 'umlt zsnv cxsr kfjy'
+        }
+      });
+
+      const org = await prisma.organization.findUnique({ where: { id: lead.organizationId } });
+      const adminEmails = org?.escalationEmails || 'stelarinteriors21@gmail.com,shaji2222222@gmail.com';
+      const assigneeName = lead.assignedTo?.name || 'Unknown Agent';
+      
+      const mailOptions = {
+        from: `"Stelar CRM Alerts" <${process.env.SMTP_USER || 'shaji2222222@gmail.com'}>`,
+        to: adminEmails,
+        subject: `🚨 Lead Passed by ${assigneeName}`,
+        html: `
+          <h2 style="color: #f59e0b;">Lead Passed Alert</h2>
+          <p><b>${assigneeName}</b> has manually <b>passed (rejected)</b> a lead.</p>
+          <hr/>
+          <h3>Lead Details:</h3>
+          <ul>
+            <li><b>Name:</b> ${lead.name}</li>
+            <li><b>Phone:</b> ${lead.phone}</li>
+            <li><b>City:</b> ${lead.city || 'N/A'}</li>
+            <li><b>Source:</b> ${lead.source}</li>
+          </ul>
+          <br/>
+          <p>It has been auto-reassigned to the next available agent (or Admin queue).</p>
+        `
+      };
+      
+      transporter.sendMail(mailOptions).catch(console.error); // don't await so it doesn't block UI
+    } catch (e) {
+      console.error("Failed to send pass email", e);
+    }
+  }
 
   revalidatePath('/leads');
   revalidatePath('/calls');

@@ -105,7 +105,7 @@ export default function PendingLeadWatcher() {
   const handleReject = async (id: string, auto: boolean = false) => {
     if (processing) return;
     setProcessing(true);
-    await escalateLead(id);
+    await escalateLead(id, !auto);
     setPendingLead(null);
     setProcessing(false);
   };
