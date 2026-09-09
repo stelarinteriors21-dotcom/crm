@@ -7,10 +7,12 @@ import { cookies } from "next/headers";
 export async function getCurrentUser() {
   try {
     const cookieStore = cookies();
-    const mockEmail = cookieStore.get("mock_user_email")?.value || "stelarinteriors21@gmail.com";
+    const userEmail = cookieStore.get("mock_user_email")?.value;
+    
+    if (!userEmail) return null;
 
     const user = await prisma.user.findUnique({
-      where: { email: mockEmail },
+      where: { email: userEmail },
       include: {
         organization: true,
       },

@@ -14,13 +14,19 @@ import OmniSearch from "@/components/OmniSearch";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import prisma from "@/lib/prisma";
 
+import { redirect } from "next/navigation";
+
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
-  const isAdmin = user?.role === "ADMIN" || user?.role === "ROOT";
+  if (!user) {
+    redirect("/login");
+  }
+  
+  const isAdmin = user.role === "ADMIN" || user.role === "ROOT";
   
   // Fetch pending tasks for the user
   let upcomingTasks: any[] = [];
