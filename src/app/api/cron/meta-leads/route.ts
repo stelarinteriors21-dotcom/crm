@@ -59,10 +59,10 @@ export async function GET(request: Request) {
           
           if (lead.field_data) {
             lead.field_data.forEach((field: { name: string; values: string[] }) => {
-              if (field.name === 'full_name' || field.name === 'first_name') name = field.values[0];
-              if (field.name === 'phone_number') phone = field.values[0];
-              if (field.name === 'email') email = field.values[0];
-              if (field.name === 'city') city = field.values[0];
+              if (field.name === 'full_name' || field.name === 'first_name') name = field.values?.[0] || 'Unknown';
+              if (field.name === 'phone_number') phone = field.values?.[0] || '';
+              if (field.name === 'email') email = field.values?.[0] || null;
+              if (field.name === 'city') city = field.values?.[0] || null;
             });
           }
 
