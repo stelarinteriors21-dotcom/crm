@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     if (body.object === 'page') {
       for (const entry of body.entry) {
         for (const change of entry.changes) {
-          if (change.value.item === 'leadgen') {
+          if (change.field === 'leadgen') {
             const leadgenId = change.value.leadgen_id;
             console.log('Processing leadgen_id:', leadgenId);
             
