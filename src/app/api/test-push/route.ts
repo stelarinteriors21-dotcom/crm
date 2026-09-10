@@ -1,6 +1,6 @@
 
 import { NextResponse } from "next/server";
-import admin from "@/lib/firebaseAdmin";
+import { sendPushNotification } from "@/lib/firebaseAdmin";
 import prisma from "@/lib/prisma";
 
 export async function GET(req: Request) {
@@ -12,22 +12,8 @@ export async function GET(req: Request) {
   if (!user || !user.fcmToken) return NextResponse.json({ error: "No user or fcmToken" });
 
   try {
-    const message = {
-      notification: { title: "TEST ALERT", body: "Did you get this while closed?" },
-      token: user.fcmToken,
-      android: {
-        priority: "high" as const,
-        notification: {
-          channelId: "default",
-          sound: "default",
-          defaultSound: true,
-          defaultVibrateTimings: true,
-          defaultLightSettings: true,
-        }
-      }
-    };
-    const res = await admin.messaging().send(message);
-    return NextResponse.json({ success: true, message: "Push sent to " + email, res });
+    const res = await sendPushNotification(user.fcmToken, "TEST ALERT", "Did you get this while closed?");
+    return NextResponse.json({ success: res.success, message: "Push sent to " + email, res });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message });
   }

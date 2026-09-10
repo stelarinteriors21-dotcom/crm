@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.telecrm.clone',
+  appId: 'com.stelar.telecrm',
   appName: 'Stelar CRM',
   webDir: 'public',
   server: {

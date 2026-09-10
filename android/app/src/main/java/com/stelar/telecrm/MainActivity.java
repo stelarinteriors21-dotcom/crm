@@ -1,4 +1,4 @@
-package com.telecrm.clone;
+package com.stelar.telecrm;
 
 import com.getcapacitor.BridgeActivity;
 
