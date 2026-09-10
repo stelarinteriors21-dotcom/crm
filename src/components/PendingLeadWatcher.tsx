@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useRef } from "react";
 import { getPendingLeadForUser, acceptLead, escalateLead, getCallers, assignLeadToUser, acceptAndScheduleCall } from "@/app/actions/leadActions";
+import { saveFcmToken } from "@/app/actions/authActions";
 import { User, Phone, MapPin, Loader2, AlertCircle, Users } from "lucide-react";
+import { PushNotifications } from "@capacitor/push-notifications";
 
 export default function PendingLeadWatcher() {
   const [pendingLead, setPendingLead] = useState<any>(null);
@@ -13,6 +15,32 @@ export default function PendingLeadWatcher() {
   const [selectedAssignee, setSelectedAssignee] = useState("");
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    // Initialize Push Notifications
+    const initPush = async () => {
+      try {
+        let permStatus = await PushNotifications.checkPermissions();
+        if (permStatus.receive === 'prompt') {
+          permStatus = await PushNotifications.requestPermissions();
+        }
+        if (permStatus.receive !== 'granted') return;
+
+        await PushNotifications.register();
+
+        PushNotifications.addListener('registration', async (token) => {
+          await saveFcmToken(token.value);
+        });
+
+        PushNotifications.addListener('pushNotificationReceived', (notification) => {
+          console.log('Push received: ', notification);
+        });
+      } catch (e) {
+        console.log("Push notifications not supported on web/simulator", e);
+      }
+    };
+    initPush();
+  }, []);
 
   useEffect(() => {
     let pollingTimer: NodeJS.Timeout;

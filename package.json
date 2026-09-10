@@ -10,11 +10,13 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@capacitor/push-notifications": "^8.1.2",
     "@prisma/client": "^5.22.0",
     "@supabase/supabase-js": "^2.115.0",
     "@types/papaparse": "^5.5.2",
     "bcryptjs": "^3.0.3",
     "date-fns": "^4.4.0",
+    "firebase-admin": "^14.3.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "localtunnel": "^2.0.2",

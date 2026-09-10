@@ -156,6 +156,9 @@ export async function createLead(data: any) {
       },
     });
 
+    if (assignedToId) {
+      await notifyUser(assignedToId, 'New Lead Assigned! 🚨', 'You have a new lead to call.');
+    }
     revalidatePath("/leads");
     revalidatePath("/dashboard");
     return { success: true, lead };
@@ -275,6 +278,10 @@ export async function escalateLead(leadId: string, isManualPass: boolean = true)
       assignedAt: new Date() // Reset the 20-min timer for the next person
     }
   });
+
+  if (nextAssigneeId) {
+    await notifyUser(nextAssigneeId, 'Lead Assigned! \uD83D\uDEA8', 'A lead was assigned to you and needs attention.');
+  }
 
   // If this was a manual pass by the employee, send an email to admins
   if (isManualPass) {
@@ -428,3 +435,12 @@ export async function logWhatsAppMessage(leadId: string, message: string) {
   revalidatePath('/leads/' + leadId);
   return { success: true };
 }
+
+import { sendPushNotification } from "@/lib/firebaseAdmin";
+export async function notifyUser(userId: string, title: string, body: string) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (user?.fcmToken) {
+    await sendPushNotification(user.fcmToken, title, body);
+  }
+}
+

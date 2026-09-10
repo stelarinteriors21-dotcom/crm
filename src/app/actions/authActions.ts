@@ -80,3 +80,16 @@ export async function login(formData: FormData) {
 export async function logout() {
   cookies().delete("mock_user_email");
 }
+
+export async function saveFcmToken(token: string) {
+  const user = await getCurrentUser();
+  if (user) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { fcmToken: token }
+    });
+    return { success: true };
+  }
+  return { success: false };
+}
+
