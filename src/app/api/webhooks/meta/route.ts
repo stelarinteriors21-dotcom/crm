@@ -42,19 +42,24 @@ export async function POST(request: Request) {
     // }
 
     const body = JSON.parse(rawBody);
+    console.log('Webhook body object:', body.object);
 
     if (body.object === 'page') {
       for (const entry of body.entry) {
         for (const change of entry.changes) {
           if (change.value.item === 'leadgen') {
             const leadgenId = change.value.leadgen_id;
+            console.log('Processing leadgen_id:', leadgenId);
             
             // 3. Fetch the actual lead details from Meta Graph API
             if (META_PAGE_ACCESS_TOKEN) {
+              console.log('META_PAGE_ACCESS_TOKEN is present, fetching Graph API...');
               const leadResponse = await fetch(`https://graph.facebook.com/v19.0/${leadgenId}?access_token=${META_PAGE_ACCESS_TOKEN}`);
               const leadData = await leadResponse.json();
+              console.log('Graph API Response:', JSON.stringify(leadData));
               
               if (leadData.field_data) {
+                console.log('Field data found, extracting fields...');
                 // Extract fields dynamically (Meta returns them as an array of name/value pairs)
                 let name = 'Unknown';
                 let phone = '';
