@@ -10,33 +10,55 @@ import { LEAD_STATUS_OPTIONS, LEAD_STATUS_COLORS } from "@/lib/constants";
 
 type Lead = any;
 
-const ALL_COLUMNS = [
+const BASE_COLUMNS = [
   { id: "name", label: "Name", type: "T", defaultVisible: true },
-  { id: "status", label: "Status", type: "≡", defaultVisible: true },
-  { id: "score", label: "Lead Score", type: "★", defaultVisible: true },
-  { id: "approximateBudget", label: "Approximate Budget", type: "▾", defaultVisible: true },
+  { id: "status", label: "Status", type: "🔴", defaultVisible: true },
+  { id: "score", label: "Lead Score", type: "⭐", defaultVisible: true },
+  { id: "approximateBudget", label: "Approximate Budget", type: "💰", defaultVisible: true },
   { id: "city", label: "City", type: "T", defaultVisible: true },
-  { id: "propertyStatus", label: "Property status", type: "▾", defaultVisible: true },
+  { id: "propertyStatus", label: "Property status", type: "🏠", defaultVisible: true },
   { id: "siteVisitDate", label: "Site Visit Date", type: "📅", defaultVisible: true },
-  { id: "email", label: "Email", type: "✉", defaultVisible: true },
-  { id: "typeOfSpace", label: "Type of space", type: "▾", defaultVisible: false },
-  { id: "alternatePhone", label: "Alternate Phone", type: "📞", defaultVisible: false },
+  { id: "email", label: "Email", type: "📧", defaultVisible: true },
+  { id: "typeOfSpace", label: "Type of space", type: "🏢", defaultVisible: false },
+  { id: "alternatePhone", label: "Alternate Phone", type: "📱", defaultVisible: false },
   { id: "captureFrequency", label: "Capture Frequency", type: "#", defaultVisible: false },
   { id: "capturedOn", label: "Captured On", type: "📅", defaultVisible: true },
   { id: "createdOn", label: "Created On", type: "📅", defaultVisible: true },
   { id: "facebookAd", label: "Facebook Ad", type: "T", defaultVisible: true },
   { id: "facebookCampaign", label: "Facebook Campaign", type: "T", defaultVisible: false },
-  { id: "leadSource", label: "Lead Source", type: "▾", defaultVisible: true },
+  { id: "leadSource", label: "Lead Source", type: "🌐", defaultVisible: true },
   { id: "modifiedOn", label: "Modified On", type: "📅", defaultVisible: false },
-  { id: "rating", label: "Rating", type: "★", defaultVisible: false },
-  { id: "tag", label: "Tag", type: "🏷", defaultVisible: true },
+  { id: "rating", label: "Rating", type: "⭐", defaultVisible: false },
+  { id: "tag", label: "Tag", type: "🏷️", defaultVisible: true },
   { id: "assignee", label: "Assignee", type: "👤", defaultVisible: true },
-  { id: "phone", label: "Phone", type: "📞", defaultVisible: true }
+  { id: "phone", label: "Phone", type: "📱", defaultVisible: true }
 ];
 
 export default function LeadsTableClient({ leads, totalLeads }: { leads: Lead[], totalLeads: number }) {
+  // Extract custom fields from leads
+  const customFieldKeys = new Set<string>();
+  let customLabels: Record<string, string> = {};
+  
+  leads.forEach(l => {
+    if (l.organization?.customFieldLabels) {
+      customLabels = { ...customLabels, ...(l.organization.customFieldLabels as Record<string, string>) };
+    }
+    if (l.customFields) {
+      Object.keys(l.customFields as object).forEach(k => customFieldKeys.add(k));
+    }
+  });
+
+  const dynamicColumns = Array.from(customFieldKeys).map(k => ({
+    id: `custom_${k}`,
+    label: customLabels[k] || k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+    type: "⚡",
+    defaultVisible: true
+  }));
+
+  const allColumns = [...BASE_COLUMNS, ...dynamicColumns];
+
   const [visibleCols, setVisibleCols] = useState<string[]>(
-    ALL_COLUMNS.filter(c => c.defaultVisible).map(c => c.id)
+    allColumns.filter(c => c.defaultVisible).map(c => c.id)
   );
   const [showColMenu, setShowColMenu] = useState(false);
   const colMenuRef = useRef<HTMLDivElement>(null);
@@ -180,7 +202,7 @@ export default function LeadsTableClient({ leads, totalLeads }: { leads: Lead[],
                    <input type="text" placeholder="Search fields" className="w-full border border-gray-200 rounded px-2 py-1 text-xs outline-none" />
                 </div>
                 <div className="max-h-64 overflow-y-auto">
-                  {ALL_COLUMNS.map(col => (
+                  {allColumns.map(col => (
                     <label key={col.id} className="flex items-center px-2 py-1.5 hover:bg-gray-50 cursor-pointer rounded">
                       <input 
                         type="checkbox" 
@@ -319,6 +341,9 @@ export default function LeadsTableClient({ leads, totalLeads }: { leads: Lead[],
               {isCol('typeOfSpace') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Type of space</th>}
               {isCol('facebookAd') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Facebook Ad</th>}
               {isCol('facebookCampaign') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Facebook Campaign</th>}
+              {dynamicColumns.map(col => isCol(col.id) && (
+                <th key={col.id} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">{col.label}</th>
+              ))}
               {isCol('phone') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Phone</th>}
             </tr>
           </thead>
@@ -513,6 +538,19 @@ export default function LeadsTableClient({ leads, totalLeads }: { leads: Lead[],
                     --
                   </td>
                 )}
+
+                {dynamicColumns.map(col => {
+                  if (isCol(col.id)) {
+                    const rawKey = col.id.replace('custom_', '');
+                    const val = (lead.customFields as Record<string, string>)?.[rawKey];
+                    return (
+                      <td key={col.id} className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600 truncate max-w-[150px]" title={val}>
+                        {val || '--'}
+                      </td>
+                    );
+                  }
+                  return null;
+                })}
 
                 {isCol('phone') && (
                   <td className="px-4 py-2.5 whitespace-nowrap text-gray-900 font-medium flex items-center justify-between">

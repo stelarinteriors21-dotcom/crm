@@ -23,6 +23,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
       fileAttachments: { orderBy: { createdAt: "desc" } },
       emailLogs: { orderBy: { createdAt: "desc" } },
       assignedTo: true,
+      organization: true,
     }
   });
 
@@ -174,6 +175,27 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
               ))}
             </div>
           </div>
+
+          {/* Dynamic Custom Fields */}
+          {lead.customFields && Object.keys(lead.customFields as object).length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <h3 className="text-[13px] font-bold text-gray-700 mb-3 flex items-center">
+                <FileText className="w-4 h-4 mr-2 text-[#613cbc]" /> Additional Information
+              </h3>
+              <div className="space-y-3">
+                {Object.entries(lead.customFields as object).map(([key, value]) => {
+                  const labels = (lead.organization?.customFieldLabels as Record<string, string>) || {};
+                  const displayName = labels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                  return (
+                    <div key={key} className="flex flex-col text-[13px]">
+                      <span className="text-gray-500 mb-0.5">{displayName}</span>
+                      <span className="text-gray-800 font-medium break-words">{String(value)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Schedule Follow-up */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">

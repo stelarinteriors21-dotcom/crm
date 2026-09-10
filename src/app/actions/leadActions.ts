@@ -69,6 +69,7 @@ export async function getLeads(query?: string, status?: string | string[], sourc
     orderBy: { createdAt: "desc" },
     include: {
       assignedTo: true,
+      organization: true,
     },
   });
 

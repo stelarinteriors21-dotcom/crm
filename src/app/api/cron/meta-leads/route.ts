@@ -57,13 +57,20 @@ export async function GET(request: Request) {
           let phone = '';
           let email = null;
           let city = null;
+          let propertyStatus = null;
+          let customFields: Record<string, string> = {};
           
           if (lead.field_data) {
             lead.field_data.forEach((field: { name: string; values: string[] }) => {
-              if (field.name === 'full_name' || field.name === 'first_name') name = field.values?.[0] || 'Unknown';
-              if (field.name === 'phone_number') phone = field.values?.[0] || '';
-              if (field.name === 'email') email = field.values?.[0] || null;
-              if (field.name === 'city') city = field.values?.[0] || null;
+              const val = field.values?.[0] || '';
+              if (field.name === 'full_name' || field.name === 'first_name') name = val || 'Unknown';
+              else if (field.name === 'phone_number') phone = val;
+              else if (field.name === 'email') email = val || null;
+              else if (field.name === 'city') city = val || null;
+              else if (field.name === 'property_status' || field.name === 'status_of_property') propertyStatus = val || null;
+              else {
+                customFields[field.name] = val;
+              }
             });
           }
 
@@ -96,6 +103,8 @@ export async function GET(request: Request) {
                   phone,
                   email,
                   city,
+                  propertyStatus,
+                  customFields,
                   source: 'META ADS',
                   status: 'Fresh',
                   fbAd: lead.campaign_name || 'Facebook Ad',

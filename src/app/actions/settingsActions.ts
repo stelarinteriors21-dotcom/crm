@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/app/actions/authActions";
 import { revalidatePath } from "next/cache";
@@ -9,7 +9,7 @@ export async function getOrganizationSettings() {
   
   return prisma.organization.findUnique({
     where: { id: user.organizationId },
-    select: { escalationEmails: true }
+    select: { escalationEmails: true, customFieldLabels: true }
   });
 }
 
@@ -20,6 +20,19 @@ export async function updateEscalationEmails(emails: string) {
   await prisma.organization.update({
     where: { id: user.organizationId },
     data: { escalationEmails: emails }
+  });
+  
+  revalidatePath('/settings');
+  return { success: true };
+}
+
+export async function updateCustomFieldLabels(labels: Record<string, string>) {
+  const user = await getCurrentUser();
+  if (!user || !user.organizationId) throw new Error("Unauthorized");
+  
+  await prisma.organization.update({
+    where: { id: user.organizationId },
+    data: { customFieldLabels: labels }
   });
   
   revalidatePath('/settings');

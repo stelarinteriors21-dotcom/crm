@@ -17,6 +17,7 @@ model Organization {
   messageTemplates    MessageTemplate[]
   permissionTemplates PermissionTemplate[]
   escalationEmails    String?           @default("stelarinteriors21@gmail.com,shaji2222222@gmail.com")
+  customFieldLabels   Json?             @default("{}")
   createdAt           DateTime          @default(now())
 }
 
@@ -62,6 +63,7 @@ model Lead {
   city           String?
   propertyStatus String?
   fbAd           String?
+  customFields   Json?        @default("{}")
   capturedOn     DateTime?
   assignedToId   String?
   assignedTo     User?        @relation(fields: [assignedToId], references: [id])
