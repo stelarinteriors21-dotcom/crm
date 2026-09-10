@@ -34,9 +34,11 @@ export default function LeadsFilterDropdowns() {
   const [callers, setCallers] = useState<any[]>([]);
 
   const STATUS_OPTIONS = [
-    "NEW", "Fresh", "RNR", "Job Enquiries", "Interested",
-    "follow up", "Lost", "Hot", "Contacted", "Site Visit Scheduled",
-    "Advance received", "Hold", "Call Not Connected", "PENDING", "WhatsApp Chat"
+    "Fresh", "RNR", "Job enquiry", "Contacted", "interested",
+    "just curious", "follow up", "Junk", "Whatsapp Chat", "Hot",
+    "Hold", "Site visit Schedules", "Site visit Recheduled", "Site visit done",
+    "Quotation shared", "Estimated Quotation", "final Quotation",
+    "Advance recieved", "Pay Pending", "Won", "Lost"
   ];
 
   const TAG_OPTIONS = [
