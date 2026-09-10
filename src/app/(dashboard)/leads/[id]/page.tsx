@@ -9,6 +9,9 @@ import WhatsAppLogForm from "@/components/WhatsAppLogForm";
 import CallLogCard from "@/components/CallLogCard";
 import EmailLogForm from "@/components/EmailLogForm";
 import FileAttachmentForm from "@/components/FileAttachmentForm";
+import { getCallers } from "@/app/actions/leadActions";
+import ReassignButton from "@/components/ReassignButton";
+import { getCurrentUser } from "@/app/actions/authActions";
 
 export default async function LeadDetailsPage({ params }: { params: { id: string } }) {
   const lead = await prisma.lead.findUnique({
@@ -24,6 +27,10 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
   });
 
   if (!lead) return notFound();
+
+  const user = await getCurrentUser();
+  const isAdmin = user?.role === "ADMIN" || user?.role === "ROOT";
+  const callers = isAdmin ? await getCallers() : [];
 
   const initials = lead.name.split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase();
   const formattedDate = lead.createdAt.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
@@ -112,6 +119,11 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
             </div>
             {total >= 80 && <span className="text-[10px] font-bold text-yellow-600">Hot 🔥</span>}
           </div>
+          
+          {isAdmin && (
+            <ReassignButton leadId={lead.id} currentAssigneeId={lead.assignedToId} callers={callers} />
+          )}
+
           <Link
             href={`/leads/${lead.id}/edit`}
             className="flex items-center px-3 py-1.5 text-[12px] font-bold text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
