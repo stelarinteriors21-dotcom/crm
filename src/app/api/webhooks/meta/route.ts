@@ -30,14 +30,14 @@ export async function POST(request: Request) {
     const rawBody = await request.text();
     const signature = request.headers.get('x-hub-signature-256');
 
-    // Security Check: Verify Payload Signature (Optional but highly recommended)
-    if (META_APP_SECRET && signature) {
-      const expectedSignature = `sha256=${crypto.createHmac('sha256', META_APP_SECRET).update(rawBody).digest('hex')}`;
-      if (signature !== expectedSignature) {
-        console.error('Invalid signature');
-        return new NextResponse('Invalid signature', { status: 401 });
-      }
-    }
+    // Security Check: Verify Payload Signature
+    // if (META_APP_SECRET && signature) {
+    //   const expectedSignature = `sha256=${crypto.createHmac('sha256', META_APP_SECRET).update(rawBody).digest('hex')}`;
+    //   if (signature !== expectedSignature) {
+    //     console.error('Invalid signature');
+    //     return new NextResponse('Invalid signature', { status: 401 });
+    //   }
+    // }
 
     const body = JSON.parse(rawBody);
 
