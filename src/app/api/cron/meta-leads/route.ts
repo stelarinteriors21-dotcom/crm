@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { notifyUser } from '@/app/actions/leadActions';
 
 const META_PAGE_ACCESS_TOKEN = process.env.META_PAGE_ACCESS_TOKEN || '';
 const META_PAGE_ID = process.env.META_PAGE_ID || '';
@@ -111,7 +112,6 @@ export async function GET(request: Request) {
               // Trigger Push Notification!
               if (assignedToId) {
                 try {
-                  const { notifyUser } = require('@/app/actions/leadActions');
                   await notifyUser(assignedToId, 'New Lead Assigned', `You have a new Meta lead: ${name}`);
                 } catch (pushErr) {
                   console.error('Failed to send push notification:', pushErr);

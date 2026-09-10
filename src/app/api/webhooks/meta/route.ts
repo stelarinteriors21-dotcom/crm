@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { notifyUser } from '@/app/actions/leadActions';
 import crypto from 'crypto';
 
 // These should be set in your .env file
@@ -131,7 +132,6 @@ export async function POST(request: Request) {
                       // Trigger Push Notification!
                       if (assignedToId) {
                         try {
-                          const { notifyUser } = require('@/app/actions/leadActions');
                           await notifyUser(assignedToId, 'New Lead Assigned', `You have a new Meta lead: ${name}`);
                         } catch (pushErr) {
                           console.error('Failed to send push notification:', pushErr);
