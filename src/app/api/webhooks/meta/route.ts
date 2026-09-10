@@ -103,7 +103,7 @@ export async function POST(request: Request) {
                         assignedToId = callers[nextIndex].id;
                       }
 
-                      await prisma.lead.create({
+                      const createdLead = await prisma.lead.create({
                         data: {
                           name,
                           phone,
@@ -120,6 +120,16 @@ export async function POST(request: Request) {
                         }
                       });
                       console.log(`Successfully ingested and assigned Meta Lead: ${name} (${phone}) to caller ${assignedToId}`);
+
+                      // Trigger Push Notification!
+                      if (assignedToId) {
+                        try {
+                          const { notifyUser } = require('@/app/actions/leadActions');
+                          await notifyUser(assignedToId, 'New Lead Assigned', `You have a new Meta lead: ${name}`);
+                        } catch (pushErr) {
+                          console.error('Failed to send push notification:', pushErr);
+                        }
+                      }
                     }
                   }
                 }
