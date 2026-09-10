@@ -151,17 +151,19 @@ export default function LeadsTableClient({ leads, totalLeads }: { leads: Lead[],
 
   return (
     <>
-      <div className="flex items-center justify-between px-4 md:px-6 py-2 border-b border-gray-100 bg-white">
-        <div className="flex items-center space-x-4 text-sm text-gray-600">
-          <input 
-            type="checkbox" 
-            checked={filteredLeads.length > 0 && selectedLeads.length === filteredLeads.length}
-            onChange={toggleSelectAll}
-            className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc]" 
-          />
-          <span className="bg-gray-100 px-2 py-0.5 rounded text-xs flex items-center">
-            {selectedLeads.length > 0 ? `${selectedLeads.length} selected` : `1-${filteredLeads.length} of ${totalLeads}`} <ChevronRight className="w-3 h-3 ml-1" />
-          </span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 md:px-6 py-3 border-b border-gray-100 bg-white gap-3">
+        <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
+          <div className="flex items-center gap-2">
+            <input 
+              type="checkbox" 
+              checked={filteredLeads.length > 0 && selectedLeads.length === filteredLeads.length}
+              onChange={toggleSelectAll}
+              className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc]" 
+            />
+            <span className="bg-gray-100 px-2 py-0.5 rounded text-xs flex items-center shrink-0">
+              {selectedLeads.length > 0 ? `${selectedLeads.length} selected` : `1-${filteredLeads.length} of ${totalLeads}`} <ChevronRight className="w-3 h-3 ml-1" />
+            </span>
+          </div>
 
           <div className="relative" ref={colMenuRef}>
             <button 

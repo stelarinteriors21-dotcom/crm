@@ -24,9 +24,11 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
       <LeadsHeaderActions />
 
       {/* Search & Filters */}
-      <div className="px-4 md:px-6 py-3 border-b border-gray-100 flex items-center justify-between shrink-0 bg-[#FDFDFD]">
-        <SearchBar />
-        <div className="flex items-center space-x-3 ml-4">
+      <div className="px-4 md:px-6 py-3 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between shrink-0 bg-[#FDFDFD] gap-3 overflow-hidden">
+        <div className="w-full lg:w-auto shrink-0">
+          <SearchBar />
+        </div>
+        <div className="flex items-center overflow-x-auto pb-1 -mb-1 w-full lg:w-auto shrink-0 hide-scrollbar gap-2">
           <LeadsFilterDropdowns />
         </div>
       </div>
