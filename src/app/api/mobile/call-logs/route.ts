@@ -5,6 +5,12 @@ import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
   try {
     const formData = await request.formData();
     
@@ -17,7 +23,7 @@ export async function POST(request: Request) {
     const recordingFile = formData.get('audio') as File;
 
     if ((!leadIdFromForm && !phone) || !userId) {
-      return new NextResponse('Missing required fields', { status: 400 });
+      return new NextResponse('Missing required fields', { status: 400, headers: corsHeaders });
     }
 
     let leadId = leadIdFromForm;
@@ -36,7 +42,7 @@ export async function POST(request: Request) {
       });
       
       if (!lead) {
-        return new NextResponse(`Lead not found for phone: ${phone}`, { status: 404 });
+        return new NextResponse(`Lead not found for phone: ${phone}`, { status: 404, headers: corsHeaders });
       }
       leadId = lead.id;
     }
@@ -95,9 +101,20 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ success: true, callLog });
+    return NextResponse.json({ success: true, callLog }, { headers: corsHeaders });
   } catch (error) {
     console.error('Error saving call log:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return new NextResponse('Internal Server Error', { status: 500, headers: corsHeaders });
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
 }

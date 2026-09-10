@@ -158,7 +158,7 @@ export async function createLead(data: any) {
     });
 
     if (assignedToId) {
-      await notifyUser(assignedToId, 'New Lead Assigned! 🚨', 'You have a new lead to call.');
+      await notifyUser(assignedToId, 'New Lead Assigned! 🚨', 'You have a new lead to call.', true);
     }
     revalidatePath("/leads");
     revalidatePath("/dashboard");
@@ -281,7 +281,7 @@ export async function escalateLead(leadId: string, isManualPass: boolean = true)
   });
 
   if (nextAssigneeId) {
-    await notifyUser(nextAssigneeId, 'Lead Assigned! \uD83D\uDEA8', 'A lead was assigned to you and needs attention.');
+    await notifyUser(nextAssigneeId, 'Lead Assigned! 🚨', 'A lead was assigned to you and needs attention.', true);
   }
 
   // If this was a manual pass by the employee, send an email to admins
