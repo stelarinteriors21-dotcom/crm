@@ -439,7 +439,7 @@ export async function logWhatsAppMessage(leadId: string, message: string) {
 import { sendPushNotification } from "@/lib/firebaseAdmin";
 
 
-export async function notifyUser(userId: string, title: string, body: string) {
+export async function notifyUser(userId: string, title: string, body: string, waitForCompletion: boolean = false) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user?.fcmToken) return;
 
@@ -447,13 +447,19 @@ export async function notifyUser(userId: string, title: string, body: string) {
   const REPEAT_COUNT = 5;       // number of notifications
   const INTERVAL_MS = 2000;     // 2 seconds between each
 
-  // Fire-and-forget so this doesn't block the server action
-  (async () => {
+  const sendLoop = async () => {
     for (let i = 0; i < REPEAT_COUNT; i++) {
       await sendPushNotification(token, title, body);
       if (i < REPEAT_COUNT - 1) {
         await new Promise(resolve => setTimeout(resolve, INTERVAL_MS));
       }
     }
-  })();
+  };
+
+  if (waitForCompletion) {
+    await sendLoop();
+  } else {
+    // Fire-and-forget so this doesn't block the server action
+    sendLoop();
+  }
 }

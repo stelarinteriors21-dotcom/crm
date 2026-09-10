@@ -132,7 +132,7 @@ export async function POST(request: Request) {
                       // Trigger Push Notification!
                       if (assignedToId) {
                         try {
-                          await notifyUser(assignedToId, 'New Lead Assigned', `You have a new Meta lead: ${name}`);
+                          await notifyUser(assignedToId, 'New Lead Assigned', `You have a new Meta lead: ${name}`, true);
                         } catch (pushErr) {
                           console.error('Failed to send push notification:', pushErr);
                         }
