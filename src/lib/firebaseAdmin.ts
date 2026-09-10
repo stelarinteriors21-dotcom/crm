@@ -1,39 +1,37 @@
-import * as admin from "firebase-admin";
+import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { getMessaging } from "firebase-admin/messaging";
+import serviceAccountJson from "./firebase-server-key.json";
 
-if (!admin.apps?.length) {
+if (!getApps().length) {
   try {
-    const serviceAccount = require("./firebase-server-key.json");
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
+    initializeApp({
+      credential: cert(serviceAccountJson as any)
     });
   } catch (error) {
     console.error("Firebase admin initialization error", error);
   }
 }
 
-export const sendPushNotification = async (token: string, title: string, body: string, data?: any) => {
+export const sendPushNotification = async (token: string, title: string, body: string, data?: Record<string, string>) => {
   try {
     const message = {
       notification: { title, body },
       token,
       data: data || {},
-      android: { 
-        priority: "high" as const, 
-        notification: { 
+      android: {
+        priority: "high" as const,
+        notification: {
           channelId: "default",
           sound: "default",
           defaultSound: true,
           defaultVibrateTimings: true
-        } 
+        }
       }
     };
-    await admin.messaging().send(message);
+    await getMessaging().send(message);
     return { success: true };
   } catch (error) {
     console.error("Error sending push notification:", error);
     return { success: false, error };
   }
 };
-
-export default admin;
-
