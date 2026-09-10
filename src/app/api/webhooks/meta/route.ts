@@ -4,8 +4,6 @@ import crypto from 'crypto';
 
 // These should be set in your .env file
 const META_VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || 'telecrm_meta_secure_token_2026';
-const META_APP_SECRET = process.env.META_APP_SECRET || '';
-const META_PAGE_ACCESS_TOKEN = process.env.META_PAGE_ACCESS_TOKEN || '';
 
 // 1. Webhook Verification (GET)
 // Meta will send a GET request here when you configure the webhook in the App Dashboard.
@@ -26,6 +24,10 @@ export async function GET(request: Request) {
 // 2. Receiving Lead Data (POST)
 // Meta will send a POST request whenever a new lead is generated.
 export async function POST(request: Request) {
+  // Read env vars inside the function so Vercel doesn't cache them as empty at build time!
+  const META_APP_SECRET = process.env.META_APP_SECRET || '';
+  const META_PAGE_ACCESS_TOKEN = process.env.META_PAGE_ACCESS_TOKEN || '';
+  
   try {
     const rawBody = await request.text();
     const signature = request.headers.get('x-hub-signature-256');
