@@ -74,15 +74,15 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
     <div className="h-full bg-[#F8F9FA] -m-3 md:-m-6 overflow-y-auto">
       
       {/* Top Bar */}
-      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sticky top-0 z-10">
         <div className="flex items-center">
           <Link href="/leads" className="flex items-center text-[13px] text-gray-500 hover:text-[#613cbc] mr-4 transition-colors">
             <ArrowLeft className="w-4 h-4 mr-1" /> Leads
           </Link>
           <span className="text-gray-300 mr-4">/</span>
-          <span className="text-[13px] font-semibold text-gray-700">{lead.name}</span>
+          <span className="text-[13px] font-semibold text-gray-700 truncate">{lead.name}</span>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Score badge in top bar */}
           <div className="flex items-center space-x-2 mr-2" title={`Score: ${total.toFixed(1)}/100 · ${grade}`}>
             <div className="relative w-8 h-8">
@@ -129,10 +129,10 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-6 flex gap-6">
+      <div className="max-w-6xl mx-auto p-4 md:p-6 flex flex-col md:flex-row gap-6">
 
         {/* Left Column */}
-        <div className="w-80 flex-shrink-0 space-y-4">
+        <div className="w-full md:w-80 flex-shrink-0 space-y-4">
 
           {/* Profile Card */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
