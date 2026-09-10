@@ -26,6 +26,8 @@ export default function PendingLeadWatcher() {
         }
         if (permStatus.receive !== 'granted') return;
 
+        await PushNotifications.createChannel({ id: 'default', name: 'Default', description: 'General Notifications', importance: 5, visibility: 1 });
+
         await PushNotifications.register();
 
         PushNotifications.addListener('registration', async (token) => {
