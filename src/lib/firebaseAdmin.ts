@@ -17,7 +17,7 @@ export const sendPushNotification = async (token: string, title: string, body: s
       notification: { title, body },
       token,
       data: data || {},
-      android: { notification: { channelId: 'default' } }
+      android: { priority: 'high', notification: { channelId: 'default' } }
     };
     await admin.messaging().send(message);
     return { success: true };
