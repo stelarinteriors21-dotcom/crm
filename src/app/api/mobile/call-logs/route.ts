@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { writeFile } from 'fs/promises';
 import path from 'path';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
   try {
@@ -23,15 +24,13 @@ export async function POST(request: Request) {
 
     // Look up the lead by phone number if we don't have the ID
     if (!leadId && phone) {
-      // Basic normalization (removing spaces/special chars if needed)
+      // Extract the last 10 digits for robust matching across country codes
       const normalizedPhone = phone.replace(/\D/g, "");
+      const corePhone = normalizedPhone.length >= 10 ? normalizedPhone.slice(-10) : normalizedPhone;
       
       const lead = await prisma.lead.findFirst({
         where: {
-          OR: [
-            { phone: { contains: normalizedPhone } },
-            { phone: phone }
-          ]
+          phone: { contains: corePhone }
         },
         select: { id: true, status: true }
       });
@@ -50,26 +49,29 @@ export async function POST(request: Request) {
       const buffer = Buffer.from(bytes);
       const filename = `call_${leadId}_${Date.now()}.mp3`;
       
-      // Upload to Supabase Storage
-      const { createClient } = require('@supabase/supabase-js');
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; 
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
-      const { data, error } = await supabase.storage
-        .from('call-recordings')
-        .upload(filename, buffer, {
-          contentType: 'audio/mpeg',
-          upsert: false
-        });
-
-      if (error) {
-        console.error('Error uploading to Supabase:', error);
+      
+      if (!supabaseUrl || !supabaseKey) {
+        console.error('Supabase credentials missing!');
       } else {
-        const { data: publicUrlData } = supabase.storage
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const { data, error } = await supabase.storage
           .from('call-recordings')
-          .getPublicUrl(filename);
-        recordingUrl = publicUrlData.publicUrl;
+          .upload(filename, buffer, {
+            contentType: 'audio/mpeg',
+            upsert: false
+          });
+
+        if (error) {
+          console.error('Error uploading to Supabase:', error);
+        } else {
+          const { data: publicUrlData } = supabase.storage
+            .from('call-recordings')
+            .getPublicUrl(filename);
+          recordingUrl = publicUrlData.publicUrl;
+        }
       }
     }
 
