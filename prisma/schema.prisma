@@ -67,8 +67,9 @@ model Lead {
   capturedOn     DateTime?
   assignedToId   String?
   assignedTo     User?        @relation(fields: [assignedToId], references: [id])
-  assignedStatus String       @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  assignedStatus String       @default("PENDING") // PENDING, ACCEPTED, REJECTED, SNOOZED
   assignedAt     DateTime?
+  snoozedUntil   DateTime?
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
   calls          CallLog[]

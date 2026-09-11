@@ -216,6 +216,29 @@ export async function getPendingLeadForUser() {
   const user = await getCurrentUser();
   if (!user) return null;
   
+  // 1. Check if any snoozed lead is ready to wake up
+  const snoozedLead = await prisma.lead.findFirst({
+    where: {
+      organizationId: user.organizationId,
+      assignedStatus: 'SNOOZED',
+      assignedToId: user.id,
+      snoozedUntil: { lte: new Date() }
+    },
+    orderBy: { snoozedUntil: 'asc' }
+  });
+
+  if (snoozedLead) {
+    const updated = await prisma.lead.update({
+      where: { id: snoozedLead.id },
+      data: { assignedStatus: 'PENDING', assignedAt: new Date(), snoozedUntil: null }
+    });
+    if (user.fcmToken) {
+      await sendPushNotification(user.fcmToken, 'Snooze Over! ⏰', `Time to call ${updated.name}`);
+    }
+    return updated;
+  }
+
+  // 2. Otherwise get normal pending lead
   const lead = await prisma.lead.findFirst({
     where: { 
       organizationId: user.organizationId,
@@ -392,21 +415,21 @@ export async function acceptAndScheduleCall(leadId: string, minutes: number = 15
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
+  const snoozedUntil = new Date(Date.now() + minutes * 60000);
+
   await prisma.lead.update({
     where: { id: leadId },
     data: { 
-      assignedStatus: 'ACCEPTED', 
-      assignedToId: user.id 
+      assignedStatus: 'SNOOZED', 
+      assignedToId: user.id,
+      snoozedUntil: snoozedUntil
     }
   });
-
-  const dueDate = new Date();
-  dueDate.setMinutes(dueDate.getMinutes() + minutes);
 
   await prisma.task.create({
     data: {
       title: `Call scheduled in ${minutes} mins`,
-      dueDate: dueDate,
+      dueDate: snoozedUntil,
       status: "PENDING",
       type: "CALL",
       leadId: leadId,

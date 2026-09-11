@@ -1,13 +1,41 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import nodemailer from 'nodemailer';
+import { sendPushNotification } from '@/lib/firebaseAdmin';
 
-// Remove dynamic force-dynamic if not needed, but for cron it's good
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    // We only want to process leads that have been PENDING for > 20 minutes
+
+
+    // 1. Wake up SNOOZED leads whose time is up
+    const wakeLeads = await prisma.lead.findMany({
+      where: {
+        assignedStatus: 'SNOOZED',
+        snoozedUntil: { lte: new Date() }
+      },
+      include: { assignedTo: true }
+    });
+
+    let wokeCount = 0;
+    for (const lead of wakeLeads) {
+      await prisma.lead.update({
+        where: { id: lead.id },
+        data: {
+          assignedStatus: 'PENDING',
+          assignedAt: new Date(),
+          snoozedUntil: null,
+          escalationLevel: 0
+        }
+      });
+      wokeCount++;
+      if (lead.assignedTo?.fcmToken) {
+        await sendPushNotification(lead.assignedTo.fcmToken, "Snooze Over! ⏰", `Time to call ${lead.name}`);
+      }
+    }
+
+    // 2. We only want to process leads that have been PENDING for > 20 minutes
     const twentyMinutesAgo = new Date(Date.now() - 20 * 60 * 1000);
 
     const ignoredLeads = await prisma.lead.findMany({
@@ -21,8 +49,8 @@ export async function GET(request: Request) {
       }
     });
 
-    if (ignoredLeads.length === 0) {
-      return NextResponse.json({ message: 'No ignored leads found.' });
+    if (ignoredLeads.length === 0 && wakeLeads.length === 0) {
+      return NextResponse.json({ message: 'No ignored or snoozed leads found.' });
     }
 
     // Configure Nodemailer
