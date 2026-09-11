@@ -10,7 +10,7 @@ export default function PendingLeadWatcher({ userId }: { userId?: string }) {
   const [pendingLead, setPendingLead] = useState<any>(null);
   const [flashing, setFlashing] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(1200);
+  const [timeLeft, setTimeLeft] = useState(600);
   const [callers, setCallers] = useState<any[]>([]);
   const [selectedAssignee, setSelectedAssignee] = useState("");
 
@@ -65,7 +65,7 @@ export default function PendingLeadWatcher({ userId }: { userId?: string }) {
         const assignedTime = new Date(lead.assignedAt || lead.createdAt).getTime();
         const now = Date.now();
         const diffSecs = Math.floor((now - assignedTime) / 1000);
-        setTimeLeft(Math.max(0, 1200 - diffSecs));
+        setTimeLeft(Math.max(0, 600 - diffSecs));
 
         // Fetch callers if this is an admin alert
         if (lead.escalationLevel >= 2 && callers.length === 0) {

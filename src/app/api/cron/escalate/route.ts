@@ -35,13 +35,13 @@ export async function GET(request: Request) {
       }
     }
 
-    // 2. We only want to process leads that have been PENDING for > 20 minutes
-    const twentyMinutesAgo = new Date(Date.now() - 20 * 60 * 1000);
+    // 2. We only want to process leads that have been PENDING for > 10 minutes
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
 
     const ignoredLeads = await prisma.lead.findMany({
       where: {
         assignedStatus: 'PENDING',
-        assignedAt: { lte: twentyMinutesAgo },
+        assignedAt: { lte: tenMinutesAgo },
         escalationLevel: { lt: 2 } // 0 = unescalated, 1 = warning, 2 = admin alert via email
       },
       include: {
@@ -77,10 +77,10 @@ export async function GET(request: Request) {
       const mailOptions = {
         from: `"Stelar CRM Alerts" <${process.env.SMTP_USER || 'shaji2222222@gmail.com'}>`,
         to: adminEmails,
-        subject: `🚨 URGENT: Lead Ignored by ${assigneeName} for > 20 Mins!`,
+        subject: `🚨 URGENT: Lead Ignored by ${assigneeName} for > 10 Mins!`,
         html: `
           <h2 style="color: #d93025;">Lead Escalation Alert</h2>
-          <p>The following lead was assigned to <b>${assigneeName}</b> over 20 minutes ago, but they have not accepted, passed, or snoozed it.</p>
+          <p>The following lead was assigned to <b>${assigneeName}</b> over 10 minutes ago, but they have not accepted, passed, or snoozed it.</p>
           <hr/>
           <h3>Lead Details:</h3>
           <ul>

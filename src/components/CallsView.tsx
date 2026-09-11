@@ -5,6 +5,9 @@ import { Search, Filter, AtSign, ChevronRight, Star, PhoneCall, Phone, Mail, Map
 import { format, formatDistanceToNow } from "date-fns";
 
 export default function CallsView({ leads }: { leads: any[] }) {
+  const [isMounted, setIsMounted] = React.useState(false);
+  React.useEffect(() => setIsMounted(true), []);
+
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(leads.length > 0 ? leads[0].id : null);
 
   const selectedLead = leads.find(l => l.id === selectedLeadId);
@@ -188,7 +191,7 @@ function CallLogItem({ call }: { call: any }) {
     <div className="flex flex-col bg-gray-50 p-4 rounded-lg border border-gray-100">
       <div className="flex justify-between items-center mb-2">
         <span className="font-bold text-gray-800 text-sm" suppressHydrationWarning>
-          {format(new Date(call.createdAt), 'dd MMM yyyy, hh:mm aa')}
+          {isMounted ? format(new Date(call.createdAt), 'dd MMM yyyy, hh:mm aa') : ''}
         </span>
         <span className="text-xs font-bold px-2 py-1 bg-green-100 text-green-800 rounded">
           {call.duration} seconds
