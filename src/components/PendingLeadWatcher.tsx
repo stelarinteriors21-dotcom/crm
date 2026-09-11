@@ -20,6 +20,15 @@ export default function PendingLeadWatcher() {
     // Initialize Push Notifications
     const initPush = async () => {
       try {
+        // Check if we are running inside the custom native Webview (telecrm-android-sync)
+        if (typeof window !== 'undefined' && (window as any).AndroidApp) {
+          const token = (window as any).AndroidApp.getFcmToken();
+          if (token) {
+            await saveFcmToken(token);
+          }
+          return; // Skip capacitor setup
+        }
+
         let permStatus = await PushNotifications.checkPermissions();
         if (permStatus.receive === 'prompt') {
           permStatus = await PushNotifications.requestPermissions();
