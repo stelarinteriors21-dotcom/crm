@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Settings, RefreshCw, ChevronDown, CheckCircle, XCircle, TrendingUp, Users, PhoneCall } from "lucide-react";
+import { Settings, RefreshCw, ChevronDown, CheckCircle, XCircle, TrendingUp, Users, PhoneCall, Calendar } from "lucide-react";
 import { acceptLead, rejectLead, acceptAllLeads, rejectAllLeads } from "@/app/actions/leadActions";
 
 type Lead = {
@@ -494,7 +494,7 @@ function AllLeadsWidget({ statusBreakdown, totalLeads, title = "All Leads" }: { 
           <div className="p-6 text-center text-gray-400 text-sm">No leads yet.</div>
         ) : (
           sorted.map((s, i) => (
-            <div key={s.label} className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer">
+            <div key={s.label} className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = '/leads?status=' + encodeURIComponent(s.label)}>
               <div className={`w-2 h-2 rounded-full mr-2 flex-shrink-0 ${STATUS_BAR_COLORS[i % STATUS_BAR_COLORS.length]}`} />
               <span className="flex-1 text-[13px] text-gray-700">{s.label}</span>
               <span className="w-16 text-center text-[13px] font-bold text-gray-800">{s.count}</span>
