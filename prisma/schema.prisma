@@ -37,6 +37,7 @@ model User {
   tasks          Task[]
   fileAttachments FileAttachment[]
   emailLogs       EmailLog[]
+    notes           Note[]
 }
 
 model PermissionTemplate {
@@ -77,6 +78,7 @@ model Lead {
   whatsAppLogs   WhatsAppLog[]
   fileAttachments FileAttachment[]
   emailLogs       EmailLog[]
+    notes           Note[]
   createdAt      DateTime     @default(now())
 
   escalationLevel Int     @default(0)
@@ -172,5 +174,14 @@ model EmailLog {
   body      String
   direction String   
   status    String   @default("SENT")
+  createdAt DateTime @default(now())
+}
+model Note {
+  id        String   @id @default(cuid())
+  content   String
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
 }

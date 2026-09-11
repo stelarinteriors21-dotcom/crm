@@ -6,6 +6,7 @@ import LeadScoreWidget from "@/components/LeadScoreWidget";
 import { calculateLeadScore, getScoreColor } from "@/lib/leadScore";
 import LeadStatusDropdown from "@/components/LeadStatusDropdown";
 import WhatsAppLogForm from "@/components/WhatsAppLogForm";
+import AddNoteForm from "@/components/AddNoteForm";
 import CallLogCard from "@/components/CallLogCard";
 import EmailLogForm from "@/components/EmailLogForm";
 import FileAttachmentForm from "@/components/FileAttachmentForm";
@@ -22,6 +23,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
       whatsAppLogs: { orderBy: { createdAt: "desc" } },
       fileAttachments: { orderBy: { createdAt: "desc" } },
       emailLogs: { orderBy: { createdAt: "desc" } },
+      notes: { orderBy: { createdAt: "desc" } },
       assignedTo: true,
       organization: true,
     }
@@ -304,6 +306,41 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
               ) : (
                 lead.calls.map((log) => (
                   <CallLogCard key={log.id} log={log} leadPhone={lead.phone} />
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* General Notes */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-6">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="text-[14px] font-bold text-gray-800 flex items-center">
+                <FileText className="w-4 h-4 mr-2 text-yellow-600" /> General Notes
+              </h2>
+              <span className="text-[11px] text-gray-400">{(lead as any).notes?.length || 0} note{((lead as any).notes?.length || 0) !== 1 ? "s" : ""}</span>
+            </div>
+
+            <AddNoteForm leadId={lead.id} />
+
+            <div className="divide-y divide-gray-100">
+              {!(lead as any).notes || (lead as any).notes.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-[12px] text-gray-400">No general notes added yet</div>
+                </div>
+              ) : (
+                (lead as any).notes.map((note: any) => (
+                  <div key={note.id} className="px-5 py-4 flex items-start space-x-3 hover:bg-gray-50 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-3.5 h-3.5 text-yellow-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[12px] font-semibold text-gray-800">Note Added</span>
+                        <span className="text-[10px] text-gray-400">{timeAgo(note.createdAt)}</span>
+                      </div>
+                      <p className="text-[12px] text-gray-700 whitespace-pre-wrap">{note.content}</p>
+                    </div>
+                  </div>
                 ))
               )}
             </div>
