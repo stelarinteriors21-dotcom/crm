@@ -61,11 +61,11 @@ export default async function PermissionTemplateDetailsPage({ params }: { params
           
           <div className="text-[10px] text-gray-500 text-right leading-relaxed flex flex-col items-end">
             <div className="flex items-center">
-              <span>Created On: <span className="font-semibold text-gray-700">{new Date(template.createdAt).toLocaleString()}</span> | Created by:</span>
+              <span>Created On: <span className="font-semibold text-gray-700">{""}</span> | Created by:</span>
               <div className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[8px] font-bold text-gray-600 ml-1 border border-gray-300">SI</div>
             </div>
             <div className="flex items-center mt-1">
-              <span>Last Modified On: <span className="font-semibold text-gray-700">{new Date(template.updatedAt).toLocaleString()}</span> | Last Modified by:</span>
+              <span>Last Modified On: <span className="font-semibold text-gray-700">{""}</span> | Last Modified by:</span>
               <div className="w-4 h-4 rounded-full bg-[#E8E2F7] flex items-center justify-center text-[8px] font-bold text-[#613cbc] ml-1 border border-[#d6cbf0]">SI</div>
             </div>
           </div>

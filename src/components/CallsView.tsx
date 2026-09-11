@@ -174,6 +174,8 @@ export default function CallsView({ leads }: { leads: any[] }) {
 }
 
 function CallLogItem({ call }: { call: any }) {
+  const [isMounted, setIsMounted] = React.useState(false);
+  React.useEffect(() => setIsMounted(true), []);
   const [isEditing, setIsEditing] = useState(false);
   const [noteText, setNoteText] = useState(call.notes || "");
   const [saving, setSaving] = useState(false);

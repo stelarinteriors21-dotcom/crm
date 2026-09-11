@@ -60,7 +60,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
     { label: "Source", value: lead.source, icon: FileText },
     { label: "Lead Source", value: lead.leadSource, icon: Tag },
     { label: "Assignee", value: lead.assignedTo?.name ?? "Unassigned", icon: User },
-    { label: "Budget", value: lead.approximateBudget, icon: FileText },
+    { label: "Budget", value: lead.budget, icon: FileText },
     { label: "Created", value: formattedDate, icon: Calendar },
   ];
 

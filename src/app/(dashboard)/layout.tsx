@@ -9,6 +9,7 @@ import {
 import { getCurrentUser } from "@/app/actions/authActions";
 import UserDropdown from "@/components/UserDropdown";
 import PendingLeadWatcher from "@/components/PendingLeadWatcher";
+import LeadScorePromptWatcher from "@/components/LeadScorePromptWatcher";
 import NotificationBell from "@/components/NotificationBell";
 import OmniSearch from "@/components/OmniSearch";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -45,6 +46,7 @@ export default async function DashboardLayout({
   return (
     <>
       <PendingLeadWatcher userId={user?.id} />
+      <LeadScorePromptWatcher />
       <div className="flex h-screen bg-[#F8F9FA] text-[#333333] font-sans flex-col md:flex-row overflow-hidden">
 
       {/* Desktop Sidebar (hidden on mobile) */}
