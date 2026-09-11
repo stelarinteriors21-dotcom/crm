@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, FileText, Loader2, ChevronDown, ChevronUp, Check, Pencil, Wand2 } from "lucide-react";
+import { MessageSquare, FileText, Loader2, ChevronDown, ChevronUp, Check, Pencil, Wand2, Clock, MessageCircle, X } from "lucide-react";
 
 async function saveCallNotes(callId: string, notes: string) {
   const res = await fetch(`/api/call-notes/${callId}`, {
@@ -102,7 +102,7 @@ export default function CallLogCard({ log, leadPhone }: { log: any; leadPhone: s
             <span className="text-[11px] text-gray-400">{timeAgo(log.createdAt)}</span>
           </div>
           <div className="flex items-center space-x-4 text-[12px] text-gray-500 mb-3">
-            <span>? Duration: <strong className="text-gray-700">{formatDuration(log.duration)}</strong></span>
+            <span className="flex items-center"><Clock className="w-3 h-3 mr-1 text-gray-400" /> Duration: <strong className="text-gray-700">{formatDuration(log.duration)}</strong></span>
             <span className="text-gray-300">|</span>
             <span>{new Date(log.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
           </div>
@@ -213,8 +213,8 @@ export default function CallLogCard({ log, leadPhone }: { log: any; leadPhone: s
               {showWaDraft && (
                 <div className="border border-green-200 rounded-lg overflow-hidden">
                   <div className="px-3 py-2 bg-green-50 flex items-center justify-between">
-                    <span className="text-[12px] font-semibold text-green-700">?? WhatsApp Reply Draft</span>
-                    <button onClick={() => setShowWaDraft(false)} className="text-[11px] text-green-600 hover:text-green-800">?</button>
+                    <span className="text-[12px] font-semibold text-green-700"><MessageCircle className="w-3.5 h-3.5 inline mr-1" /> WhatsApp Reply Draft</span>
+                    <button onClick={() => setShowWaDraft(false)} className="text-[11px] text-green-600 hover:text-green-800"><X className="w-3.5 h-3.5" /></button>
                   </div>
                   <div className="p-3">
                     <textarea

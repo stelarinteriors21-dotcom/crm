@@ -51,7 +51,7 @@ export default async function DashboardLayout({
       <div className="hidden md:flex flex-col w-[60px] bg-white border-r border-gray-200 z-10 shadow-sm shrink-0 overflow-hidden">
         <div className="h-16 flex items-center justify-center border-b border-gray-100">
           <div className="w-8 h-8 bg-[#613cbc] rounded flex items-center justify-center">
-            <span className="text-white font-bold text-lg leading-none">T</span>
+            <span className="text-white font-bold text-lg leading-none">S</span>
           </div>
         </div>
 
@@ -111,10 +111,10 @@ export default async function DashboardLayout({
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 z-[60] relative shadow-sm shrink-0">
           <div className="flex items-center space-x-2 overflow-hidden">
             <div className="w-8 h-8 bg-[#613cbc] rounded flex items-center justify-center md:hidden mr-2 shrink-0">
-              <span className="text-white font-bold text-lg leading-none">T</span>
+              <span className="text-white font-bold text-lg leading-none">S</span>
             </div>
             <div className="w-6 h-6 rounded-full bg-[#613cbc] flex items-center justify-center shrink-0">
-              <span className="text-white text-xs font-bold">T</span>
+              <span className="text-white text-xs font-bold">S</span>
             </div>
             <span className="font-semibold text-[15px] truncate max-w-[120px] md:max-w-none">
               {user?.organization?.name || "Stelar Interiors Pvt Ltd"}
