@@ -44,7 +44,7 @@ export default async function DashboardLayout({
 
   return (
     <>
-      <PendingLeadWatcher />
+      <PendingLeadWatcher userId={user?.id} />
       <div className="flex h-screen bg-[#F8F9FA] text-[#333333] font-sans flex-col md:flex-row overflow-hidden">
 
       {/* Desktop Sidebar (hidden on mobile) */}

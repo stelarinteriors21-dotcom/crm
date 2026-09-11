@@ -6,7 +6,7 @@ import { saveFcmToken } from "@/app/actions/authActions";
 import { User, Phone, MapPin, Loader2, AlertCircle, Users } from "lucide-react";
 import { PushNotifications } from "@capacitor/push-notifications";
 
-export default function PendingLeadWatcher() {
+export default function PendingLeadWatcher({ userId }: { userId?: string }) {
   const [pendingLead, setPendingLead] = useState<any>(null);
   const [flashing, setFlashing] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -22,7 +22,7 @@ export default function PendingLeadWatcher() {
       try {
         // Check if we are running inside the custom native Webview (telecrm-android-sync)
         if (typeof window !== 'undefined' && (window as any).AndroidApp) {
-          const token = (window as any).AndroidApp.getFcmToken();
+          if (userId && (window as any).AndroidApp.setUserId) { (window as any).AndroidApp.setUserId(userId); } const token = (window as any).AndroidApp.getFcmToken();
           if (token) {
             await saveFcmToken(token);
           }
@@ -76,7 +76,7 @@ export default function PendingLeadWatcher() {
           }
         }
       } else {
-        setPendingLead(null);
+        setPendingLead(null); if(audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
       }
     };
 
@@ -129,7 +129,7 @@ export default function PendingLeadWatcher() {
     if (!pendingLead || processing) return;
     setProcessing(true);
     await acceptLead(pendingLead.id);
-    setPendingLead(null);
+    setPendingLead(null); if(audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
     setProcessing(false);
   };
 
@@ -137,7 +137,7 @@ export default function PendingLeadWatcher() {
     if (!pendingLead || processing) return;
     setProcessing(true);
     await acceptAndScheduleCall(pendingLead.id, 15);
-    setPendingLead(null);
+    setPendingLead(null); if(audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
     setProcessing(false);
   };
 
@@ -145,7 +145,7 @@ export default function PendingLeadWatcher() {
     if (processing) return;
     setProcessing(true);
     await escalateLead(id, !auto);
-    setPendingLead(null);
+    setPendingLead(null); if(audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
     setProcessing(false);
   };
 
@@ -153,7 +153,7 @@ export default function PendingLeadWatcher() {
     if (!pendingLead || !selectedAssignee || processing) return;
     setProcessing(true);
     await assignLeadToUser(pendingLead.id, selectedAssignee);
-    setPendingLead(null);
+    setPendingLead(null); if(audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
     setProcessing(false);
   };
 
