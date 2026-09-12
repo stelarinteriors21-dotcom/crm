@@ -210,7 +210,6 @@ export default function LeadsTableClient({ leads, totalLeads }: { leads: Lead[],
                         onChange={() => toggleCol(col.id)}
                         className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc] mr-3"
                       />
-                      <span className="text-gray-400 text-xs w-4 text-center mr-1">{col.type}</span>
                       <span className="text-sm text-gray-700">{col.label}</span>
                     </label>
                   ))}
