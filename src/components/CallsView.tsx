@@ -9,19 +9,20 @@ export default function CallsView({ leads }: { leads: any[] }) {
   React.useEffect(() => setIsMounted(true), []);
 
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(leads.length > 0 ? leads[0].id : null);
+  const [showMobileDetail, setShowMobileDetail] = useState(false);
 
   const selectedLead = leads.find(l => l.id === selectedLeadId);
 
   return (
     <div className="flex flex-col md:flex-row flex-1 overflow-hidden h-full">
       {/* Left Panel: Calls List */}
-      <div className="w-full md:w-[380px] border-r border-b md:border-b-0 border-gray-200 flex flex-col bg-white shrink-0 h-[45%] md:h-full overflow-y-auto">
+      <div className={`${showMobileDetail ? "hidden md:flex" : "flex"} w-full md:w-[380px] border-r border-gray-200 flex-col bg-white shrink-0 h-full overflow-y-auto`}>
         {leads.map((lead, i) => {
           const isSelected = selectedLeadId === lead.id;
           return (
             <div 
               key={lead.id} 
-              onClick={() => setSelectedLeadId(lead.id)}
+              onClick={() => { setSelectedLeadId(lead.id); setShowMobileDetail(true); }}
               className={`p-4 border-b border-gray-100 cursor-pointer ${isSelected ? 'bg-purple-50 border-l-4 border-l-[#613cbc]' : 'hover:bg-gray-50'}`}
             >
               <div className="flex justify-between items-start mb-1">
@@ -73,12 +74,16 @@ export default function CallsView({ leads }: { leads: any[] }) {
       </div>
 
       {/* Right Panel: Detail View */}
-      <div className="flex-1 bg-gray-50 border-t border-gray-200 shadow-inner overflow-y-auto p-4 md:p-8">
+      <div className={`${showMobileDetail ? "flex flex-col" : "hidden md:flex"} flex-1 bg-gray-50 md:border-t border-gray-200 shadow-inner overflow-y-auto p-4 md:p-8`}>
         {selectedLead ? (
           <div className="max-w-3xl mx-auto">
             
             {/* Header Card */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+              {/* Mobile Back Button */}
+              <button onClick={() => setShowMobileDetail(false)} className="md:hidden flex items-center text-[#613cbc] font-bold text-sm mb-4 bg-purple-50 px-3 py-1.5 rounded-lg">
+                <ChevronRight className="w-4 h-4 mr-1 rotate-180" /> Back to Leads
+              </button>
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-1">{selectedLead.name}</h2>
