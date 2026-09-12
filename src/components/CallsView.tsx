@@ -84,21 +84,21 @@ export default function CallsView({ leads }: { leads: any[] }) {
               <button onClick={() => setShowMobileDetail(false)} className="md:hidden flex items-center text-[#613cbc] font-bold text-sm mb-4 bg-purple-50 px-3 py-1.5 rounded-lg">
                 <ChevronRight className="w-4 h-4 mr-1 rotate-180" /> Back to Leads
               </button>
-              <div className="flex justify-between items-start mb-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-1">{selectedLead.name}</h2>
                   <div className="text-sm font-medium text-[#613cbc] bg-purple-50 inline-flex px-3 py-1 rounded-full">
                     {selectedLead.status}
                   </div>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex gap-2 w-full sm:w-auto">
                   {selectedLead.phone && (
                     <>
                       <a
                         href={`https://wa.me/${selectedLead.phone?.replace(/\D/g, "")}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center px-3 py-2 bg-green-500 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-green-600 transition-colors"
+                        className="flex-1 sm:flex-none justify-center items-center flex px-3 py-2 bg-green-500 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-green-600 transition-colors"
                         title="Open in WhatsApp"
                       >
                         <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
@@ -108,7 +108,7 @@ export default function CallsView({ leads }: { leads: any[] }) {
                       </a>
                       <a
                         href={`tel:${selectedLead.phone?.replace(/\s/g, "")}`}
-                        className="flex items-center px-4 py-2 bg-[#10b981] text-white text-sm font-bold rounded-lg shadow-sm hover:bg-emerald-600 transition-colors"
+                        className="flex-1 sm:flex-none justify-center items-center flex px-4 py-2 bg-[#10b981] text-white text-sm font-bold rounded-lg shadow-sm hover:bg-emerald-600 transition-colors"
                       >
                         <Phone className="w-4 h-4 mr-2" /> Call Now
                       </a>
@@ -117,7 +117,7 @@ export default function CallsView({ leads }: { leads: any[] }) {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm break-all sm:break-normal">
                 <div className="flex items-center text-gray-600">
                   <Phone className="w-4 h-4 mr-3 text-gray-400" />
                   <span className="font-medium text-gray-800">{selectedLead.phone}</span>
