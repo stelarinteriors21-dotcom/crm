@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Settings, RefreshCw, ChevronDown, CheckCircle, XCircle, TrendingUp, Users, PhoneCall, Calendar } from "lucide-react";
+import { Settings, RefreshCw, ChevronDown, CheckCircle, XCircle, TrendingUp, Users, PhoneCall, Calendar, X, Download } from "lucide-react";
 import { acceptLead, rejectLead, acceptAllLeads, rejectAllLeads } from "@/app/actions/leadActions";
 
 type Lead = {
@@ -535,20 +535,39 @@ function UserReportModal({ userName, onClose, allLeads }: { userName: string, on
     percent: ((breakdown[label] / userLeads.length) * 100).toFixed(1) + "%"
   }));
 
+  const downloadCSV = () => {
+    const headers = ["Status", "Count", "Percentage"];
+    const rows = statusBreakdown.map(b => [b.label, b.count, b.percent]);
+    const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${userName.replace(/\s+/g, '_')}_Report.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm border border-gray-100">
-          ?
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm border border-gray-200 transition-colors">
+          <X className="w-4 h-4" />
         </button>
-        <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#E8E2F7] text-[#613cbc] font-bold flex items-center justify-center text-sm">
-            {userName.split(" ").map((p: string) => p[0]).join("").slice(0, 2).toUpperCase()}
+        <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#E8E2F7] text-[#613cbc] font-bold flex items-center justify-center text-sm">
+              {userName.split(" ").map((p: string) => p[0]).join("").slice(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-800">{userName}&apos;s Report</h2>
+              <p className="text-xs text-gray-500">Lead status breakdown for this specific user.</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-bold text-gray-800">{userName}&apos;s Report</h2>
-            <p className="text-xs text-gray-500">Lead status breakdown for this specific user.</p>
-          </div>
+          <button onClick={downloadCSV} className="mr-8 md:mr-10 flex items-center gap-2 bg-[#613cbc] text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-purple-700 transition-colors">
+            <Download className="w-4 h-4" /> Download CSV
+          </button>
         </div>
         <div className="p-6 bg-gray-50 max-h-[80vh] overflow-y-auto">
           <AllLeadsWidget statusBreakdown={statusBreakdown} totalLeads={userLeads.length} title={`${userName}&apos;s Leads`} />
