@@ -241,7 +241,7 @@ export default function LeadsTableClient({ leads, totalLeads }: { leads: Lead[],
                    <select name="status" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#613cbc]">
                      <option value="">Select new status...</option>
                       {LEAD_STATUS_OPTIONS.map(opt => (
-                        <option key={opt} value={opt} className={`${LEAD_STATUS_COLORS[opt] || 'bg-white text-gray-900'} font-medium`}>{opt}</option>
+                        <option key={opt} value={opt} className="bg-white text-gray-900 font-medium">{opt}</option>
                       ))}
                    </select>
                  </div>
