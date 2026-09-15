@@ -15,7 +15,9 @@ export default function LoginPage() {
     setError("");
     
     try {
-      const formData = new FormData(e.currentTarget);
+      const formData = new FormData();
+      formData.append("email", email);
+      formData.append("password", password);
       const res = await login(formData);
       if (res?.error) {
         setError(res.error);
@@ -48,6 +50,8 @@ export default function LoginPage() {
             <input 
               type="email" 
               name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               autoComplete="off"
               className="w-full px-4 py-2 text-gray-900 bg-white placeholder-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#613cbc]/20 focus:border-[#613cbc]"
               placeholder="user@example.com"
@@ -58,6 +62,8 @@ export default function LoginPage() {
             <input 
               type="password" 
               name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
               className="w-full px-4 py-2 text-gray-900 bg-white placeholder-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#613cbc]/20 focus:border-[#613cbc]"
               placeholder="••••••••"
