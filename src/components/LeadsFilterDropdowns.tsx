@@ -5,7 +5,7 @@ import { ChevronDown, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getCallers } from "@/app/actions/leadActions";
 
-export default function LeadsFilterDropdowns() {
+export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?: any[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -41,9 +41,7 @@ export default function LeadsFilterDropdowns() {
     "Advance recieved", "Pay Pending", "Won", "Lost"
   ];
 
-  const TAG_OPTIONS = [
-    "All", "Potential lead", "Future potential lead"
-  ];
+  const TAG_OPTIONS = ["All", ...customTags.map((t: any) => t.name)];
 
   useEffect(() => {
     async function fetchCallers() {
@@ -200,18 +198,23 @@ export default function LeadsFilterDropdowns() {
               <span className="text-xs text-[#613cbc] cursor-pointer" onClick={() => handleTagChange("All")}>Clear All</span>
             </div>
             <div className="p-2 overflow-y-auto max-h-72">
-              {TAG_OPTIONS.map(tagOption => (
-                <label key={tagOption} className="flex items-center text-[13px] text-gray-700 cursor-pointer hover:bg-gray-50 px-2 py-2 rounded mb-1">
-                  <input 
-                    type="radio" 
-                    name="tag"
-                    checked={selectedTag === tagOption}
-                    onChange={() => handleTagChange(tagOption)}
-                    className="w-3.5 h-3.5 mr-3 border-gray-300 rounded text-[#613cbc] focus:ring-[#613cbc]" 
-                  /> 
-                  <span className="font-medium">{tagOption === "All" ? "All Tags" : tagOption}</span>
-                </label>
-              ))}
+              {TAG_OPTIONS.map(tagOption => {
+                const tagColor = customTags.find((t: any) => t.name === tagOption)?.color;
+                return (
+                  <label key={tagOption} className="flex items-center text-[13px] text-gray-700 cursor-pointer hover:bg-gray-50 px-2 py-2 rounded mb-1">
+                    <input 
+                      type="radio" 
+                      name="tag"
+                      value={tagOption}
+                      checked={selectedTag === tagOption}
+                      onChange={() => handleTagChange(tagOption)}
+                      className="w-3.5 h-3.5 mr-3 border-gray-300 text-[#613cbc] focus:ring-[#613cbc]" 
+                    /> 
+                    {tagColor && <span className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: tagColor }} />}
+                    <span className="font-medium">{tagOption === "All" ? "All Tags" : tagOption}</span>
+                  </label>
+                );
+              })}
             </div>
           </div>
         )}

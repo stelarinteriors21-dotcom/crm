@@ -11,6 +11,7 @@ export default async function SettingsPage() {
       <SettingsClient 
         initialEmails={settings?.escalationEmails || ""} 
         initialLabels={(settings?.customFieldLabels as Record<string, string>) || {}}
+        initialTags={(settings?.customTags as any[]) || [{name: "Potential lead", color: "#3b82f6"}, {name: "Future potential lead", color: "#8b5cf6"}]}
       />
     </div>
   );

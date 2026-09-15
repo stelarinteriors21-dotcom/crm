@@ -1,5 +1,6 @@
 import { Search, ChevronDown } from "lucide-react";
 import { getLeads } from "@/app/actions/leadActions";
+import { getOrganizationSettings } from "@/app/actions/settingsActions";
 import LeadsHeaderActions from "@/components/LeadsHeaderActions";
 import LeadsFilterDropdowns from "@/components/LeadsFilterDropdowns";
 import LeadsTableClient from "@/components/LeadsTableClient";
@@ -18,6 +19,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
   const tag = typeof searchParams.tag === "string" ? searchParams.tag : undefined;
 
   const dbLeads = await getLeads(query, searchField, status, source, assigned, active, startDate, endDate, tag);
+  const settings = await getOrganizationSettings();
+  const customTags = (settings?.customTags as any[]) || [{name: "Potential lead", color: "#3b82f6"}, {name: "Future potential lead", color: "#8b5cf6"}];
 
   return (
     <div className="h-full bg-white flex flex-col -m-3 md:-m-6">
@@ -30,15 +33,15 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
           <SearchBar />
         </div>
         <div className="flex flex-wrap items-center w-full lg:w-auto shrink-0 gap-2">
-          <LeadsFilterDropdowns />
+          <LeadsFilterDropdowns customTags={customTags} />
         </div>
       </div>
 
       {/* View Switcher is typically added in LeadsHeaderActions, but we check searchParams here */}
       {searchParams.view === 'kanban' ? (
-        <LeadsKanbanClient leads={dbLeads} />
+        <LeadsKanbanClient leads={dbLeads} customTags={customTags} />
       ) : (
-        <LeadsTableClient leads={dbLeads} totalLeads={dbLeads.length} />
+        <LeadsTableClient leads={dbLeads} totalLeads={dbLeads.length} customTags={customTags} />
       )}
 
     </div>

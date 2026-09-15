@@ -9,7 +9,7 @@ export async function getOrganizationSettings() {
   
   return prisma.organization.findUnique({
     where: { id: user.organizationId },
-    select: { escalationEmails: true, customFieldLabels: true }
+    select: { escalationEmails: true, customFieldLabels: true, customTags: true }
   });
 }
 
@@ -38,3 +38,4 @@ export async function updateCustomFieldLabels(labels: Record<string, string>) {
   revalidatePath('/settings');
   return { success: true };
 }
+export async function updateCustomTags(tags: any[]) { const user = await getCurrentUser(); if (!user || !user.organizationId) throw new Error('Unauthorized'); await prisma.organization.update({ where: { id: user.organizationId }, data: { customTags: tags } }); revalidatePath('/settings'); return { success: true }; }

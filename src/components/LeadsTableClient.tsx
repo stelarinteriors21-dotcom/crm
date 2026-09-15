@@ -34,7 +34,7 @@ const BASE_COLUMNS = [
   { id: "phone", label: "Phone", type: "📱", defaultVisible: true }
 ];
 
-export default function LeadsTableClient({ leads, totalLeads }: { leads: Lead[], totalLeads: number }) {
+export default function LeadsTableClient({ leads, totalLeads, customTags = [] }: { leads: Lead[], totalLeads: number, customTags?: any[] }) {
   // Extract custom fields from leads
   const customFieldKeys = new Set<string>();
   let customLabels: Record<string, string> = {};
@@ -438,11 +438,13 @@ export default function LeadsTableClient({ leads, totalLeads }: { leads: Lead[],
                           alert('Failed to update tag');
                         }
                       }}
+                      style={lead.tag ? { color: customTags.find((t: any) => t.name === lead.tag)?.color || 'inherit', fontWeight: 600 } : {}}
                       className="text-xs border-0 bg-transparent text-gray-500 hover:bg-gray-50 rounded px-1 py-0.5 focus:ring-0 cursor-pointer w-[140px]"
                     >
                       <option value="">-- No Tag --</option>
-                      <option value="Future potential lead">Future potential lead</option>
-                      <option value="Potential lead">Potential lead</option>
+                      {customTags.map((t: any) => (
+                        <option key={t.name} value={t.name}>{t.name}</option>
+                      ))}
                     </select>
                   </td>
                 )}

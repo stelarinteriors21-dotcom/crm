@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
-import { updateEscalationEmails, updateCustomFieldLabels } from "@/app/actions/settingsActions";
-import { Loader2, Save, Mail, FileText, Plus, Trash2 } from "lucide-react";
+import { updateEscalationEmails, updateCustomFieldLabels, updateCustomTags } from "@/app/actions/settingsActions";
+import { Loader2, Save, Mail, FileText, Plus, Trash2, Tag } from "lucide-react";
 
-export default function SettingsClient({ initialEmails, initialLabels }: { initialEmails: string, initialLabels: Record<string, string> }) {
+export default function SettingsClient({ initialEmails, initialLabels, initialTags }: { initialEmails: string, initialLabels: Record<string, string>, initialTags?: any[] }) {
   const [emails, setEmails] = useState(initialEmails);
   const [labels, setLabels] = useState(initialLabels);
+  const [tags, setTags] = useState<any[]>(initialTags || []);
   
   const [loadingEmails, setLoadingEmails] = useState(false);
   const [savedEmails, setSavedEmails] = useState(false);
@@ -13,8 +14,14 @@ export default function SettingsClient({ initialEmails, initialLabels }: { initi
   const [loadingLabels, setLoadingLabels] = useState(false);
   const [savedLabels, setSavedLabels] = useState(false);
 
+  const [loadingTags, setLoadingTags] = useState(false);
+  const [savedTags, setSavedTags] = useState(false);
+
   const [newKey, setNewKey] = useState("");
   const [newVal, setNewVal] = useState("");
+
+  const [newTagName, setNewTagName] = useState("");
+  const [newTagColor, setNewTagColor] = useState("#613cbc");
 
   const handleSaveEmails = async () => {
     setLoadingEmails(true);
@@ -34,6 +41,15 @@ export default function SettingsClient({ initialEmails, initialLabels }: { initi
     setTimeout(() => setSavedLabels(false), 3000);
   };
 
+  const handleSaveTags = async () => {
+    setLoadingTags(true);
+    setSavedTags(false);
+    await updateCustomTags(tags);
+    setLoadingTags(false);
+    setSavedTags(true);
+    setTimeout(() => setSavedTags(false), 3000);
+  };
+
   const addLabel = () => {
     if (!newKey.trim()) return;
     setLabels(prev => ({ ...prev, [newKey.trim()]: newVal.trim() }));
@@ -47,6 +63,16 @@ export default function SettingsClient({ initialEmails, initialLabels }: { initi
       delete next[key];
       return next;
     });
+  };
+
+  const addTag = () => {
+    if (!newTagName.trim()) return;
+    setTags(prev => [...prev, { name: newTagName.trim(), color: newTagColor }]);
+    setNewTagName("");
+  };
+
+  const removeTag = (idx: number) => {
+    setTags(prev => prev.filter((_, i) => i !== idx));
   };
 
   return (
@@ -87,6 +113,78 @@ export default function SettingsClient({ initialEmails, initialLabels }: { initi
         </div>
       </div>
 
+      {/* Tags Settings Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+            <Tag className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Custom Tags Mapping</h2>
+            <p className="text-sm text-gray-500">Create color-coded tags that team members can apply to leads.</p>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-4">
+          {tags.map((tag, idx) => (
+            <div key={idx} className="flex items-center gap-3">
+              <input 
+                type="text" 
+                value={tag.name}
+                disabled
+                className="w-1/3 bg-gray-100 border border-gray-200 text-gray-700 text-sm rounded-lg block p-2.5 cursor-not-allowed font-medium"
+              />
+              <input 
+                type="color" 
+                value={tag.color}
+                disabled
+                className="w-12 h-10 rounded cursor-not-allowed border-0 p-0"
+              />
+              <button 
+                onClick={() => removeTag(idx)}
+                className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            </div>
+          ))}
+
+          <div className="flex items-center gap-3 pt-2">
+            <input 
+              type="text" 
+              value={newTagName}
+              onChange={e => setNewTagName(e.target.value)}
+              placeholder="Tag Name (e.g. VIP Client)"
+              className="w-1/3 bg-white border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#613cbc] focus:border-[#613cbc] block p-2.5"
+            />
+            <input 
+              type="color" 
+              value={newTagColor}
+              onChange={e => setNewTagColor(e.target.value)}
+              className="w-12 h-10 rounded cursor-pointer border border-gray-200 p-0"
+            />
+            <button 
+              onClick={addTag}
+              disabled={!newTagName.trim()}
+              className="flex items-center text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <Plus className="w-4 h-4 mr-1" /> Add Tag
+            </button>
+          </div>
+
+          <div className="pt-4 mt-4 border-t border-gray-100">
+            <button
+              onClick={handleSaveTags}
+              disabled={loadingTags}
+              className="flex items-center bg-[#613cbc] hover:bg-purple-800 text-white font-bold py-2.5 px-6 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {loadingTags ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              {savedTags ? "Saved!" : "Save Tags"}
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Dynamic Fields Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center space-x-3 mb-4">
@@ -112,10 +210,13 @@ export default function SettingsClient({ initialEmails, initialLabels }: { initi
               <input 
                 type="text" 
                 value={val}
-                onChange={(e) => setLabels(prev => ({ ...prev, [key]: e.target.value }))}
-                className="flex-1 bg-white border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#613cbc] focus:border-[#613cbc] block p-2.5"
+                onChange={e => setLabels(prev => ({ ...prev, [key]: e.target.value }))}
+                className="w-1/3 bg-white border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#613cbc] focus:border-[#613cbc] block p-2.5"
               />
-              <button onClick={() => removeLabel(key)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+              <button 
+                onClick={() => removeLabel(key)}
+                className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              >
                 <Trash2 className="w-5 h-5" />
               </button>
             </div>
@@ -124,32 +225,38 @@ export default function SettingsClient({ initialEmails, initialLabels }: { initi
           <div className="flex items-center gap-3 pt-2">
             <input 
               type="text" 
-              placeholder="Raw Meta Key (e.g. approx_budget_range)"
               value={newKey}
-              onChange={(e) => setNewKey(e.target.value)}
-              className="w-1/3 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#613cbc] focus:border-[#613cbc] block p-2.5"
+              onChange={e => setNewKey(e.target.value)}
+              placeholder="Raw key (e.g. ad_id)"
+              className="w-1/3 bg-white border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#613cbc] focus:border-[#613cbc] block p-2.5"
             />
             <span className="text-gray-400">→</span>
             <input 
               type="text" 
-              placeholder="Display Name (e.g. Budget Range)"
               value={newVal}
-              onChange={(e) => setNewVal(e.target.value)}
-              className="flex-1 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#613cbc] focus:border-[#613cbc] block p-2.5"
+              onChange={e => setNewVal(e.target.value)}
+              placeholder="Display name (e.g. Ad ID)"
+              className="w-1/3 bg-white border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#613cbc] focus:border-[#613cbc] block p-2.5"
             />
-            <button onClick={addLabel} disabled={!newKey.trim()} className="p-2 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg disabled:opacity-50">
-              <Plus className="w-5 h-5" />
+            <button 
+              onClick={addLabel}
+              disabled={!newKey.trim()}
+              className="flex items-center text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <Plus className="w-4 h-4 mr-1" /> Add
             </button>
           </div>
 
-          <button
-            onClick={handleSaveLabels}
-            disabled={loadingLabels}
-            className="flex items-center bg-[#613cbc] hover:bg-purple-800 text-white font-bold py-2.5 px-6 rounded-lg transition-colors disabled:opacity-50 mt-6"
-          >
-            {loadingLabels ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-            {savedLabels ? "Saved!" : "Save Column Mappings"}
-          </button>
+          <div className="pt-4 mt-4 border-t border-gray-100">
+            <button
+              onClick={handleSaveLabels}
+              disabled={loadingLabels}
+              className="flex items-center bg-[#613cbc] hover:bg-purple-800 text-white font-bold py-2.5 px-6 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {loadingLabels ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              {savedLabels ? "Saved!" : "Save Mapping"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
