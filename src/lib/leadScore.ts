@@ -1,69 +1,75 @@
 // Stelar Lead Scoring — Stagewise
 // Each factor has a max of 11.11 points (9 factors × 11.11 = ~100)
 
-export const SCORE_MAX = 11.11;
+export const SCORE_MAX = 10.00;
 
 export const SCORE_FACTORS = {
-  // Stage 01 — Interest
+  // Stage 01 - Interest
   scoreEngagement: {
     stage: "01 — Interest",
     label: "Engagement / Intent",
     levels: ["None", "Cold", "Warm", "Hot"],
-    scores:  [0,       2.78,   5.56,   11.11],
+    scores:  [0,       3.33,   6.67,   10.00],
   },
 
-  // Stage 02 — Qualification
+  // Stage 02 - Qualification
   scoreLocation: {
     stage: "02 — Qualification",
     label: "Location",
     levels: ["Outside", "Kerala", "Near TVM", "TVM"],
-    scores:  [0,          2.78,    5.56,        11.11],
+    scores:  [0,          3.33,    6.67,        10.00],
   },
   scoreBudget: {
     stage: "02 — Qualification",
     label: "Budget",
-    levels: ["Unknown", "Poor", "Possible", "Good", "Strong"],
-    scores:  [0,          2.78,  5.56,       8.33,  11.11],
+    levels: ["None", "1L - 3L", "3L - 6L", "6L - 9L", "9L - 12L", "12L - 15L", "15L+"],
+    scores:  [0,      1.67,      3.33,      5.00,      6.67,       8.33,        10.00],
   },
   scoreTimeline: {
     stage: "02 — Qualification",
     label: "Buying Timeline",
-    levels: ["None", "6M+", "3-6M", "1-3M", "<30D"],
-    scores:  [0,       2.78,  5.56,   8.33,  11.11],
+    levels: ["None", "6M+", "3-6M", "1-3M", "1M"],
+    scores:  [0,       2.50,  5.00,   7.50,  10.00],
+  },
+  scoreStatus: {
+    stage: "02 — Qualification",
+    label: "Status",
+    levels: ["None", "Renovation", "New House"],
+    scores:  [0,       5.00,         10.00],
   },
 
-  // Stage 03 — Project
+  // Stage 03 - Project
   scoreFullHome: {
     stage: "03 — Project",
-    label: "Full Home",
-    levels: ["Room", "Limited", "Multiple", "Major", "Full Home"],
-    scores:  [0,       2.78,     5.56,       8.33,   11.11],
+    label: "Requirements",
+    levels: ["None", "Partitioning", "Cieling", "Paneling", "Bedroom", "Kitchen", "Dining area", "Living room", "Multiple section", "Full home"],
+    scores:  [0,      1.11,           2.22,      3.33,       4.44,      5.55,      6.66,          7.77,          8.88,               10.00],
   },
   scoreFloorPlan: {
     stage: "03 — Project",
     label: "Floor Plan",
-    levels: ["None", "Pending", "Partial", "Received"],
-    scores:  [0,       2.78,     5.56,      11.11],
+    levels: ["None", "Pending", "Received"],
+    scores:  [0,       5.00,      10.00],
   },
   scoreMoodBoard: {
     stage: "03 — Project",
     label: "Mood Board",
-    levels: ["None", "Style", "References", "Direction", "Received"],
-    scores:  [0,       2.78,  5.56,          8.33,       11.11],
+    levels: ["None", "Received", "Approved"],
+    scores:  [0,       5.00,       10.00],
   },
 
-  // Stage 04 — Sales
+  // Stage 04 - Sales
   scoreSiteVisit: {
     stage: "04 — Sales",
     label: "Site Visit",
-    levels: ["None", "Discussed", "Scheduled", "Done"],
-    scores:  [0,       2.78,       8.33,        11.11],
+    levels: ["None", "Scheduled", "Rescheduled", "Done"],
+    scores:  [0,       3.33,        6.67,          10.00],
   },
   scoreQuotation: {
     stage: "04 — Sales",
     label: "Quotation",
-    levels: ["None", "Discussed", "Requested", "Shared", "Review"],
-    scores:  [0,       2.78,       5.56,        8.33,    11.11],
+    levels: ["None", "Estimate", "Revised", "Final"],
+    scores:  [0,       3.33,       6.67,      10.00],
   },
 } as const;
 
@@ -74,6 +80,7 @@ export type LeadScoreInput = {
   scoreLocation: string;
   scoreBudget: string;
   scoreTimeline: string;
+  scoreStatus: string;
   scoreFullHome: string;
   scoreFloorPlan: string;
   scoreMoodBoard: string;

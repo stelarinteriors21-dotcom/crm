@@ -151,7 +151,7 @@ export default function LeadScoreWidget({ leadId, initialScores }: Props) {
                     {stage}
                   </span>
                   <span className="text-[11px] text-gray-400 font-medium">
-                    {stageFactors.reduce((s, f) => s + f.score, 0).toFixed(2)} / {(stageFactors.length * 11.11).toFixed(2)}
+                    {stageFactors.reduce((s, f) => s + f.score, 0).toFixed(2)} / {(stageFactors.length * 10.00).toFixed(2)}
                   </span>
                 </div>
 
@@ -185,12 +185,12 @@ export default function LeadScoreWidget({ leadId, initialScores }: Props) {
                       <div className="text-right ml-4 flex-shrink-0 w-24">
                         <div className="text-[13px] font-black text-gray-800">
                           {factor.score.toFixed(2)}
-                          <span className="text-[10px] font-medium text-gray-400"> / 11.11</span>
+                          <span className="text-[10px] font-medium text-gray-400"> / 10.00</span>
                         </div>
                         <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden mt-1">
                           <div
                             className={`h-full rounded-full transition-all duration-300 ${STAGE_COLORS[factor.stage]}`}
-                            style={{ width: `${(factor.score / 11.11) * 100}%` }}
+                            style={{ width: `${(factor.score / 10.00) * 100}%` }}
                           />
                         </div>
                       </div>

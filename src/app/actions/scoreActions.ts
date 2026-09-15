@@ -8,6 +8,7 @@ export async function updateLeadScore(leadId: string, scores: {
   scoreLocation: string;
   scoreBudget: string;
   scoreTimeline: string;
+  scoreStatus: string;
   scoreFullHome: string;
   scoreFloorPlan: string;
   scoreMoodBoard: string;
@@ -59,6 +60,7 @@ export async function checkPendingScoreLead() {
             scoreLocation: lead.scoreLocation,
             scoreBudget: lead.scoreBudget,
             scoreTimeline: lead.scoreTimeline,
+            scoreStatus: lead.scoreStatus,
             scoreFullHome: lead.scoreFullHome,
             scoreFloorPlan: lead.scoreFloorPlan,
             scoreMoodBoard: lead.scoreMoodBoard,

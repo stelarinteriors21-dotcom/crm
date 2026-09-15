@@ -85,16 +85,17 @@ model Lead {
   escalationLevel Int     @default(0)
   previousAssigneeId String?
 
-  // Stelar Lead Scoring â€” Stagewise
-  scoreEngagement  String  @default("None")      // None | Low | Medium | High | Strong
+  // Stelar  // Lead Scoring Fields (Stagewise)
+  scoreEngagement  String  @default("None")      // None | Cold | Warm | Hot
   scoreLocation    String  @default("Outside")   // Outside | Kerala | Near TVM | TVM
-  scoreBudget      String  @default("Unknown")   // Unknown | Poor | Possible | Good | Strong
-  scoreTimeline    String  @default("None")      // None | 6M+ | 3-6M | 1-3M | <30D
-  scoreFullHome    String  @default("Room")      // Room | Limited | Multiple | Major | Full Home
-  scoreFloorPlan   String  @default("None")      // None | Pending | Partial | Received
-  scoreMoodBoard   String  @default("None")      // None | Style | References | Direction | Received
-  scoreSiteVisit   String  @default("None")      // None | Discussed | Scheduled | Done
-  scoreQuotation   String  @default("None")      // None | Discussed | Requested | Shared | Review
+  scoreBudget      String  @default("None")      // None | 1L - 3L | 3L - 6L | 6L - 9L | 9L - 12L | 12L - 15L | 15L+
+  scoreTimeline    String  @default("None")      // None | 6M+ | 3-6M | 1-3M | 1M
+  scoreStatus      String  @default("None")      // None | Renovation | New House
+  scoreFullHome    String  @default("None")      // None | Partitioning | Cieling | Paneling | Bedroom | Kitchen | Dining area | Living room | Multiple section | Full home
+  scoreFloorPlan   String  @default("None")      // None | Pending | Received
+  scoreMoodBoard   String  @default("None")      // None | Received | Approved
+  scoreSiteVisit   String  @default("None")      // None | Scheduled | Rescheduled | Done
+  scoreQuotation   String  @default("None")      // None | Estimate | Revised | Final
 }
 
 model CallLog {

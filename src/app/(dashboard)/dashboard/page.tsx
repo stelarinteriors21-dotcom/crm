@@ -37,6 +37,7 @@ export default async function DashboardPage() {
         scoreLocation: l.scoreLocation,
         scoreBudget: l.scoreBudget,
         scoreTimeline: l.scoreTimeline,
+        scoreStatus: l.scoreStatus,
         scoreFullHome: l.scoreFullHome,
         scoreFloorPlan: l.scoreFloorPlan,
         scoreMoodBoard: l.scoreMoodBoard,

@@ -71,6 +71,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
     scoreLocation:   lead.scoreLocation,
     scoreBudget:     lead.scoreBudget,
     scoreTimeline:   lead.scoreTimeline,
+    scoreStatus:     lead.scoreStatus,
     scoreFullHome:   lead.scoreFullHome,
     scoreFloorPlan:  lead.scoreFloorPlan,
     scoreMoodBoard:  lead.scoreMoodBoard,

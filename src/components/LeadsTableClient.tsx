@@ -381,6 +381,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                     scoreLocation: lead.scoreLocation,
                     scoreBudget: lead.scoreBudget,
                     scoreTimeline: lead.scoreTimeline,
+                    scoreStatus: lead.scoreStatus,
                     scoreFullHome: lead.scoreFullHome,
                     scoreFloorPlan: lead.scoreFloorPlan,
                     scoreMoodBoard: lead.scoreMoodBoard,
