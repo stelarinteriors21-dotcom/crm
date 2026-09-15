@@ -14,13 +14,19 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     
-    const formData = new FormData(e.currentTarget);
-    const res = await login(formData);
-    if (res?.error) {
-      setError(res.error);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const res = await login(formData);
+      if (res?.error) {
+        setError(res.error);
+        setLoading(false);
+      } else {
+        window.location.href = "/dashboard";
+      }
+    } catch (err: any) {
+      console.error("Login exception:", err);
+      setError(err.message || "An unexpected error occurred connecting to the database. Please try again.");
       setLoading(false);
-    } else {
-      window.location.href = "/dashboard";
     }
   };
 
