@@ -54,7 +54,7 @@ export const SCORE_FACTORS = {
   scoreMoodBoard: {
     stage: "03 — Project",
     label: "Mood Board",
-    levels: ["None", "Received", "Approved"],
+    levels: ["None", "Revised", "Approved"],
     scores:  [0,       5.00,       10.00],
   },
 
