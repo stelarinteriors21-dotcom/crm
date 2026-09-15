@@ -26,6 +26,9 @@ export default function LoginPage() {
         window.location.href = "/dashboard";
       }
     } catch (err: any) {
+      if (err.message === "NEXT_REDIRECT") {
+        throw err;
+      }
       console.error("Login exception:", err);
       setError(err.message || "An unexpected error occurred connecting to the database. Please try again.");
       setLoading(false);

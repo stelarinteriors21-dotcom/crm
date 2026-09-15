@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export async function getCurrentUser() {
   try {
@@ -70,13 +71,14 @@ export async function login(formData: FormData) {
     return { error: "Incorrect password. Please try again." };
   }
   
-  cookies().set("mock_user_email", user.email, { 
-    path: "/", 
+  cookies().set({
+    name: "mock_user_email",
+    value: user.email,
+    path: "/",
     maxAge: 60 * 60 * 24 * 30, // 30 days
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax"
   });
-  return { success: true };
+  
+  redirect("/dashboard");
 }
 
 export async function logout() {
