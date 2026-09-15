@@ -7,7 +7,7 @@ import LeadsKanbanClient from "@/components/LeadsKanbanClient";
 import SearchBar from "@/components/SearchBar";
 
 export default async function LeadsPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
-  const query = typeof searchParams.q === "string" ? searchParams.q : undefined;
+  const query = typeof searchParams.query === "string" ? searchParams.query : undefined;
   const searchField = typeof searchParams.searchField === "string" ? searchParams.searchField : undefined;
   const status = searchParams.status as string | string[] | undefined;
   const source = typeof searchParams.source === "string" ? searchParams.source : undefined;
