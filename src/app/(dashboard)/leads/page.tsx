@@ -7,7 +7,12 @@ import LeadsTableClient from "@/components/LeadsTableClient";
 import LeadsKanbanClient from "@/components/LeadsKanbanClient";
 import SearchBar from "@/components/SearchBar";
 
+import { getCurrentUser } from "@/app/actions/authActions";
+
 export default async function LeadsPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+  const user = await getCurrentUser();
+  const isAdmin = user?.role === "ADMIN" || user?.role === "ROOT";
+
   const query = typeof searchParams.query === "string" ? searchParams.query : undefined;
   const searchField = typeof searchParams.searchField === "string" ? searchParams.searchField : undefined;
   const status = searchParams.status as string | string[] | undefined;
@@ -38,10 +43,10 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
       </div>
 
       {/* View Switcher is typically added in LeadsHeaderActions, but we check searchParams here */}
-      {searchParams.view === 'kanban' ? (
+      {searchParams.view === "kanban" ? (
         <LeadsKanbanClient leads={dbLeads} customTags={customTags} />
       ) : (
-        <LeadsTableClient leads={dbLeads} totalLeads={dbLeads.length} customTags={customTags} />
+        <LeadsTableClient leads={dbLeads} totalLeads={dbLeads.length} customTags={customTags} isAdmin={isAdmin} />
       )}
 
     </div>

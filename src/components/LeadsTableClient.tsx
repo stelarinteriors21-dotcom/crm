@@ -6,6 +6,7 @@ import * as XLSX from "xlsx";
 import LeadActionsMenu from "@/components/LeadActionsMenu";
 import { calculateLeadScore, getScoreColor } from "@/lib/leadScore";
 import { updateLeadTag } from "@/app/actions/leadActions";
+import { addCustomTag } from "@/app/actions/settingsActions";
 import { LEAD_STATUS_OPTIONS, LEAD_STATUS_COLORS } from "@/lib/constants";
 
 type Lead = any;
@@ -34,7 +35,7 @@ const BASE_COLUMNS = [
   { id: "phone", label: "Phone", type: "📱", defaultVisible: true }
 ];
 
-export default function LeadsTableClient({ leads, totalLeads, customTags = [] }: { leads: Lead[], totalLeads: number, customTags?: any[] }) {
+export default function LeadsTableClient({ leads, totalLeads, customTags = [], isAdmin = false }: { leads: Lead[], totalLeads: number, customTags?: any[], isAdmin?: boolean }) {
   // Extract custom fields from leads
   const customFieldKeys = new Set<string>();
   let customLabels: Record<string, string> = {};
@@ -432,6 +433,25 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [] }:
                       value={lead.tag || ""}
                       onChange={async (e) => {
                         const val = e.target.value || null;
+                        if (val === "__ADD_NEW__") {
+                          if (!isAdmin) return;
+                          const newTag = window.prompt("Enter new tag name:");
+                          if (newTag && newTag.trim()) {
+                            try {
+                              const res = await addCustomTag(newTag.trim());
+                              if (res.success) {
+                                await updateLeadTag(lead.id, newTag.trim());
+                              } else {
+                                alert(res.error || "Failed to add tag");
+                              }
+                            } catch(e) {
+                              alert("Failed to add new tag");
+                            }
+                          }
+                          // Reset the select if they cancelled
+                          e.target.value = lead.tag || "";
+                          return;
+                        }
                         try {
                           await updateLeadTag(lead.id, val);
                         } catch (err) {
@@ -445,6 +465,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [] }:
                       {customTags.map((t: any) => (
                         <option key={t.name} value={t.name}>{t.name}</option>
                       ))}
+                      {isAdmin && <option value="__ADD_NEW__" className="text-[#613cbc] font-bold">+ Add New Tag</option>}
                     </select>
                   </td>
                 )}
