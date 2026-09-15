@@ -34,8 +34,8 @@ export const SCORE_FACTORS = {
   scoreStatus: {
     stage: "02 — Qualification",
     label: "Status",
-    levels: ["None", "Renovation", "New House"],
-    scores:  [0,       5.00,         10.00],
+    levels: ["None", "Renovation", "New House", "Plastering", "Flooring/ Tiling", "Painting Stage", "Finishing Stage"],
+    scores:  [0,       1.67,         3.33,        5.00,         6.67,               8.33,             10.00],
   },
 
   // Stage 03 - Project
