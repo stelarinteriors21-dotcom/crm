@@ -8,6 +8,7 @@ export default function LeadsFilterClient() {
   const searchParams = useSearchParams();
   
   const currentQuery = searchParams.get('q') || '';
+  const currentSearchField = searchParams.get('searchField') || 'all';
   const currentStatus = searchParams.get('status') || '';
   const currentAssignee = searchParams.get('assignee') || '';
 
@@ -15,6 +16,9 @@ export default function LeadsFilterClient() {
 
   const [searchTimer, setSearchTimer] = useState<NodeJS.Timeout | null>(null);
   
+  const [showSearchFieldMenu, setShowSearchFieldMenu] = useState(false);
+  const searchFieldRef = useRef<HTMLDivElement>(null);
+
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const statusRef = useRef<HTMLDivElement>(null);
   
@@ -28,6 +32,9 @@ export default function LeadsFilterClient() {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      if (searchFieldRef.current && !searchFieldRef.current.contains(event.target as Node)) {
+        setShowSearchFieldMenu(false);
+      }
       if (statusRef.current && !statusRef.current.contains(event.target as Node)) {
         setShowStatusMenu(false);
       }
@@ -62,15 +69,40 @@ export default function LeadsFilterClient() {
 
   return (
     <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-gray-100 bg-gray-50/30">
-      <div className="flex items-center flex-1 max-w-2xl bg-white border border-gray-200 rounded-md shadow-sm">
-        <div className="flex items-center px-3 py-1.5 border-r border-gray-200 cursor-pointer">
+      <div className="flex items-center flex-1 max-w-2xl bg-white border border-gray-200 rounded-md shadow-sm relative">
+        <div 
+          ref={searchFieldRef}
+          onClick={() => setShowSearchFieldMenu(!showSearchFieldMenu)}
+          className="flex items-center px-3 py-1.5 border-r border-gray-200 cursor-pointer relative"
+        >
           <Search className="w-4 h-4 text-gray-400 mr-2" />
-          <span className="text-sm text-gray-600">Name</span>
+          <span className="text-sm text-gray-600 w-12 truncate">{currentSearchField === 'all' ? 'All' : currentSearchField === 'name' ? 'Name' : currentSearchField === 'phone' ? 'Phone' : 'Email'}</span>
           <ChevronDown className="w-4 h-4 ml-1 text-gray-400" />
+          
+          {showSearchFieldMenu && (
+            <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden">
+              <div 
+                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                onClick={() => updateUrl('searchField', 'all')}
+              >All</div>
+              <div 
+                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                onClick={() => updateUrl('searchField', 'name')}
+              >Name</div>
+              <div 
+                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                onClick={() => updateUrl('searchField', 'phone')}
+              >Phone</div>
+              <div 
+                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                onClick={() => updateUrl('searchField', 'email')}
+              >Email</div>
+            </div>
+          )}
         </div>
         <input 
           type="text" 
-          placeholder="Search lead by name or phone" 
+          placeholder={currentSearchField === 'phone' ? "Search lead by phone" : currentSearchField === 'name' ? "Search lead by name" : "Search lead by name, phone, or email"} 
           defaultValue={currentQuery}
           onChange={(e) => handleSearch(e.target.value)}
           className="flex-1 px-3 py-1.5 outline-none text-sm" 

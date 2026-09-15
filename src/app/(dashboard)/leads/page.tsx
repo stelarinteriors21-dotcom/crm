@@ -7,7 +7,8 @@ import LeadsKanbanClient from "@/components/LeadsKanbanClient";
 import SearchBar from "@/components/SearchBar";
 
 export default async function LeadsPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
-  const query = typeof searchParams.query === "string" ? searchParams.query : undefined;
+  const query = typeof searchParams.q === "string" ? searchParams.q : undefined;
+  const searchField = typeof searchParams.searchField === "string" ? searchParams.searchField : undefined;
   const status = searchParams.status as string | string[] | undefined;
   const source = typeof searchParams.source === "string" ? searchParams.source : undefined;
   const assigned = typeof searchParams.assigned === "string" ? searchParams.assigned : undefined;
@@ -16,7 +17,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
   const endDate = typeof searchParams.endDate === "string" ? searchParams.endDate : undefined;
   const tag = typeof searchParams.tag === "string" ? searchParams.tag : undefined;
 
-  const dbLeads = await getLeads(query, status, source, assigned, active, startDate, endDate, tag);
+  const dbLeads = await getLeads(query, searchField, status, source, assigned, active, startDate, endDate, tag);
 
   return (
     <div className="h-full bg-white flex flex-col -m-3 md:-m-6">

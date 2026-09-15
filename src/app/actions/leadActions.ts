@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "./authActions";
 import { revalidatePath } from "next/cache";
 
-export async function getLeads(query?: string, status?: string | string[], source?: string, assigned?: string, active?: boolean, startDate?: string, endDate?: string, tag?: string) {
+export async function getLeads(query?: string, searchField?: string, status?: string | string[], source?: string, assigned?: string, active?: boolean, startDate?: string, endDate?: string, tag?: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
@@ -47,11 +47,19 @@ export async function getLeads(query?: string, status?: string | string[], sourc
   }
 
   if (query) {
-    where.OR = [
-      { name: { contains: query } },
-      { phone: { contains: query } },
-      { email: { contains: query } },
-    ];
+    if (searchField === "phone") {
+      where.phone = { contains: query };
+    } else if (searchField === "email") {
+      where.email = { contains: query };
+    } else if (searchField === "name") {
+      where.name = { contains: query };
+    } else {
+      where.OR = [
+        { name: { contains: query } },
+        { phone: { contains: query } },
+        { email: { contains: query } },
+      ];
+    }
   }
 
   if (status) {
