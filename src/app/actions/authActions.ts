@@ -62,7 +62,7 @@ export async function login(formData: FormData) {
     if (user.password.startsWith("$2a$") || user.password.startsWith("$2b$") || user.password.startsWith("$2y$")) {
       isValid = await bcrypt.compare(password, user.password);
     } else {
-      isValid = password === user.password;
+      isValid = password.trim() === user.password;
     }
   }
 
