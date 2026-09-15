@@ -60,7 +60,7 @@ export default function SearchBar({ placeholder = "Search lead" }: { placeholder
   };
 
   return (
-    <div className="flex-1 max-w-2xl relative flex items-center">
+    <div className="flex-1 max-w-2xl relative flex items-center z-[100]">
       <div 
         ref={menuRef}
         className="absolute left-1 flex items-center h-[90%] z-10"

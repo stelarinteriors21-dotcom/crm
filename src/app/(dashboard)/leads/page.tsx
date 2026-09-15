@@ -25,7 +25,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
       <LeadsHeaderActions />
 
       {/* Search & Filters */}
-      <div className="px-4 md:px-6 py-3 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between shrink-0 bg-[#FDFDFD] gap-3">
+      <div className="px-4 md:px-6 py-3 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between shrink-0 bg-[#FDFDFD] gap-3 relative z-50">
         <div className="w-full lg:w-auto shrink-0">
           <SearchBar />
         </div>
