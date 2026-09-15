@@ -40,7 +40,7 @@ export async function getCurrentUser() {
     return user;
   } catch (error) {
     console.error("Auth Error:", error);
-    return null;
+    throw error;
   }
 }
 
@@ -72,7 +72,9 @@ export async function login(formData: FormData) {
   
   cookies().set("mock_user_email", user.email, { 
     path: "/", 
-    maxAge: 60 * 60 * 24 * 30 // 30 days
+    maxAge: 60 * 60 * 24 * 30, // 30 days
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax"
   });
   return { success: true };
 }
