@@ -9,15 +9,12 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     
-    const formData = new FormData();
-    formData.append("email", email);
-    formData.append("password", password);
-    
+    const formData = new FormData(e.currentTarget);
     const res = await login(formData);
     if (res?.error) {
       setError(res.error);
@@ -44,8 +41,7 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
             <input 
               type="email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
               className="w-full px-4 py-2 text-gray-900 bg-white placeholder-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#613cbc]/20 focus:border-[#613cbc]"
               placeholder="user@example.com"
               required 
@@ -55,8 +51,7 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input 
               type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
               className="w-full px-4 py-2 text-gray-900 bg-white placeholder-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#613cbc]/20 focus:border-[#613cbc]"
               placeholder="••••••••"
               required 
