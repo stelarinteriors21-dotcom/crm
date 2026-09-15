@@ -40,6 +40,7 @@ export const SCORE_FACTORS = {
 
   // Stage 03 - Project
   scoreFullHome: {
+    type: "multi",
     stage: "03 — Project",
     label: "Requirements",
     levels: ["None", "Partitioning", "Cieling", "Paneling", "Bedroom", "Kitchen", "Dining area", "Living room", "Multiple section", "Full home"],
@@ -107,15 +108,27 @@ export function calculateLeadScore(input: LeadScoreInput): {
   const factors: FactorResult[] = [];
 
   for (const [key, def] of Object.entries(SCORE_FACTORS) as [ScoreKey, (typeof SCORE_FACTORS)[ScoreKey]][]) {
-    const level = input[key] ?? def.levels[0];
-    const idx = def.levels.indexOf(level as never);
-    const score = idx >= 0 ? def.scores[idx] : 0;
+    const levelStr = input[key] ?? def.levels[0];
+    
+    let score = 0;
+    if ("type" in def && def.type === "multi") {
+      const selected = levelStr.split(",").map(s => s.trim()).filter(Boolean);
+      for (const s of selected) {
+        const idx = def.levels.indexOf(s as never);
+        if (idx >= 0) score += def.scores[idx];
+      }
+      if (score > SCORE_MAX) score = SCORE_MAX;
+    } else {
+      const idx = def.levels.indexOf(levelStr as never);
+      score = idx >= 0 ? def.scores[idx] : 0;
+    }
+
     const pct = (score / SCORE_MAX) * 100;
     factors.push({
       key,
       stage: def.stage,
       label: def.label,
-      level,
+      level: levelStr,
       score: Math.round(score * 100) / 100,
       max: SCORE_MAX,
       pct: Math.round(pct),

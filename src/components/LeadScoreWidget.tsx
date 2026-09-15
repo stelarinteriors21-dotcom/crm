@@ -35,7 +35,25 @@ export default function LeadScoreWidget({ leadId, initialScores }: Props) {
   const barColor = getScoreBarColor(total);
 
   const handleChange = (key: ScoreKey, value: string) => {
-    setScores(prev => ({ ...prev, [key]: value }));
+    const def = SCORE_FACTORS[key];
+    setScores(prev => {
+      if ("type" in def && def.type === "multi") {
+        if (value === "None") return { ...prev, [key]: "None" };
+        
+        let current = (prev[key] || "None").split(",").map(s => s.trim()).filter(Boolean);
+        if (current.includes("None")) current = [];
+        
+        if (current.includes(value)) {
+          current = current.filter(v => v !== value);
+        } else {
+          current.push(value);
+        }
+        
+        if (current.length === 0) current = ["None"];
+        return { ...prev, [key]: current.join(",") };
+      }
+      return { ...prev, [key]: value };
+    });
     setSaved(false);
   };
 
@@ -47,12 +65,13 @@ export default function LeadScoreWidget({ leadId, initialScores }: Props) {
     setTimeout(() => setSaved(false), 3000);
   };
 
-  // Group factors by stage
+  // Group by stage
   const stages: Record<string, typeof factors> = {};
   for (const f of factors) {
     if (!stages[f.stage]) stages[f.stage] = [];
     stages[f.stage].push(f);
   }
+
 
   // Arc gauge helpers
   const RADIUS = 54;
@@ -158,6 +177,10 @@ export default function LeadScoreWidget({ leadId, initialScores }: Props) {
                 {/* Factors */}
                 {stageFactors.map(factor => {
                   const def = SCORE_FACTORS[factor.key];
+                  const currentSelectedStr = scores[factor.key] || "None";
+                  const isMulti = "type" in def && def.type === "multi";
+                  const currentSelectedArr = isMulti ? currentSelectedStr.split(",").map(s => s.trim()) : [currentSelectedStr];
+                  
                   return (
                     <div key={factor.key} className="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
                       <div className="flex-1">
@@ -165,7 +188,7 @@ export default function LeadScoreWidget({ leadId, initialScores }: Props) {
                         {/* Level pills */}
                         <div className="flex flex-wrap gap-1 mt-1.5">
                           {def.levels.map((level, i) => {
-                            const isSelected = scores[factor.key] === level;
+                            const isSelected = currentSelectedArr.includes(level);
                             return (
                               <button
                                 key={level}
