@@ -16,7 +16,7 @@ type Lead = {
 };
 
 type StatusStat = { label: string; count: number; percent: string };
-type TeamMember = { initials: string; name: string; calls: number; duration: string; revenue: string };
+type TeamMember = { initials: string; name: string; calls: number; duration: string; revenue: string; activeMinutes?: number };
 
 type Props = {
   pendingLeads: Lead[];
@@ -354,6 +354,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
           userName={selectedUserReport} 
           onClose={() => setSelectedUserReport(null)} 
           allLeads={allLeads}
+          teamActivity={teamActivity}
         />
       )}
     </div>
@@ -520,8 +521,9 @@ function AllLeadsWidget({ statusBreakdown, totalLeads, title = "All Leads" }: { 
   );
 }
 
-function UserReportModal({ userName, onClose, allLeads }: { userName: string, onClose: () => void, allLeads: Lead[] }) {
+function UserReportModal({ userName, onClose, allLeads, teamActivity }: { userName: string, onClose: () => void, allLeads: Lead[], teamActivity: TeamMember[] }) {
   const userLeads = allLeads.filter(l => l.assignedTo?.name === userName);
+  const userActivity = teamActivity.find(t => t.name === userName);
   
   const breakdown: Record<string, number> = {};
   userLeads.forEach(l => {
@@ -562,12 +564,22 @@ function UserReportModal({ userName, onClose, allLeads }: { userName: string, on
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-800">{userName}&apos;s Report</h2>
-              <p className="text-xs text-gray-500">Lead status breakdown for this specific user.</p>
+              <p className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
+                <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold text-[10px]">
+                  {userActivity?.activeMinutes ?? 0}m ACTIVE TODAY
+                </span>
+                <span>{userActivity?.calls ?? 0} calls</span>
+              </p>
             </div>
           </div>
-          <button onClick={downloadCSV} className="mr-8 md:mr-10 flex items-center gap-2 bg-[#613cbc] text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-purple-700 transition-colors">
-            <Download className="w-4 h-4" /> Download CSV
-          </button>
+          <div className="flex items-center gap-2 mr-8 md:mr-10">
+            <Link href="/team/activity" className="text-[12px] font-bold text-[#613cbc] hover:underline px-2">
+              View Activity Logs
+            </Link>
+            <button onClick={downloadCSV} className="flex items-center gap-2 bg-[#613cbc] text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-purple-700 transition-colors">
+              <Download className="w-4 h-4" /> Download CSV
+            </button>
+          </div>
         </div>
         <div className="p-6 bg-gray-50 max-h-[80vh] overflow-y-auto">
           <AllLeadsWidget statusBreakdown={statusBreakdown} totalLeads={userLeads.length} title={`${userName}&apos;s Leads`} />

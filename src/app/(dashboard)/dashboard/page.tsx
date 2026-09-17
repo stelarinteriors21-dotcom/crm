@@ -4,10 +4,13 @@ import { getCurrentUser } from "@/app/actions/authActions";
 import prisma from "@/lib/prisma";
 import DashboardClient from "@/components/DashboardClient";
 import { calculateLeadScore } from "@/lib/leadScore";
+import { getUserInvolvementStats } from "@/app/actions/activityActions";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   const stats = await getDashboardStats();
+  const involvementStats = await getUserInvolvementStats();
+
   
   let pendingLeads: any[] = [];
   let allLeads: any[] = [];
@@ -85,11 +88,13 @@ export default async function DashboardPage() {
         if (s < 60) return `${s}s`;
         return `${Math.floor(s / 60)}m ${s % 60}s`;
       }
+      const invStat = involvementStats.find(s => s.name === m.name);
       return {
         initials,
         name: m.name ?? "Unknown",
         calls: allCalls.length,
-        duration: fmtSecs(totalSecs)
+        duration: fmtSecs(totalSecs),
+        activeMinutes: invStat?.activeMinutes || 0
       };
     });
   }
