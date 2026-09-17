@@ -3,6 +3,8 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+import { logActivity } from "./activityActions";
+
 export async function updateLeadScore(leadId: string, scores: {
   scoreEngagement: string;
   scoreLocation: string;
@@ -21,6 +23,8 @@ export async function updateLeadScore(leadId: string, scores: {
   });
   revalidatePath(`/leads/${leadId}`);
   revalidatePath("/leads");
+  
+  await logActivity("SCORE_UPDATED", `Updated lead score`);
 }
 import { getCurrentUser } from "./authActions";
 

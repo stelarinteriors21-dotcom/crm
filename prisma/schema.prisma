@@ -38,7 +38,8 @@ model User {
   tasks          Task[]
   fileAttachments FileAttachment[]
   emailLogs       EmailLog[]
-    notes           Note[]
+  notes           Note[]
+  activityLogs    ActivityLog[]
 }
 
 model PermissionTemplate {
@@ -185,5 +186,14 @@ model Note {
   lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String   
+  details   String?  
   createdAt DateTime @default(now())
 }

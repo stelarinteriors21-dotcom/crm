@@ -45,6 +45,7 @@ export async function getCurrentUser() {
   }
 }
 
+import { logActivity } from "./activityActions";
 import bcrypt from "bcryptjs";
 
 export async function login(formData: FormData) {
@@ -77,6 +78,9 @@ export async function login(formData: FormData) {
     path: "/",
     maxAge: 60 * 60 * 24 * 30, // 30 days
   });
+  
+  // NOTE: logActivity requires the cookie to be set first to identify the user
+  await logActivity("LOGIN", "User logged in to CRM");
   
   redirect("/dashboard");
 }

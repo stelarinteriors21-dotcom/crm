@@ -177,6 +177,25 @@ export async function createLead(data: any) {
   }
 }
 
+export async function updateLeadStatus(leadId: string, status: string | null) {
+  try {
+    const updatedLead = await prisma.lead.update({
+      where: { id: leadId },
+      data: { status },
+    });
+    
+    revalidatePath("/leads");
+    revalidatePath(`/leads/${leadId}`);
+    
+    await logActivity("STATUS_UPDATED", `Updated status to ${status || 'None'} for ${updatedLead.name}`);
+    
+    return updatedLead;
+  } catch (error) {
+    console.error("Failed to update lead status:", error);
+    throw error;
+  }
+}
+
 export async function acceptLead(leadId: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");

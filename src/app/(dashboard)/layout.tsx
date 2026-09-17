@@ -4,7 +4,7 @@ import {
   BarChart2, Search, UserPlus, PhoneCall, AtSign, Filter, 
   Tag, TrendingUp, Bot, Link as LinkIcon, LayoutGrid, Users, Briefcase,
   Settings, Clock, Bell, ChevronDown, Headset, Plus, Sparkles, Code2, Calendar, Cloud, Download
-} from "lucide-react";
+, Activity} from "lucide-react";
 
 import { getCurrentUser } from "@/app/actions/authActions";
 import UserDropdown from "@/components/UserDropdown";
