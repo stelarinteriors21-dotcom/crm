@@ -31,9 +31,11 @@ export async function checkPendingScoreLead() {
   const leads = await prisma.lead.findMany({
     where: {
       assignedToId: user.id,
-      scoreLocation: "Outside",
-      scoreBudget: "None",
-      scoreTimeline: "None",
+      OR: [
+        { scoreLocation: { in: ["None", "Outside"] } },
+        { scoreBudget: "None" },
+        { scoreTimeline: "None" }
+      ]
     },
     include: {
       calls: {

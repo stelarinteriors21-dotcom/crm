@@ -88,7 +88,7 @@ model Lead {
 
   // Stelar  // Lead Scoring Fields (Stagewise)
   scoreEngagement  String  @default("None")      // None | Cold | Warm | Hot
-  scoreLocation    String  @default("Outside")   // Outside | Kerala | Near TVM | TVM
+  scoreLocation    String  @default("None")      // None | Outside | Kerala | Near TVM | TVM
   scoreBudget      String  @default("None")      // None | 1L - 3L | 3L - 6L | 6L - 9L | 9L - 12L | 12L - 15L | 15L+
   scoreTimeline    String  @default("None")      // None | 6M+ | 3-6M | 1-3M | 1M
   scoreStatus      String  @default("None")      // None | Renovation | New House

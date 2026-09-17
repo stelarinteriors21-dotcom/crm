@@ -5,8 +5,8 @@ export const SCORE_FACTORS = {
   scoreLocation: {
     stage: "Qualification",
     label: "Location",
-    levels: ["Outside", "Kerala", "Near TVM", "TVM"],
-    scores:  [0,          6.66,    13.33,       20.00],
+    levels: ["None", "Outside", "Kerala", "Near TVM", "TVM"],
+    scores:  [0,      5.00,      10.00,    15.00,       20.00],
   },
   scoreBudget: {
     stage: "Qualification",

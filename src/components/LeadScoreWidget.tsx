@@ -24,7 +24,7 @@ const STAGE_LABEL_COLORS: Record<string, string> = {
   "04 — Sales":         "text-green-700 bg-green-50 border-green-200",
 };
 
-export default function LeadScoreWidget({ leadId, initialScores }: Props) {
+export default function LeadScoreWidget({ leadId, initialScores, onSave }: Props) {
   const [scores, setScores] = useState<LeadScoreInput>(initialScores);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -60,6 +60,7 @@ export default function LeadScoreWidget({ leadId, initialScores }: Props) {
   const handleSave = async () => {
     setSaving(true);
     await updateLeadScore(leadId, scores);
+    if (onSave) onSave(scores);
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);

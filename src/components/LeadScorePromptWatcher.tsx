@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { checkPendingScoreLead } from "@/app/actions/scoreActions";
 import LeadScoreWidget from "./LeadScoreWidget";
-import { X } from "lucide-react";
 
 export default function LeadScorePromptWatcher() {
   const [lead, setLead] = useState<any>(null);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     async function check() {
@@ -24,36 +24,45 @@ export default function LeadScorePromptWatcher() {
       }
     }
     
-    // We only check once when the component mounts (which happens when page loads or is reloaded after a call sync)
     check();
   }, []);
 
   if (!lead) return null;
 
-  const handleClose = () => {
+  const handleSave = (scores: any) => {
+    // Check if any score is "None"
+    const hasNone = Object.values(scores).some(v => v === "None" || v === "");
+    if (hasNone) {
+      setErrorMsg("Please fill out all fields before saving.");
+      return;
+    }
+    
+    // Completely filled
     localStorage.setItem("lead_score_dismissed_" + lead.id, "true");
     setLead(null);
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4 backdrop-blur-md">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="p-4 bg-gradient-to-r from-purple-600 to-[#613cbc] text-white flex justify-between items-center shrink-0">
           <div>
             <h2 className="font-bold text-lg">Lead Score Required</h2>
             <p className="text-xs text-purple-100 opacity-90">{lead.name}</p>
           </div>
-          <button onClick={handleClose} className="text-white/80 hover:text-white p-1 rounded-full hover:bg-white/20 transition-colors">
-            <X className="w-5 h-5" />
-          </button>
         </div>
         <div className="p-5 overflow-y-auto bg-gray-50 flex-1 scrollbar-hide">
-          <p className="text-sm text-gray-700 mb-5 font-medium leading-relaxed">
+          <p className="text-sm text-gray-700 mb-2 font-medium leading-relaxed">
             You just completed the first call for <strong className="text-gray-900">{lead.name}</strong>! 
-            Please take a moment to evaluate the lead's quality.
+            Please take a moment to evaluate the lead's quality. All fields are mandatory.
           </p>
-          <div className="shadow-md rounded-xl overflow-hidden">
-            <LeadScoreWidget leadId={lead.id} initialScores={lead.scores} />
+          {errorMsg && (
+            <div className="mb-4 p-2 bg-red-50 text-red-600 text-sm font-semibold rounded-md border border-red-200">
+              {errorMsg}
+            </div>
+          )}
+          <div className="shadow-md rounded-xl overflow-hidden pointer-events-auto">
+            <LeadScoreWidget leadId={lead.id} initialScores={lead.scores} onSave={handleSave} />
           </div>
         </div>
       </div>
