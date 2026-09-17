@@ -165,12 +165,12 @@ export default function LeadScoreWidget({ leadId, initialScores }: Props) {
             {Object.entries(stages).map(([stage, stageFactors]) => (
               <div key={stage} className="border-b border-gray-100 last:border-0">
                 {/* Stage Header */}
-                <div className={`px-5 py-2 flex items-center justify-between border-b border-gray-100`}>
-                  <span className={`text-[11px] font-black px-2 py-0.5 rounded border ${STAGE_LABEL_COLORS[stage]}`}>
+                <div className="flex items-center justify-between mt-6 mb-3 px-4">
+                  <span className="text-[10px] font-black tracking-wider uppercase px-2 py-1 rounded bg-gray-100 text-gray-500">
                     {stage}
                   </span>
                   <span className="text-[11px] text-gray-400 font-medium">
-                    {stageFactors.reduce((s, f) => s + f.score, 0).toFixed(2)} / {(stageFactors.length * 10.00).toFixed(2)}
+                    {stageFactors.reduce((s, f) => s + f.score, 0).toFixed(2)} / {stageFactors.reduce((s, f) => s + f.max, 0).toFixed(2)}
                   </span>
                 </div>
 
@@ -182,21 +182,21 @@ export default function LeadScoreWidget({ leadId, initialScores }: Props) {
                   const currentSelectedArr = isMulti ? currentSelectedStr.split(",").map(s => s.trim()) : [currentSelectedStr];
                   
                   return (
-                    <div key={factor.key} className="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                      <div className="flex-1">
-                        <div className="text-[12px] font-semibold text-gray-700">{factor.label}</div>
+                    <div key={factor.key} className="flex items-center justify-between bg-white px-4 py-3 border border-gray-100 rounded-lg hover:border-gray-300 transition-colors group mb-2 mx-4">
+                      <div className="flex-1 min-w-0 pr-4">
+                        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-2">{factor.label}</label>
                         {/* Level pills */}
-                        <div className="flex flex-wrap gap-1 mt-1.5">
-                          {def.levels.map((level, i) => {
+                        <div className="flex flex-wrap gap-1.5">
+                          {def.levels.map((level) => {
                             const isSelected = currentSelectedArr.includes(level);
                             return (
                               <button
                                 key={level}
                                 onClick={() => handleChange(factor.key, level)}
-                                className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all ${
+                                className={`px-2 py-1 rounded text-[11px] font-semibold border transition-all ${
                                   isSelected
                                     ? "bg-[#613cbc] text-white border-[#613cbc] shadow-sm"
-                                    : "text-gray-500 border-gray-200 hover:border-[#613cbc] hover:text-[#613cbc]"
+                                    : "bg-white text-gray-600 border-gray-200 hover:border-[#613cbc] hover:text-[#613cbc]"
                                 }`}
                               >
                                 {level}
@@ -208,12 +208,12 @@ export default function LeadScoreWidget({ leadId, initialScores }: Props) {
                       <div className="text-right ml-4 flex-shrink-0 w-24">
                         <div className="text-[13px] font-black text-gray-800">
                           {factor.score.toFixed(2)}
-                          <span className="text-[10px] font-medium text-gray-400"> / 10.00</span>
+                          <span className="text-[10px] font-medium text-gray-400"> / {factor.max.toFixed(2)}</span>
                         </div>
                         <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden mt-1">
                           <div
-                            className={`h-full rounded-full transition-all duration-300 ${STAGE_COLORS[factor.stage]}`}
-                            style={{ width: `${(factor.score / 10.00) * 100}%` }}
+                            className={`h-full rounded-full transition-all duration-300 ${STAGE_COLORS[factor.stage] || "bg-gray-400"}`}
+                            style={{ width: `${(factor.score / factor.max) * 100}%` }}
                           />
                         </div>
                       </div>
@@ -228,7 +228,7 @@ export default function LeadScoreWidget({ leadId, initialScores }: Props) {
           <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
             <div className="text-[13px] font-black text-gray-800">TOTAL SCORE</div>
             <div className={`text-[18px] font-black px-3 py-1 rounded-lg border ${scoreColor}`}>
-              {total.toFixed(1)} / 100 · {grade}
+              {total.toFixed(1)} / 100 — {grade}
             </div>
           </div>
 

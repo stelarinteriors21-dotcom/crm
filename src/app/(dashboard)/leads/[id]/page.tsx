@@ -68,14 +68,9 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
   ];
 
   const leadScoreInput = {
-    scoreEngagement: lead.scoreEngagement,
     scoreLocation:   lead.scoreLocation,
     scoreBudget:     lead.scoreBudget,
     scoreTimeline:   lead.scoreTimeline,
-    scoreStatus:     lead.scoreStatus,
-    scoreFullHome:   lead.scoreFullHome,
-    scoreFloorPlan:  lead.scoreFloorPlan,
-    scoreMoodBoard:  lead.scoreMoodBoard,
     scoreSiteVisit:  lead.scoreSiteVisit,
     scoreQuotation:  lead.scoreQuotation,
   };

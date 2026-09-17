@@ -36,14 +36,9 @@ export default async function DashboardPage() {
     hotLeads = allLeads.map((l: any) => ({
       ...l,
       computedScore: calculateLeadScore({
-        scoreEngagement: l.scoreEngagement,
         scoreLocation: l.scoreLocation,
         scoreBudget: l.scoreBudget,
         scoreTimeline: l.scoreTimeline,
-        scoreStatus: l.scoreStatus,
-        scoreFullHome: l.scoreFullHome,
-        scoreFloorPlan: l.scoreFloorPlan,
-        scoreMoodBoard: l.scoreMoodBoard,
         scoreSiteVisit: l.scoreSiteVisit,
         scoreQuotation: l.scoreQuotation,
       }).total

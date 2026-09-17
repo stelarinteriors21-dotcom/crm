@@ -138,14 +138,6 @@ export async function createLead(data: any) {
       else if (bLower.includes("1l") || bLower.includes("2l") || bLower.includes("3l") || bLower.includes("4l") || bLower.includes("poor")) scoreBudget = "Poor";
     }
 
-    let scoreEngagement = "None";
-    if (data.source) {
-      const src = data.source.toLowerCase();
-      if (src.includes("facebook") || src.includes("meta") || src.includes("ad")) scoreEngagement = "Cold";
-      else if (src.includes("website") || src.includes("organic")) scoreEngagement = "Warm";
-      else if (src.includes("manual") || src.includes("referral")) scoreEngagement = "Hot";
-    }
-
     const lead = await prisma.lead.create({
       data: {
         name: data.name || "Unknown",
@@ -161,7 +153,6 @@ export async function createLead(data: any) {
         assignedAt: new Date(),
         scoreLocation,
         scoreBudget,
-        scoreEngagement
       },
     });
 

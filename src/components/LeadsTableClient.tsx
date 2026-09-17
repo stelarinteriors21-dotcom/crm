@@ -377,14 +377,9 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
 
                 {isCol('score') && (() => {
                   const scoreInput = {
-                    scoreEngagement: lead.scoreEngagement,
                     scoreLocation: lead.scoreLocation,
                     scoreBudget: lead.scoreBudget,
                     scoreTimeline: lead.scoreTimeline,
-                    scoreStatus: lead.scoreStatus,
-                    scoreFullHome: lead.scoreFullHome,
-                    scoreFloorPlan: lead.scoreFloorPlan,
-                    scoreMoodBoard: lead.scoreMoodBoard,
                     scoreSiteVisit: lead.scoreSiteVisit,
                     scoreQuotation: lead.scoreQuotation,
                   };

@@ -6,14 +6,9 @@ import { revalidatePath } from "next/cache";
 import { logActivity } from "./activityActions";
 
 export async function updateLeadScore(leadId: string, scores: {
-  scoreEngagement: string;
   scoreLocation: string;
   scoreBudget: string;
   scoreTimeline: string;
-  scoreStatus: string;
-  scoreFullHome: string;
-  scoreFloorPlan: string;
-  scoreMoodBoard: string;
   scoreSiteVisit: string;
   scoreQuotation: string;
 }) {
@@ -36,9 +31,8 @@ export async function checkPendingScoreLead() {
   const leads = await prisma.lead.findMany({
     where: {
       assignedToId: user.id,
-      scoreEngagement: "None",
       scoreLocation: "Outside",
-      scoreBudget: "Unknown",
+      scoreBudget: "None",
       scoreTimeline: "None",
     },
     include: {
@@ -60,14 +54,9 @@ export async function checkPendingScoreLead() {
           id: lead.id,
           name: lead.name,
           scores: {
-            scoreEngagement: lead.scoreEngagement,
             scoreLocation: lead.scoreLocation,
             scoreBudget: lead.scoreBudget,
             scoreTimeline: lead.scoreTimeline,
-            scoreStatus: lead.scoreStatus,
-            scoreFullHome: lead.scoreFullHome,
-            scoreFloorPlan: lead.scoreFloorPlan,
-            scoreMoodBoard: lead.scoreMoodBoard,
             scoreSiteVisit: lead.scoreSiteVisit,
             scoreQuotation: lead.scoreQuotation,
           }
