@@ -422,22 +422,6 @@ export async function updateLeadTag(leadId: string, tag: string | null) {
   revalidatePath('/leads');
 }
 
-export async function updateLeadStatus(leadId: string, status: string | null) {
-  const { getCurrentUser } = await import("@/app/actions/authActions");
-  const user = await getCurrentUser();
-  if (!user) throw new Error("Unauthorized");
-
-  const prisma = (await import("@/lib/prisma")).default;
-  await prisma.lead.update({
-    where: { id: leadId },
-    data: { status }
-  });
-
-  const { revalidatePath } = await import("next/cache");
-  revalidatePath('/leads');
-  revalidatePath(/leads/ + leadId);
-}
-
 export async function acceptAndScheduleCall(leadId: string, minutes: number = 15) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
