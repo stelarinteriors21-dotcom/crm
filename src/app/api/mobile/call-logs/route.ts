@@ -81,11 +81,23 @@ export async function POST(request: Request) {
       }
     }
 
+    let finalUserId = userId;
+    const userExists = await prisma.user.findUnique({ where: { id: userId } });
+    if (!userExists) {
+      const leadForUser = await prisma.lead.findUnique({ where: { id: leadId } });
+      if (leadForUser && leadForUser.assignedToId) {
+        finalUserId = leadForUser.assignedToId;
+      } else {
+        const admin = await prisma.user.findFirst();
+        if (admin) finalUserId = admin.id;
+      }
+    }
+
     // Save call log in database
     const callLog = await prisma.callLog.create({
       data: {
         leadId,
-        userId,
+        userId: finalUserId,
         duration,
         recordingUrl,
         notes
