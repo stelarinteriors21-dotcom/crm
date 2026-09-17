@@ -228,8 +228,10 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
               {pending.map(lead => (
                 <div key={lead.id} className="bg-white border border-yellow-200 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex-1">
-                    <div className="font-bold text-[15px] text-gray-800">{lead.name}</div>
-                    <div className="text-[12px] text-gray-500 mt-0.5">
+                    <Link href={`/leads/${lead.id}`} className="font-bold text-[15px] text-[#613cbc] hover:underline cursor-pointer">
+                      {lead.name}
+                    </Link>
+                    <div className="text-[13px] text-gray-500 mt-1 flex items-center">
                       {lead.phone} · {lead.source ?? "Unknown Source"}
                     </div>
                     <div className="text-[11px] text-red-500 mt-1 font-bold">

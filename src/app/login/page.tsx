@@ -40,7 +40,7 @@ export default function LoginPage() {
       <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100 w-full max-w-md">
         <div className="flex justify-center mb-6">
           <div className="w-12 h-12 bg-[#613cbc] rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-2xl leading-none">T</span>
+            <span className="text-white font-bold text-2xl leading-none">S</span>
           </div>
         </div>
         <h1 className="text-2xl font-bold text-center text-gray-900 mb-6">Sign In to Stelar CRM</h1>

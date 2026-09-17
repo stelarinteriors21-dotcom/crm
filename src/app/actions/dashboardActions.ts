@@ -34,7 +34,7 @@ export async function getDashboardStats() {
     name: a.name,
     calls: 0,
     duration: "0s",
-    revenue: "₹ 0"
+    revenue: "₹0"
   }));
 
   return { totalLeads, statuses, performance };
