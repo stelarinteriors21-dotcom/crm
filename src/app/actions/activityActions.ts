@@ -50,7 +50,6 @@ export async function getUserInvolvementStats() {
   const user = await getCurrentUser();
   if (!user) return [];
 
-  // Group by user, get their first and last activity for today
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -67,32 +66,46 @@ export async function getUserInvolvementStats() {
     orderBy: { createdAt: "asc" }
   });
 
-  // Calculate session times per user
-  const stats: Record<string, { name: string; firstActivity: Date; lastActivity: Date; totalActions: number }> = {};
+  const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes max gap
+
+  const stats: Record<string, { name: string; lastActivity: Date; activeMinutes: number; totalActions: number; lastLogTime: Date }> = {};
 
   for (const log of logs) {
     if (!stats[log.userId]) {
       stats[log.userId] = {
         name: log.user.name,
-        firstActivity: log.createdAt,
         lastActivity: log.createdAt,
+        activeMinutes: 1, // base 1 minute for their first action
         totalActions: 0,
+        lastLogTime: log.createdAt,
       };
     }
-    stats[log.userId].lastActivity = log.createdAt;
-    stats[log.userId].totalActions += 1;
+
+    const stat = stats[log.userId];
+    
+    // Only calculate gap if this isn't the very first action
+    if (stat.totalActions > 0) {
+      const gapMs = log.createdAt.getTime() - stat.lastLogTime.getTime();
+
+      // If gap is less than timeout, add to active minutes
+      if (gapMs < SESSION_TIMEOUT_MS) {
+        stat.activeMinutes += gapMs / 60000;
+      } else {
+        // If gap is large, we assume they were inactive. 
+        // Add a base 1 minute for this new solitary action just so it counts.
+        stat.activeMinutes += 1;
+      }
+    }
+
+    stat.lastLogTime = log.createdAt;
+    stat.lastActivity = log.createdAt;
+    stat.totalActions += 1;
   }
 
-  // Convert to array and calculate duration in minutes
-  return Object.values(stats).map(stat => {
-    const durationMs = stat.lastActivity.getTime() - stat.firstActivity.getTime();
-    const durationMinutes = Math.round(durationMs / 60000);
-    return {
-      name: stat.name,
-      firstActivity: stat.firstActivity,
-      lastActivity: stat.lastActivity,
-      activeMinutes: durationMinutes,
-      totalActions: stat.totalActions,
-    };
-  });
+  return Object.values(stats).map(stat => ({
+    name: stat.name,
+    lastActivity: stat.lastActivity,
+    activeMinutes: Math.round(stat.activeMinutes),
+    totalActions: stat.totalActions,
+  }));
 }
