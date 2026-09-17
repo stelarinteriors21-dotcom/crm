@@ -16,9 +16,9 @@ export default async function SearchPage({
     results = await prisma.lead.findMany({
       where: {
         OR: [
-          { name: { contains: query } },
-          { phone: { contains: query } },
-          { email: { contains: query } }
+          { name: { contains: query, mode: 'insensitive' } },
+          { phone: { contains: query, mode: 'insensitive' } },
+          { email: { contains: query, mode: 'insensitive' } }
         ]
       },
       take: 20

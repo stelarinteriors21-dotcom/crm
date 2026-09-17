@@ -48,16 +48,16 @@ export async function getLeads(query?: string, searchField?: string, status?: st
 
   if (query) {
     if (searchField === "phone") {
-      where.phone = { contains: query };
+      where.phone = { contains: query, mode: 'insensitive' };
     } else if (searchField === "email") {
-      where.email = { contains: query };
+      where.email = { contains: query, mode: 'insensitive' };
     } else if (searchField === "name") {
-      where.name = { contains: query };
+      where.name = { contains: query, mode: 'insensitive' };
     } else {
       where.OR = [
-        { name: { contains: query } },
-        { phone: { contains: query } },
-        { email: { contains: query } },
+        { name: { contains: query, mode: 'insensitive' } },
+        { phone: { contains: query, mode: 'insensitive' } },
+        { email: { contains: query, mode: 'insensitive' } },
       ];
     }
   }

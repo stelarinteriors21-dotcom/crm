@@ -19,9 +19,9 @@ export default async function CallsPage({ searchParams }: { searchParams: { [key
 
   if (query) {
     whereClause.OR = [
-      { name: { contains: query } },
-      { phone: { contains: query } },
-      { email: { contains: query } },
+      { name: { contains: query, mode: 'insensitive' } },
+      { phone: { contains: query, mode: 'insensitive' } },
+      { email: { contains: query, mode: 'insensitive' } },
     ];
   }
   
