@@ -490,5 +490,4 @@ export async function notifyUser(userId: string, title: string, body: string, wa
   }
 }
 
- e x p o r t   a s y n c   f u n c t i o n   d e l e t e T a s k ( t a s k I d :   s t r i n g ,   l e a d I d :   s t r i n g )   {   a w a i t   p r i s m a . t a s k . d e l e t e ( {   w h e r e :   {   i d :   t a s k I d   }   } ) ;   r e v a l i d a t e P a t h ( ' / l e a d s / '   +   l e a d I d ) ;   }  
- 
+export async function deleteTask(taskId: string, leadId: string) { await prisma.task.delete({ where: { id: taskId } }); revalidatePath('/leads/' + leadId); }
