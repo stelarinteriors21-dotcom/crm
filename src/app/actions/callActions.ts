@@ -21,3 +21,18 @@ export async function updateCallNote(callId: string, notes: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function logManualCall(leadId: string, durationMin: number, notes: string) {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'Unauthorized' };
+  try {
+    await prisma.callLog.create({
+      data: { leadId, userId: user.id, duration: durationMin * 60, notes, recordingUrl: null }
+    });
+    revalidatePath('/leads');
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch(e: any) {
+    return { error: e.message };
+  }
+}

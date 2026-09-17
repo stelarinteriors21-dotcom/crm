@@ -8,6 +8,7 @@ import LeadStatusDropdown from "@/components/LeadStatusDropdown";
 import WhatsAppLogForm from "@/components/WhatsAppLogForm";
 import AddNoteForm from "@/components/AddNoteForm";
 import CallLogCard from "@/components/CallLogCard";
+import ManualCallLogForm from "@/components/ManualCallLogForm";
 import EmailLogForm from "@/components/EmailLogForm";
 import FileAttachmentForm from "@/components/FileAttachmentForm";
 import { getCallers } from "@/app/actions/leadActions";
@@ -256,11 +257,12 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
                 ))}
               </div>
             )}
+            {/* Mobile Lead Score Widget */}
+            <div className="block md:hidden">
+              <LeadScoreWidget leadId={lead.id} initialScores={leadScoreInput} />
+            </div>
+
           </div>
-
-          {/* Stelar Lead Score Widget */}
-          <LeadScoreWidget leadId={lead.id} initialScores={leadScoreInput} />
-
         </div>
 
         {/* Right Column */}
@@ -286,6 +288,13 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
             </div>
           </div>
 
+          {/* Stelar Lead Score Widget */}
+          <div className="hidden md:block">
+            <LeadScoreWidget leadId={lead.id} initialScores={leadScoreInput} />
+          </div>
+
+
+
           {/* Call Logs */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -309,6 +318,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
                   <CallLogCard key={log.id} log={log} leadPhone={lead.phone} />
                 ))
               )}
+              <ManualCallLogForm leadId={lead.id} />
             </div>
           </div>
 
