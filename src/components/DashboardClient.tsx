@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Settings, RefreshCw, ChevronDown, CheckCircle, XCircle, TrendingUp, Users, PhoneCall, Calendar, X, Download } from "lucide-react";
+import { Settings, RefreshCw, ChevronDown, CheckCircle, XCircle, TrendingUp, Users, PhoneCall, Calendar, X, Download, Clock } from "lucide-react";
 import { acceptLead, rejectLead, acceptAllLeads, rejectAllLeads } from "@/app/actions/leadActions";
+import { getUserActivityLogs } from "@/app/actions/activityActions";
 
 type Lead = {
   id: string;
@@ -524,6 +525,9 @@ function AllLeadsWidget({ statusBreakdown, totalLeads, title = "All Leads" }: { 
 }
 
 function UserReportModal({ userName, onClose, allLeads, teamActivity }: { userName: string, onClose: () => void, allLeads: Lead[], teamActivity: TeamMember[] }) {
+  const [activeTab, setActiveTab] = useState<"overview" | "logs">("overview");
+  const [logs, setLogs] = useState<any[]>([]);
+
   const userLeads = allLeads.filter(l => l.assignedTo?.name === userName);
   const userActivity = teamActivity.find(t => t.name === userName);
   
@@ -538,6 +542,12 @@ function UserReportModal({ userName, onClose, allLeads, teamActivity }: { userNa
     count: breakdown[label],
     percent: ((breakdown[label] / userLeads.length) * 100).toFixed(1) + "%"
   }));
+
+  useEffect(() => {
+    if (activeTab === "logs") {
+      getUserActivityLogs(userName).then(setLogs);
+    }
+  }, [activeTab, userName]);
 
   const downloadCSV = () => {
     const headers = ["Status", "Count", "Percentage"];
@@ -555,36 +565,69 @@ function UserReportModal({ userName, onClose, allLeads, teamActivity }: { userNa
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden relative">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm border border-gray-200 transition-colors">
           <X className="w-4 h-4" />
         </button>
-        <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#E8E2F7] text-[#613cbc] font-bold flex items-center justify-center text-sm">
-              {userName.split(" ").map((p: string) => p[0]).join("").slice(0, 2).toUpperCase()}
+        <div className="p-4 border-b border-gray-100 bg-gray-50 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#E8E2F7] text-[#613cbc] font-bold flex items-center justify-center text-sm">
+                {userName.split(" ").map((p: string) => p[0]).join("").slice(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-800">{userName}&apos;s Report</h2>
+                <p className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
+                  <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold text-[10px]">
+                    {userActivity?.activeMinutes ?? 0}m ACTIVE TODAY
+                  </span>
+                  <span>{userActivity?.calls ?? 0} calls</span>
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-800">{userName}&apos;s Report</h2>
-              <p className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
-                <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold text-[10px]">
-                  {userActivity?.activeMinutes ?? 0}m ACTIVE TODAY
-                </span>
-                <span>{userActivity?.calls ?? 0} calls</span>
-              </p>
-            </div>
+            {activeTab === "overview" && (
+              <div className="flex items-center gap-2 mr-8 md:mr-10">
+                <button onClick={downloadCSV} className="flex items-center gap-2 bg-[#613cbc] text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-purple-700 transition-colors">
+                  <Download className="w-4 h-4" /> Download CSV
+                </button>
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-2 mr-8 md:mr-10">
-            <Link href="/team/activity" className="text-[12px] font-bold text-[#613cbc] hover:underline px-2">
-              View Activity Logs
-            </Link>
-            <button onClick={downloadCSV} className="flex items-center gap-2 bg-[#613cbc] text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-purple-700 transition-colors">
-              <Download className="w-4 h-4" /> Download CSV
+          <div className="flex gap-4 border-b border-gray-200 px-2">
+            <button 
+              onClick={() => setActiveTab("overview")} 
+              className={`px-3 py-2 text-sm font-bold border-b-2 transition-colors ${activeTab === "overview" ? "border-[#613cbc] text-[#613cbc]" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+            >
+              Overview
+            </button>
+            <button 
+              onClick={() => setActiveTab("logs")} 
+              className={`px-3 py-2 text-sm font-bold border-b-2 transition-colors ${activeTab === "logs" ? "border-[#613cbc] text-[#613cbc]" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+            >
+              Activity Logs
             </button>
           </div>
         </div>
-        <div className="p-6 bg-gray-50 max-h-[80vh] overflow-y-auto">
-          <AllLeadsWidget statusBreakdown={statusBreakdown} totalLeads={userLeads.length} title={`${userName}&apos;s Leads`} />
+        <div className="p-6 bg-gray-50 overflow-y-auto flex-1">
+          {activeTab === "overview" ? (
+            <AllLeadsWidget statusBreakdown={statusBreakdown} totalLeads={userLeads.length} title={`${userName}'s Leads`} />
+          ) : (
+            <div className="space-y-4">
+              {logs.length > 0 ? (
+                logs.map(log => (
+                  <div key={log.id} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-bold text-[#613cbc] text-sm">{log.action}</span>
+                      <span className="text-xs text-gray-400 flex items-center"><Clock className="w-3 h-3 mr-1" /> {new Date(log.createdAt).toLocaleString()}</span>
+                    </div>
+                    {log.details && <p className="text-sm text-gray-600">{log.details}</p>}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">No logs found.</div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
