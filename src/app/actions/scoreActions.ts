@@ -32,7 +32,7 @@ export async function checkPendingScoreLead() {
     where: {
       assignedToId: user.id,
       OR: [
-        { scoreLocation: { in: ["None", "Outside"] } },
+        { scoreLocation: "None" },
         { scoreBudget: "None" },
         { scoreTimeline: "None" }
       ]

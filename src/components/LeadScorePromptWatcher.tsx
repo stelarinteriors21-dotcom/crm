@@ -30,10 +30,12 @@ export default function LeadScorePromptWatcher() {
   if (!lead) return null;
 
   const handleSave = (scores: any) => {
-    // Check if any score is "None"
-    const hasNone = Object.values(scores).some(v => v === "None" || v === "");
+    // Only Location, Budget, and Timeline are mandatory for the first call
+    const mandatoryFields = ["scoreLocation", "scoreBudget", "scoreTimeline"];
+    const hasNone = mandatoryFields.some(field => !scores[field] || scores[field] === "None" || scores[field] === "");
+    
     if (hasNone) {
-      setErrorMsg("Please fill out all fields before saving.");
+      setErrorMsg("Please fill out Location, Budget, and Buying Timeline before saving.");
       return;
     }
     
