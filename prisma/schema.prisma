@@ -40,6 +40,7 @@ model User {
   emailLogs       EmailLog[]
   notes           Note[]
   activityLogs    ActivityLog[]
+  leaves          Leave[]
 }
 
 model PermissionTemplate {
@@ -195,5 +196,14 @@ model ActivityLog {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   action    String   
   details   String?  
+  createdAt DateTime @default(now())
+}
+
+model Leave {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startDate DateTime
+  endDate   DateTime
   createdAt DateTime @default(now())
 }

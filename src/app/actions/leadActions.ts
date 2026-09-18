@@ -377,7 +377,16 @@ export async function getCallers() {
   if (!user || (user.role !== "ADMIN" && user.role !== "ROOT")) return [];
   
   return await prisma.user.findMany({
-    where: { organizationId: user.organizationId, role: "TELECALLER" },
+    where: { 
+      organizationId: user.organizationId, 
+      role: "TELECALLER",
+      leaves: {
+        none: {
+          startDate: { lte: new Date() },
+          endDate: { gte: new Date() }
+        }
+      }
+    },
     select: { id: true, name: true }
   });
 }

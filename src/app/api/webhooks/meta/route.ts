@@ -95,7 +95,16 @@ export async function POST(request: Request) {
                     if (!existingLead) {
                       // Round-robin auto assignment across telecallers
                       const callers = await prisma.user.findMany({
-                        where: { organizationId: org.id, role: "TELECALLER" },
+                        where: { 
+                          organizationId: org.id, 
+                          role: "TELECALLER",
+                          leaves: {
+                            none: {
+                              startDate: { lte: new Date() },
+                              endDate: { gte: new Date() }
+                            }
+                          }
+                        },
                         orderBy: { id: 'asc' }
                       });
 

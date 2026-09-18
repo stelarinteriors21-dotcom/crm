@@ -37,7 +37,16 @@ export async function GET(request: Request) {
     if (!org) return new NextResponse('No org found', { status: 400 });
 
     const callers = await prisma.user.findMany({
-      where: { organizationId: org.id, role: "TELECALLER" },
+      where: { 
+        organizationId: org.id, 
+        role: "TELECALLER",
+        leaves: {
+          none: {
+            startDate: { lte: new Date() },
+            endDate: { gte: new Date() }
+          }
+        }
+      },
       orderBy: { id: 'asc' }
     });
 
