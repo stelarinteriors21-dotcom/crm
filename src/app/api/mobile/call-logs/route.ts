@@ -93,6 +93,24 @@ export async function POST(request: Request) {
       }
     }
 
+    // Deduplication check: prevent identical calls from being logged multiple times 
+    // (e.g. if the mobile app retries the upload on poor connections)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const existingLog = await prisma.callLog.findFirst({
+      where: {
+        leadId,
+        userId: finalUserId,
+        duration,
+        notes,
+        createdAt: { gte: fiveMinutesAgo }
+      }
+    });
+
+    if (existingLog) {
+      console.log(`Duplicate call log detected for lead ${leadId}, skipping duplicate insertion.`);
+      return NextResponse.json({ success: true, callLog: existingLog }, { headers: corsHeaders });
+    }
+
     // Save call log in database
     const callLog = await prisma.callLog.create({
       data: {
