@@ -32,7 +32,7 @@ export default function NotificationBell({ tasks }: { tasks: any[] }) {
       </button>
 
       {isOpen && (
-        <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-[70] flex flex-col overflow-hidden">
+        <div className="origin-top-right absolute -right-16 sm:right-0 mt-2 w-[300px] sm:w-80 rounded-xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-[70] flex flex-col overflow-hidden">
           <div className="p-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
             <h3 className="text-sm font-bold text-gray-800 flex items-center">
               <Calendar className="w-4 h-4 mr-2 text-[#613cbc]" />
