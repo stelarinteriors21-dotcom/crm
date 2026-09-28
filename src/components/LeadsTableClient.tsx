@@ -414,6 +414,45 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                       {lead.status ?? "Fresh"}
                     </span>
                   </td></React.Fragment>;
+                      case 'score': return <React.Fragment key="score">{(() => {
+                    const scoreInput = {
+                      scoreLocation: lead.scoreLocation,
+                      scoreBudget: lead.scoreBudget,
+                      scoreTimeline: lead.scoreTimeline,
+                      scoreSiteVisit: lead.scoreSiteVisit,
+                      scoreQuotation: lead.scoreQuotation,
+                    };
+                    const { total, grade } = calculateLeadScore(scoreInput);
+                    const scoreColor = getScoreColor(total);
+                    return (
+                      <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
+                        <div className="flex items-center space-x-2" title={`${total.toFixed(1)}/100 - ${grade}`}>
+                          <div className="relative w-8 h-8">
+                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                              <circle cx="18" cy="18" r="16" fill="none" className="stroke-gray-100" strokeWidth="4" />
+                              <circle
+                                cx="18"
+                                cy="18"
+                                r="16"
+                                fill="none"
+                                className={
+                                  total >= 80 ? "stroke-yellow-500" :
+                                  total >= 60 ? "stroke-orange-500" :
+                                  total >= 40 ? "stroke-blue-500" :
+                                  "stroke-red-500"
+                                }
+                                strokeWidth="4"
+                                strokeDasharray={`${(total / 100) * 100}, 100`}
+                              />
+                            </svg>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="text-[10px] font-bold text-gray-700">{total.toFixed(0)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    );
+                  })()}</React.Fragment>;
                       case 'tag': return <React.Fragment key="tag"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
                     <select
                       value={lead.tag || ""}
