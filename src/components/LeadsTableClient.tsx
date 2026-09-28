@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, ChevronRight, Edit3 } from "lucide-react";
+import { ChevronDown, ChevronRight, Edit3, GripVertical } from "lucide-react";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 import LeadActionsMenu from "@/components/LeadActionsMenu";
@@ -153,15 +153,34 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
     );
   };
 
-  const moveCol = (id: string, direction: -1 | 1) => {
-    const idx = columnOrder.indexOf(id);
-    if (idx < 0) return;
-    const newIdx = idx + direction;
-    if (newIdx < 0 || newIdx >= columnOrder.length) return;
+  const [draggedCol, setDraggedCol] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedCol(id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!draggedCol || draggedCol === targetId) {
+      setDraggedCol(null);
+      return;
+    }
+
+    const oldIdx = columnOrder.indexOf(draggedCol);
+    const newIdx = columnOrder.indexOf(targetId);
+
     const newOrder = [...columnOrder];
-    [newOrder[idx], newOrder[newIdx]] = [newOrder[newIdx], newOrder[idx]];
+    newOrder.splice(oldIdx, 1);
+    newOrder.splice(newIdx, 0, draggedCol);
+
     setColumnOrder(newOrder);
     localStorage.setItem('leadsColumnOrder', JSON.stringify(newOrder));
+    setDraggedCol(null);
   };
 
   const toggleCol = (id: string) => {
@@ -233,19 +252,25 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
     const col = allColumns.find(c => c.id === colId);
     if (!col) return null;
     return (
-      <div key={col.id} className="flex items-center justify-between hover:bg-gray-50 rounded px-2 py-1.5">
-        <label className="flex items-center flex-1 cursor-pointer">
-          <input 
-            type="checkbox" 
-            checked={isCol(col.id)} 
-            onChange={() => toggleCol(col.id)} 
-            className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc] mr-2"
-          />
-          <span className="text-xs text-gray-700">{col.label}</span>
-        </label>
-        <div className="flex items-center space-x-1">
-          <button onClick={(e) => { e.stopPropagation(); moveCol(col.id, -1); }} className="p-1 text-gray-400 hover:text-[#613cbc] hover:bg-gray-200 rounded" title="Move Left"><ChevronDown className="w-3 h-3 rotate-90" /></button>
-          <button onClick={(e) => { e.stopPropagation(); moveCol(col.id, 1); }} className="p-1 text-gray-400 hover:text-[#613cbc] hover:bg-gray-200 rounded" title="Move Right"><ChevronDown className="w-3 h-3 -rotate-90" /></button>
+      <div 
+        key={col.id} 
+        draggable
+        onDragStart={(e) => handleDragStart(e, col.id)}
+        onDragOver={(e) => handleDragOver(e, col.id)}
+        onDrop={(e) => handleDrop(e, col.id)}
+        className={`flex items-center justify-between hover:bg-gray-50 rounded px-2 py-1.5 cursor-grab active:cursor-grabbing ${draggedCol === col.id ? 'opacity-50 bg-gray-100' : ''}`}
+      >
+        <div className="flex items-center flex-1">
+          <GripVertical className="w-3.5 h-3.5 text-gray-400 mr-2 hover:text-gray-600 cursor-grab active:cursor-grabbing" />
+          <label className="flex items-center flex-1 cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={isCol(col.id)} 
+              onChange={() => toggleCol(col.id)} 
+              className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc] mr-2"
+            />
+            <span className="text-xs text-gray-700 select-none">{col.label}</span>
+          </label>
         </div>
       </div>
     );
