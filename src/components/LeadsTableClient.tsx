@@ -186,10 +186,6 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
   const toggleCol = (id: string) => {
     setVisibleCols(prev => {
       if (prev.includes(id)) return prev.filter(c => c !== id);
-      if (prev.length >= 12) {
-        alert("Select at max 12 fields");
-        return prev;
-      }
       return [...prev, id];
     });
   };
