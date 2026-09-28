@@ -1,5 +1,5 @@
 "use client"
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, Edit3 } from "lucide-react";
 import Link from "next/link";
 import * as XLSX from "xlsx";
@@ -57,6 +57,21 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
   }));
 
   const allColumns = [...BASE_COLUMNS, ...dynamicColumns];
+
+  const [columnOrder, setColumnOrder] = useState<string[]>([]);
+  useEffect(() => {
+    const saved = localStorage.getItem('leadsColumnOrder');
+    let savedOrder: string[] = [];
+    if (saved) {
+      try { savedOrder = JSON.parse(saved); } catch (e) {}
+    }
+    
+    // Merge: keep saved order, append any new columns that aren't in saved order
+    const newColumns = allColumns.map(c => c.id).filter(id => !savedOrder.includes(id));
+    const finalOrder = savedOrder.length > 0 ? [...savedOrder, ...newColumns] : allColumns.map(c => c.id);
+    
+    setColumnOrder(finalOrder);
+  }, [leads.length]); // Re-run if leads length changes to capture new custom fields
 
   const [visibleCols, setVisibleCols] = useState<string[]>(
     allColumns.filter(c => c.defaultVisible).map(c => c.id)
@@ -138,6 +153,17 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
     );
   };
 
+  const moveCol = (id: string, direction: -1 | 1) => {
+    const idx = columnOrder.indexOf(id);
+    if (idx < 0) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= columnOrder.length) return;
+    const newOrder = [...columnOrder];
+    [newOrder[idx], newOrder[newIdx]] = [newOrder[newIdx], newOrder[idx]];
+    setColumnOrder(newOrder);
+    localStorage.setItem('leadsColumnOrder', JSON.stringify(newOrder));
+  };
+
   const toggleCol = (id: string) => {
     setVisibleCols(prev => {
       if (prev.includes(id)) return prev.filter(c => c !== id);
@@ -203,17 +229,27 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                    <input type="text" placeholder="Search fields" className="w-full border border-gray-200 rounded px-2 py-1 text-xs outline-none" />
                 </div>
                 <div className="max-h-64 overflow-y-auto">
-                  {allColumns.map(col => (
-                    <label key={col.id} className="flex items-center px-2 py-1.5 hover:bg-gray-50 cursor-pointer rounded">
-                      <input 
-                        type="checkbox" 
-                        checked={visibleCols.includes(col.id)}
-                        onChange={() => toggleCol(col.id)}
-                        className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc] mr-3"
-                      />
-                      <span className="text-sm text-gray-700">{col.label}</span>
-                    </label>
-                  ))}
+                  {columnOrder.map(colId => {
+    const col = allColumns.find(c => c.id === colId);
+    if (!col) return null;
+    return (
+      <div key={col.id} className="flex items-center justify-between hover:bg-gray-50 rounded px-2 py-1.5">
+        <label className="flex items-center flex-1 cursor-pointer">
+          <input 
+            type="checkbox" 
+            checked={isCol(col.id)} 
+            onChange={() => toggleCol(col.id)} 
+            className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc] mr-2"
+          />
+          <span className="text-xs text-gray-700">{col.label}</span>
+        </label>
+        <div className="flex items-center space-x-1">
+          <button onClick={(e) => { e.stopPropagation(); moveCol(col.id, -1); }} className="p-1 text-gray-400 hover:text-[#613cbc] hover:bg-gray-200 rounded" title="Move Left"><ChevronDown className="w-3 h-3 rotate-90" /></button>
+          <button onClick={(e) => { e.stopPropagation(); moveCol(col.id, 1); }} className="p-1 text-gray-400 hover:text-[#613cbc] hover:bg-gray-200 rounded" title="Move Right"><ChevronDown className="w-3 h-3 -rotate-90" /></button>
+        </div>
+      </div>
+    );
+  })}
                 </div>
               </div>
             )}
@@ -320,111 +356,65 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
       {/* ── DESKTOP TABLE VIEW ── */}
       <div className="flex-1 overflow-auto hidden md:block">
         <table className="min-w-max w-full divide-y divide-gray-200 border-b border-gray-200">
-          <thead className="bg-gray-100/80 sticky top-0 z-10">
-            <tr>
-              <th className="px-4 py-3 text-left w-10">
-                <input type="checkbox" className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc]" />
-              </th>
-              {isCol('name') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Name</th>}
-              {isCol('status') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Status</th>}
-              {isCol('score') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Lead Score</th>}
-              {isCol('tag') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Tag</th>}
-              {isCol('leadSource') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Lead Source</th>}
-              {isCol('approximateBudget') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Approximate Budget</th>}
-              {isCol('assignee') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Assignee</th>}
-              {isCol('capturedOn') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Captured On ⇕</th>}
-              {isCol('city') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">City</th>}
-              {isCol('propertyStatus') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Property status</th>}
-              {isCol('siteVisitDate') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Site Visit Date ⇕</th>}
-              {isCol('createdOn') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Created On ▴</th>}
-              {isCol('email') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Email</th>}
-              {isCol('typeOfSpace') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Type of space</th>}
-              {isCol('facebookAd') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Facebook Ad</th>}
-              {isCol('facebookCampaign') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Facebook Campaign</th>}
-              {dynamicColumns.map(col => isCol(col.id) && (
-                <th key={col.id} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">{col.label}</th>
-              ))}
-              {isCol('phone') && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Phone</th>}
-            </tr>
-          </thead>
+          
+            <thead className="bg-gray-100/80 sticky top-0 z-10">
+              <tr>
+                <th className="px-4 py-3 text-left w-10">
+                  <input type="checkbox" checked={filteredLeads.length > 0 && selectedLeads.length === filteredLeads.length} onChange={toggleSelectAll} className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc]" />
+                </th>
+                {columnOrder.filter(id => isCol(id)).map(colId => {
+                  switch(colId) {
+                    case 'name': return <React.Fragment key="name"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Name</th></React.Fragment>;
+                    case 'status': return <React.Fragment key="status"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Status</th></React.Fragment>;
+                    case 'score': return <React.Fragment key="score"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Lead Score</th></React.Fragment>;
+                    case 'tag': return <React.Fragment key="tag"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Tag</th></React.Fragment>;
+                    case 'leadSource': return <React.Fragment key="leadSource"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Lead Source</th></React.Fragment>;
+                    case 'approximateBudget': return <React.Fragment key="approximateBudget"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Approximate Budget</th></React.Fragment>;
+                    case 'assignee': return <React.Fragment key="assignee"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Assignee</th></React.Fragment>;
+                    case 'capturedOn': return <React.Fragment key="capturedOn"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Captured On ⇕</th></React.Fragment>;
+                    case 'city': return <React.Fragment key="city"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">City</th></React.Fragment>;
+                    case 'propertyStatus': return <React.Fragment key="propertyStatus"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Property status</th></React.Fragment>;
+                    case 'siteVisitDate': return <React.Fragment key="siteVisitDate"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Site Visit Date ⇕</th></React.Fragment>;
+                    case 'createdOn': return <React.Fragment key="createdOn"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Created On ▴</th></React.Fragment>;
+                    case 'email': return <React.Fragment key="email"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Email</th></React.Fragment>;
+                    case 'typeOfSpace': return <React.Fragment key="typeOfSpace"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Type of space</th></React.Fragment>;
+                    case 'facebookAd': return <React.Fragment key="facebookAd"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Facebook Ad</th></React.Fragment>;
+                    case 'facebookCampaign': return <React.Fragment key="facebookCampaign"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Facebook Campaign</th></React.Fragment>;
+                    case 'phone': return <React.Fragment key="phone"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Phone</th></React.Fragment>;
+                    default: 
+                      if (colId.startsWith('custom_')) {
+                        const col = allColumns.find(c => c.id === colId);
+                        return <th key={colId} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">{col?.label}</th>;
+                      }
+                      return null;
+                  }
+                })}
+              </tr>
+            </thead>
           <tbody className="bg-white divide-y divide-gray-200 text-sm">
             {filteredLeads.map((lead) => (
               <tr key={lead.id} className={`hover:bg-gray-50/50 ${selectedLeads.includes(lead.id) ? 'bg-purple-50/30' : ''}`}>
-                <td className="px-4 py-2.5">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedLeads.includes(lead.id)}
-                    onChange={() => toggleSelectLead(lead.id)}
-                    className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc]" 
-                  />
-                </td>
-                
-                {isCol('name') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
+                  <td className="px-4 py-2.5">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedLeads.includes(lead.id)}
+                      onChange={() => toggleSelectLead(lead.id)}
+                      className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc]" 
+                    />
+                  </td>
+                  {columnOrder.filter(id => isCol(id)).map(colId => {
+                    switch(colId) {
+                      case 'name': return <React.Fragment key="name"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
                     <Link href={`/leads/${lead.id}`} className="text-[#613cbc] font-medium hover:underline">
                       {lead.name}
                     </Link>
-                  </td>
-                )}
-                
-                {isCol('status') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
+                  </td></React.Fragment>;
+                      case 'status': return <React.Fragment key="status"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
                     <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${LEAD_STATUS_COLORS[lead.status ?? ""] ?? "bg-gray-100 text-gray-700"}`}>
                       {lead.status ?? "Fresh"}
                     </span>
-                  </td>
-                )}
-
-                {isCol('score') && (() => {
-                  const scoreInput = {
-                    scoreLocation: lead.scoreLocation,
-                    scoreBudget: lead.scoreBudget,
-                    scoreTimeline: lead.scoreTimeline,
-                    scoreSiteVisit: lead.scoreSiteVisit,
-                    scoreQuotation: lead.scoreQuotation,
-                  };
-                  const { total, grade } = calculateLeadScore(scoreInput);
-                  const scoreColor = getScoreColor(total);
-                  return (
-                    <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
-                      <div className="flex items-center space-x-2" title={`${total.toFixed(1)}/100 · ${grade}`}>
-                        <div className="relative w-8 h-8">
-                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                            {/* Background track */}
-                            <circle cx="18" cy="18" r="16" fill="none" className="stroke-gray-100" strokeWidth="4" />
-                            {/* Progress ring */}
-                            <circle
-                              cx="18"
-                              cy="18"
-                              r="16"
-                              fill="none"
-                              className={
-                                total >= 80 ? "stroke-yellow-500" :
-                                total >= 60 ? "stroke-orange-500" :
-                                total >= 40 ? "stroke-purple-500" :
-                                total > 0   ? "stroke-blue-400" :
-                                "stroke-gray-300"
-                              }
-                              strokeWidth="4"
-                              strokeDasharray="100 100"
-                              strokeDashoffset={100 - total}
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-[9px] font-black text-gray-700">
-                              {Math.round(total)}
-                            </span>
-                          </div>
-                        </div>
-                        {total >= 80 && <span className="text-[10px] font-bold text-yellow-600">Hot 🔥</span>}
-                      </div>
-                    </td>
-                  );
-                })()}
-
-                {isCol('tag') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
+                  </td></React.Fragment>;
+                      case 'tag': return <React.Fragment key="tag"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
                     <select
                       value={lead.tag || ""}
                       onChange={async (e) => {
@@ -463,11 +453,8 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                       ))}
                       {isAdmin && <option value="__ADD_NEW__" className="text-[#613cbc] font-bold">+ Add New Tag</option>}
                     </select>
-                  </td>
-                )}
-
-                {isCol('leadSource') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
+                  </td></React.Fragment>;
+                      case 'leadSource': return <React.Fragment key="leadSource"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
                     <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
                       lead.source?.toLowerCase().includes('whatsapp') ? 'bg-green-100 text-green-800' : 
                       lead.source?.toLowerCase().includes('facebook') ? 'bg-blue-100 text-blue-800' : 
@@ -475,19 +462,13 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                     }`}>
                       {lead.source || '--'}
                     </span>
-                  </td>
-                )}
-
-                {isCol('approximateBudget') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
+                  </td></React.Fragment>;
+                      case 'approximateBudget': return <React.Fragment key="approximateBudget"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
                     <span className="inline-flex px-2 py-0.5 rounded bg-purple-50 text-purple-700 text-xs font-medium">
                       {lead.budget || '₹1l - ₹5l'}
                     </span>
-                  </td>
-                )}
-
-                {isCol('assignee') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 flex items-center text-[#613cbc] font-medium text-xs">
+                  </td></React.Fragment>;
+                      case 'assignee': return <React.Fragment key="assignee"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 flex items-center text-[#613cbc] font-medium text-xs">
                     {lead.assignedTo ? (
                       <>
                         <span className="w-6 h-6 rounded-full bg-purple-200 text-purple-800 flex items-center justify-center mr-2 text-[10px] uppercase">
@@ -498,80 +479,37 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                     ) : (
                       <span className="text-gray-400">Unassigned</span>
                     )}
-                  </td>
-                )}
-
-                {isCol('capturedOn') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
+                  </td></React.Fragment>;
+                      case 'capturedOn': return <React.Fragment key="capturedOn"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
                     {lead.capturedOn ? timeAgo(lead.capturedOn) : timeAgo(lead.createdAt)}
-                  </td>
-                )}
-
-                {isCol('city') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
+                  </td></React.Fragment>;
+                      case 'city': return <React.Fragment key="city"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
                     {lead.city || 'Thiruvananthapuram'}
-                  </td>
-                )}
-                
-                {isCol('propertyStatus') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
+                  </td></React.Fragment>;
+                      case 'propertyStatus': return <React.Fragment key="propertyStatus"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
                     <span className="inline-flex px-2 py-0.5 rounded bg-orange-50 text-orange-800 text-xs font-medium">
                       {lead.propertyStatus || 'Not specified'}
                     </span>
-                  </td>
-                )}
-                
-                {isCol('siteVisitDate') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-400">
+                  </td></React.Fragment>;
+                      case 'siteVisitDate': return <React.Fragment key="siteVisitDate"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-400">
                     --
-                  </td>
-                )}
-
-                {isCol('createdOn') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
+                  </td></React.Fragment>;
+                      case 'createdOn': return <React.Fragment key="createdOn"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
                     {timeAgo(lead.createdAt)}
-                  </td>
-                )}
-
-                {isCol('email') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
+                  </td></React.Fragment>;
+                      case 'email': return <React.Fragment key="email"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
                     {lead.email || '--'}
-                  </td>
-                )}
-                
-                {isCol('typeOfSpace') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
+                  </td></React.Fragment>;
+                      case 'typeOfSpace': return <React.Fragment key="typeOfSpace"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
                     residential
-                  </td>
-                )}
-
-                {isCol('facebookAd') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
+                  </td></React.Fragment>;
+                      case 'facebookAd': return <React.Fragment key="facebookAd"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
                     {lead.fbAd || 'Stelar Interiors | onam c...'}
-                  </td>
-                )}
-                
-                {isCol('facebookCampaign') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
+                  </td></React.Fragment>;
+                      case 'facebookCampaign': return <React.Fragment key="facebookCampaign"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
                     --
-                  </td>
-                )}
-
-                {dynamicColumns.map(col => {
-                  if (isCol(col.id)) {
-                    const rawKey = col.id.replace('custom_', '');
-                    const val = (lead.customFields as Record<string, string>)?.[rawKey];
-                    return (
-                      <td key={col.id} className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600 truncate max-w-[150px]" title={val}>
-                        {val || '--'}
-                      </td>
-                    );
-                  }
-                  return null;
-                })}
-
-                {isCol('phone') && (
-                  <td className="px-4 py-2.5 whitespace-nowrap text-gray-900 font-medium flex items-center justify-between">
+                  </td></React.Fragment>;
+                      case 'phone': return <React.Fragment key="phone"><td className="px-4 py-2.5 whitespace-nowrap text-gray-900 font-medium flex items-center justify-between">
                     <span>{lead.phone}</span>
                     <div className="flex space-x-2 ml-4">
                       <a href={`tel:${lead.phone}`} title="Call Lead" className="p-1 bg-green-50 text-green-600 rounded hover:bg-green-100 flex items-center justify-center">📞</a>
@@ -580,9 +518,20 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                         <LeadActionsMenu leadId={lead.id} />
                       </div>
                     </div>
-                  </td>
-                )}
-              </tr>
+                  </td></React.Fragment>;
+                      default:
+                        if (colId.startsWith('custom_')) {
+                          const rawKey = colId.replace('custom_', '');
+                          return (
+                            <td key={colId} className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-700">
+                              {lead.customFields?.[rawKey] || "-"}
+                            </td>
+                          );
+                        }
+                        return null;
+                    }
+                  })}
+    </tr>
             ))}
           </tbody>
         </table>
