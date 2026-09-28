@@ -507,7 +507,8 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                       {lead.budget || '₹1l - ₹5l'}
                     </span>
                   </td></React.Fragment>;
-                      case 'assignee': return <React.Fragment key="assignee"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 flex items-center text-[#613cbc] font-medium text-xs">
+                      case 'assignee': return <React.Fragment key="assignee"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-[#613cbc] font-medium text-xs">
+                    <div className="flex items-center">
                     {lead.assignedTo ? (
                       <>
                         <span className="w-6 h-6 rounded-full bg-purple-200 text-purple-800 flex items-center justify-center mr-2 text-[10px] uppercase">
@@ -518,6 +519,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                     ) : (
                       <span className="text-gray-400">Unassigned</span>
                     )}
+                    </div>
                   </td></React.Fragment>;
                       case 'capturedOn': return <React.Fragment key="capturedOn"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
                     {lead.capturedOn ? timeAgo(lead.capturedOn) : timeAgo(lead.createdAt)}
@@ -548,7 +550,9 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                       case 'facebookCampaign': return <React.Fragment key="facebookCampaign"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
                     --
                   </td></React.Fragment>;
-                      case 'phone': return <React.Fragment key="phone"><td className="px-4 py-2.5 whitespace-nowrap text-gray-900 font-medium flex items-center justify-between">
+                      case 'phone': return <React.Fragment key="phone"><td className="px-4 py-2.5 whitespace-nowrap text-gray-900 font-medium">
+<div className="flex items-center justify-between">
+
                     <span>{lead.phone}</span>
                     <div className="flex space-x-2 ml-4">
                       <a href={`tel:${lead.phone}`} title="Call Lead" className="p-1 bg-green-50 text-green-600 rounded hover:bg-green-100 flex items-center justify-center">📞</a>
@@ -557,7 +561,9 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                         <LeadActionsMenu leadId={lead.id} />
                       </div>
                     </div>
-                  </td></React.Fragment>;
+                  
+</div>
+</td></React.Fragment>;
                       default:
                         if (colId.startsWith('custom_')) {
                           const rawKey = colId.replace('custom_', '');
