@@ -26,6 +26,9 @@ export default function SearchBar({ placeholder = "Search lead" }: { placeholder
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Track if we just updated the URL to prevent the sync effect from overwriting user input
+  const lastPushedQuery = useRef(initialQuery);
+
   // Debounce logic
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -42,16 +45,26 @@ export default function SearchBar({ placeholder = "Search lead" }: { placeholder
         params.delete("searchField");
       }
       
+      lastPushedQuery.current = query; // Remember what we pushed
       router.push("?" + params.toString());
     }, 300); // 300ms debounce
 
     return () => clearTimeout(delayDebounceFn);
   }, [query, searchField, router, searchParams]);
 
-  // Sync state if URL changes externally
+  // Sync state if URL changes externally (e.g., back button or clearing filters)
   useEffect(() => {
-    setQuery(searchParams.get("query") || "");
-    setSearchField(searchParams.get("searchField") || "all");
+    const urlQuery = searchParams.get("query") || "";
+    const urlSearchField = searchParams.get("searchField") || "all";
+    
+    // Only update our local state if the URL change came from outside
+    // (i.e. not from our own debounced router.push)
+    if (urlQuery !== lastPushedQuery.current) {
+      setQuery(urlQuery);
+      lastPushedQuery.current = urlQuery;
+    }
+    
+    setSearchField(urlSearchField);
   }, [searchParams]);
 
   const handleFieldSelect = (field: string) => {
@@ -89,7 +102,7 @@ export default function SearchBar({ placeholder = "Search lead" }: { placeholder
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={searchField === 'phone' ? "Search lead by phone" : searchField === 'name' ? "Search lead by name" : searchField === 'email' ? "Search lead by email" : placeholder} 
-        className="w-full pl-[88px] pr-4 py-1.5 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-[#613cbc] focus:ring-1 focus:ring-[#613cbc] bg-gray-50/50 hover:bg-white transition-colors"
+        className="w-full pl-[88px] pr-4 py-1.5 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5] bg-gray-50/50 hover:bg-white transition-colors"
       />
     </div>
   );
