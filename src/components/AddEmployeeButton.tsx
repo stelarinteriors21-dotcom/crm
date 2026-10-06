@@ -53,7 +53,7 @@ export default function AddEmployeeButton() {
       {/* Trigger Button */}
       <button
         onClick={() => { setOpen(true); setError(""); setSuccess(false); }}
-        className="flex items-center px-4 py-1.5 bg-[#613cbc] text-white rounded-lg text-sm font-bold hover:bg-purple-800 transition-colors shadow-sm"
+        className="flex items-center px-4 py-1.5 bg-[#4f46e5] text-white rounded-lg text-sm font-bold hover:bg-purple-800 transition-colors shadow-sm"
       >
         <Plus className="w-4 h-4 mr-1.5" /> Add Employee
       </button>
@@ -64,7 +64,7 @@ export default function AddEmployeeButton() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
             
             {/* Modal Header */}
-            <div className="px-4 md:px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-[#613cbc]/5 to-transparent">
+            <div className="px-4 md:px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-[#4f46e5]/5 to-transparent">
               <div>
                 <h2 className="text-[16px] font-black text-gray-900">Add New Employee</h2>
                 <p className="text-[12px] text-gray-400 mt-0.5">Create a login for a new team member</p>
@@ -87,7 +87,7 @@ export default function AddEmployeeButton() {
                     type="text"
                     required
                     placeholder="e.g. Shilpa Rajan"
-                    className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-[#613cbc] focus:ring-1 focus:ring-[#613cbc]/20 transition"
+                    className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5]/20 transition"
                   />
                 </div>
               </div>
@@ -102,7 +102,7 @@ export default function AddEmployeeButton() {
                     type="email"
                     required
                     placeholder="e.g. shilpa@stelarinteriors.com"
-                    className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-[#613cbc] focus:ring-1 focus:ring-[#613cbc]/20 transition"
+                    className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5]/20 transition"
                   />
                 </div>
               </div>
@@ -118,7 +118,7 @@ export default function AddEmployeeButton() {
                     required
                     minLength={6}
                     placeholder="Min. 6 characters"
-                    className="w-full pl-9 pr-10 py-2.5 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-[#613cbc] focus:ring-1 focus:ring-[#613cbc]/20 transition"
+                    className="w-full pl-9 pr-10 py-2.5 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5]/20 transition"
                   />
                   <button
                     type="button"
@@ -137,10 +137,10 @@ export default function AddEmployeeButton() {
                   <button
                     type="button"
                     onClick={() => setRoleOpen(!roleOpen)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 border border-gray-200 rounded-lg text-[13px] hover:border-[#613cbc] transition focus:outline-none focus:border-[#613cbc]"
+                    className="w-full flex items-center justify-between px-3 py-2.5 border border-gray-200 rounded-lg text-[13px] hover:border-[#4f46e5] transition focus:outline-none focus:border-[#4f46e5]"
                   >
                     <div className="flex items-center">
-                      <Shield className="w-4 h-4 text-[#613cbc] mr-2.5" />
+                      <Shield className="w-4 h-4 text-[#4f46e5] mr-2.5" />
                       <div className="text-left">
                         <div className="font-semibold text-gray-800">{selectedRoleObj.label}</div>
                         <div className="text-[10px] text-gray-400">{selectedRoleObj.desc}</div>
@@ -157,7 +157,7 @@ export default function AddEmployeeButton() {
                           onClick={() => { setSelectedRole(r.value); setRoleOpen(false); }}
                           className={`w-full flex items-start px-4 py-3 hover:bg-purple-50 text-left transition-colors ${selectedRole === r.value ? "bg-purple-50" : ""}`}
                         >
-                          <div className={`w-4 h-4 rounded-full border-2 mt-0.5 mr-3 flex-shrink-0 flex items-center justify-center ${selectedRole === r.value ? "border-[#613cbc] bg-[#613cbc]" : "border-gray-300"}`}>
+                          <div className={`w-4 h-4 rounded-full border-2 mt-0.5 mr-3 flex-shrink-0 flex items-center justify-center ${selectedRole === r.value ? "border-[#4f46e5] bg-[#4f46e5]" : "border-gray-300"}`}>
                             {selectedRole === r.value && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
                           </div>
                           <div>
@@ -197,7 +197,7 @@ export default function AddEmployeeButton() {
                 <button
                   type="submit"
                   disabled={loading || success}
-                  className="flex-1 py-2.5 bg-[#613cbc] text-white text-[13px] font-bold rounded-lg hover:bg-purple-800 disabled:opacity-60 transition-colors"
+                  className="flex-1 py-2.5 bg-[#4f46e5] text-white text-[13px] font-bold rounded-lg hover:bg-purple-800 disabled:opacity-60 transition-colors"
                 >
                   {loading ? "Creating..." : success ? "✓ Created!" : "Create Employee"}
                 </button>

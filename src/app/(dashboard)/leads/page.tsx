@@ -1,5 +1,5 @@
 import { Search, ChevronDown } from "lucide-react";
-import { getLeads } from "@/app/actions/leadActions";
+import { getLeads, getUniqueCities } from "@/app/actions/leadActions";
 import { getOrganizationSettings } from "@/app/actions/settingsActions";
 import LeadsHeaderActions from "@/components/LeadsHeaderActions";
 import LeadsFilterDropdowns from "@/components/LeadsFilterDropdowns";
@@ -16,6 +16,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
   const query = typeof searchParams.query === "string" ? searchParams.query : undefined;
   const searchField = typeof searchParams.searchField === "string" ? searchParams.searchField : undefined;
   const status = searchParams.status as string | string[] | undefined;
+  const city = searchParams.city as string | string[] | undefined;
   const source = typeof searchParams.source === "string" ? searchParams.source : undefined;
   const assigned = typeof searchParams.assigned === "string" ? searchParams.assigned : undefined;
   const active = searchParams.active === "true";
@@ -23,8 +24,9 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
   const endDate = typeof searchParams.endDate === "string" ? searchParams.endDate : undefined;
   const tag = typeof searchParams.tag === "string" ? searchParams.tag : undefined;
 
-  const dbLeads = await getLeads(query, searchField, status, source, assigned, active, startDate, endDate, tag);
+  const dbLeads = await getLeads(query, searchField, status, source, assigned, active, startDate, endDate, tag, city);
   const settings = await getOrganizationSettings();
+  const uniqueCities = await getUniqueCities();
   const customTags = (settings?.customTags as any[]) || [{name: "Potential lead", color: "#3b82f6"}, {name: "Future potential lead", color: "#8b5cf6"}];
 
   return (
@@ -38,7 +40,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
           <SearchBar />
         </div>
         <div className="flex flex-wrap items-center w-full lg:w-auto shrink-0 gap-2">
-          <LeadsFilterDropdowns customTags={customTags} />
+          <LeadsFilterDropdowns customTags={customTags} uniqueCities={uniqueCities} />
         </div>
       </div>
 

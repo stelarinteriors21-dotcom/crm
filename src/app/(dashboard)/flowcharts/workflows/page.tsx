@@ -16,7 +16,7 @@ export default function AutomationsDashboard() {
               Automate repetitive CRM actions with simple trigger → condition → action
             </p>
           </div>
-          <Link href="/flowcharts/workflows/create" className="bg-[#613cbc] hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center">
+          <Link href="/flowcharts/workflows/create" className="bg-[#4f46e5] hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center">
             <Plus className="w-4 h-4 mr-2" />
             Create Automation
           </Link>
@@ -26,7 +26,7 @@ export default function AutomationsDashboard() {
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
           <div className="relative w-72">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input type="text" placeholder="Search automations..." className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#613cbc] transition-colors" />
+            <input type="text" placeholder="Search automations..." className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#4f46e5] transition-colors" />
           </div>
           <div className="flex space-x-3">
             <button className="flex items-center space-x-2 text-sm font-medium text-gray-600 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">
@@ -48,7 +48,7 @@ export default function AutomationsDashboard() {
           </div>
           <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Published</h3>
-            <div className="text-3xl font-black text-[#613cbc]">8</div>
+            <div className="text-3xl font-black text-[#4f46e5]">8</div>
           </div>
           <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Drafts</h3>

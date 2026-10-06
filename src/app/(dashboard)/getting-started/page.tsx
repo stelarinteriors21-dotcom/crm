@@ -13,7 +13,7 @@ export default function GettingStartedPage() {
         </div>
         
         <div className="space-y-1 px-4">
-          <button className="w-full text-left px-3 py-2 text-[13px] font-bold text-[#613cbc] bg-[#f4effc] rounded-lg border border-purple-100 shadow-sm flex items-center">
+          <button className="w-full text-left px-3 py-2 text-[13px] font-bold text-[#4f46e5] bg-[#f4effc] rounded-lg border border-purple-100 shadow-sm flex items-center">
             <span className="w-4 h-4 rounded-full border-2 border-[#b3a1f8] mr-2"></span> All you need to get started
           </button>
           
@@ -60,16 +60,16 @@ export default function GettingStartedPage() {
 
         <div className="space-y-1 px-4">
           <button className="w-full text-left px-3 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 rounded-lg flex items-center">
-            <Download className="w-4 h-4 text-[#613cbc] mr-3" /> Download App
+            <Download className="w-4 h-4 text-[#4f46e5] mr-3" /> Download App
           </button>
           <button className="w-full text-left px-3 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 rounded-lg flex items-center">
-            <MessageSquare className="w-4 h-4 text-[#613cbc] mr-3" /> Contact our team
+            <MessageSquare className="w-4 h-4 text-[#4f46e5] mr-3" /> Contact our team
           </button>
           <button className="w-full text-left px-3 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 rounded-lg flex items-center">
-            <PlayCircle className="w-4 h-4 text-[#613cbc] mr-3" /> Help Video <ExternalLink className="w-3.5 h-3.5 ml-auto text-gray-400" />
+            <PlayCircle className="w-4 h-4 text-[#4f46e5] mr-3" /> Help Video <ExternalLink className="w-3.5 h-3.5 ml-auto text-gray-400" />
           </button>
           <button className="w-full text-left px-3 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 rounded-lg flex items-center">
-            <HelpCircle className="w-4 h-4 text-[#613cbc] mr-3" /> Product updates
+            <HelpCircle className="w-4 h-4 text-[#4f46e5] mr-3" /> Product updates
           </button>
         </div>
 
@@ -80,7 +80,7 @@ export default function GettingStartedPage() {
         <div className="max-w-4xl">
           
           <h1 className="text-2xl font-bold text-gray-800 flex items-center mb-2">
-            Hi Stelar, <span className="text-[#613cbc] ml-2">Happy Thursday!</span>
+            Hi Stelar, <span className="text-[#4f46e5] ml-2">Happy Thursday!</span>
           </h1>
           <p className="text-gray-500 text-sm mb-10 max-w-lg leading-relaxed">
             Here's where you'll set up telecrm. Walk through it at your own pace — every step you finish gets ticked off.
@@ -114,7 +114,7 @@ export default function GettingStartedPage() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:border-gray-200 cursor-pointer bg-gray-50/50">
-                  <div className="flex items-center text-[13px] text-[#613cbc]">
+                  <div className="flex items-center text-[13px] text-[#4f46e5]">
                     <div className="w-4 h-4 rounded-full border-2 border-purple-200 mr-3"></div>
                     Configure lead fields
                   </div>
@@ -122,7 +122,7 @@ export default function GettingStartedPage() {
                 </div>
                 
                 <div className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:border-gray-200 cursor-pointer bg-gray-50/50">
-                  <div className="flex items-center text-[13px] text-[#613cbc]">
+                  <div className="flex items-center text-[13px] text-[#4f46e5]">
                     <div className="w-4 h-4 rounded-full border-2 border-purple-200 mr-3"></div>
                     Configure lead stages
                   </div>
@@ -130,7 +130,7 @@ export default function GettingStartedPage() {
                 </div>
                 
                 <div className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:border-gray-200 cursor-pointer bg-gray-50/50">
-                  <div className="flex items-center text-[13px] text-[#613cbc]">
+                  <div className="flex items-center text-[13px] text-[#4f46e5]">
                     <div className="w-4 h-4 rounded-full border-2 border-purple-200 mr-3"></div>
                     Add your first leads manually
                   </div>
@@ -138,7 +138,7 @@ export default function GettingStartedPage() {
                 </div>
                 
                 <div className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:border-gray-200 cursor-pointer bg-gray-50/50">
-                  <div className="flex items-center text-[13px] text-[#613cbc]">
+                  <div className="flex items-center text-[13px] text-[#4f46e5]">
                     <div className="w-4 h-4 rounded-full border-2 border-purple-200 mr-3"></div>
                     Import leads from another CRM (Excel)
                   </div>
@@ -146,7 +146,7 @@ export default function GettingStartedPage() {
                 </div>
 
                 <div className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:border-gray-200 cursor-pointer bg-gray-50/50">
-                  <div className="flex items-center text-[13px] text-[#613cbc]">
+                  <div className="flex items-center text-[13px] text-[#4f46e5]">
                     <div className="w-4 h-4 rounded-full border-2 border-purple-200 mr-3"></div>
                     Import historical actions from another CRM
                   </div>

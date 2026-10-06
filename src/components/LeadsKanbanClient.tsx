@@ -84,12 +84,12 @@ export default function LeadsKanbanClient({ leads }: { leads: Lead[] }) {
                   className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm cursor-grab active:cursor-grabbing hover:border-purple-300 hover:shadow-md transition-all group"
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <Link href={`/leads/${lead.id}`} className="font-semibold text-gray-900 text-sm hover:text-[#613cbc] hover:underline flex-1 truncate pr-2">
+                    <Link href={`/leads/${lead.id}`} className="font-semibold text-gray-900 text-sm hover:text-[#4f46e5] hover:underline flex-1 truncate pr-2">
                       {lead.name}
                     </Link>
                     {lead.assignedTo && (
                       <div 
-                        className="w-6 h-6 rounded-full bg-purple-50 text-[#613cbc] flex items-center justify-center text-[10px] font-bold border border-purple-100 shrink-0" 
+                        className="w-6 h-6 rounded-full bg-purple-50 text-[#4f46e5] flex items-center justify-center text-[10px] font-bold border border-purple-100 shrink-0" 
                         title={lead.assignedTo.name ?? ""}
                       >
                         {(lead.assignedTo.name ?? "?").split(" ").map((p: string) => p[0]).join("").slice(0, 2).toUpperCase()}

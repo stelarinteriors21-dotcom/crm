@@ -12,20 +12,20 @@ export default async function TasksPage() {
       <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
         <div>
           <h1 className="text-[17px] font-bold text-gray-800 flex items-center">
-            Tasks <RefreshCw className="w-4 h-4 ml-2 text-[#613cbc] cursor-pointer" />
+            Tasks <RefreshCw className="w-4 h-4 ml-2 text-[#4f46e5] cursor-pointer" />
           </h1>
           <div className="text-[11px] text-gray-400 mt-0.5">
-            Never miss a followup by creating task <span className="text-[#613cbc] underline cursor-pointer">Learn More</span>
+            Never miss a followup by creating task <span className="text-[#4f46e5] underline cursor-pointer">Learn More</span>
           </div>
         </div>
-        <button className="flex items-center text-[#613cbc] border border-purple-200 bg-purple-50 px-4 py-2 rounded text-[13px] font-bold hover:bg-purple-100 transition-colors">
+        <button className="flex items-center text-[#4f46e5] border border-purple-200 bg-purple-50 px-4 py-2 rounded text-[13px] font-bold hover:bg-purple-100 transition-colors">
           <Upload className="w-4 h-4 mr-2" /> Upload tasks
         </button>
       </div>
 
       {/* Tabs */}
       <div className="px-4 md:px-6 pt-2 border-b border-gray-100 flex items-center space-x-6 shrink-0 bg-white">
-        <button className="text-[#613cbc] text-[13px] font-bold border-b-[3px] border-[#613cbc] pb-3 -mb-[2px]">
+        <button className="text-[#4f46e5] text-[13px] font-bold border-b-[3px] border-[#4f46e5] pb-3 -mb-[2px]">
           Call Followups <SettingsIcon className="w-3.5 h-3.5 ml-1 inline text-gray-400" />
         </button>
         <button className="text-gray-500 text-[13px] font-bold hover:text-gray-700 pb-3 -mb-[2px]">
@@ -41,12 +41,12 @@ export default async function TasksPage() {
           <input 
             type="text" 
             placeholder="Search on description" 
-            className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-[#613cbc] bg-white"
+            className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-[#4f46e5] bg-white"
           />
         </div>
 
         <div className="flex border border-gray-200 rounded overflow-hidden">
-          <button className="bg-purple-50 text-[#613cbc] border-r border-purple-200 px-3 py-1.5 text-[11px] font-bold flex items-center">
+          <button className="bg-purple-50 text-[#4f46e5] border-r border-purple-200 px-3 py-1.5 text-[11px] font-bold flex items-center">
             <User className="w-3.5 h-3.5 mr-1.5" /> Me
           </button>
           <button className="bg-white text-gray-500 px-3 py-1.5 text-[11px] font-bold flex items-center hover:bg-gray-50">
@@ -102,12 +102,12 @@ export default async function TasksPage() {
                 return (
                   <tr key={task.id} className="hover:bg-gray-50 transition-colors group">
                     <td className="px-4 py-3"><input type="checkbox" className="rounded border-gray-300" /></td>
-                    <td className="px-4 py-3 text-[13px] font-bold text-[#613cbc] hover:underline cursor-pointer flex items-center">
+                    <td className="px-4 py-3 text-[13px] font-bold text-[#4f46e5] hover:underline cursor-pointer flex items-center">
                       {task.lead?.name || "Unknown Lead"} <ExternalLinkIcon className="w-3 h-3 ml-1 text-gray-400" />
                     </td>
                     <td className="px-4 py-3 text-[13px] text-gray-400 italic">{task.title || "No description"}</td>
                     <td className="px-4 py-3 text-center">
-                      <div className="w-6 h-6 rounded-full bg-[#E8E2F7] text-[#613cbc] flex items-center justify-center text-[9px] font-bold mx-auto border border-white shadow-sm">SI</div>
+                      <div className="w-6 h-6 rounded-full bg-[#E8E2F7] text-[#4f46e5] flex items-center justify-center text-[9px] font-bold mx-auto border border-white shadow-sm">SI</div>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-[11px] font-bold tracking-wider ${isLate ? "text-red-600" : "text-green-600"}`}>{isLate ? "LATE" : "PENDING"}</span>
@@ -121,7 +121,7 @@ export default async function TasksPage() {
                     <td className="px-4 py-3">
                       <div className="flex justify-center space-x-2">
                         <button className="p-1.5 bg-white border border-gray-200 rounded hover:bg-gray-50 text-gray-500 shadow-sm"><Maximize2 className="w-3.5 h-3.5" /></button>
-                        <button className="p-1.5 bg-white border border-gray-200 rounded hover:bg-purple-50 text-[#613cbc] shadow-sm"><Phone className="w-3.5 h-3.5" /></button>
+                        <button className="p-1.5 bg-white border border-gray-200 rounded hover:bg-purple-50 text-[#4f46e5] shadow-sm"><Phone className="w-3.5 h-3.5" /></button>
                         <button className="p-1.5 bg-white border border-gray-200 rounded hover:bg-red-50 text-red-500 shadow-sm"><X className="w-3.5 h-3.5" /></button>
                       </div>
                     </td>

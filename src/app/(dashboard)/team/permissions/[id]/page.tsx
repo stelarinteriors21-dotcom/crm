@@ -23,7 +23,7 @@ export default async function PermissionTemplateDetailsPage({ params }: { params
           <h1 className="text-[22px] font-bold text-gray-800 leading-tight">
             {template.name} Permissions
           </h1>
-          <button className="text-[#613cbc] hover:bg-purple-50 p-1.5 rounded-full transition-colors shrink-0 ml-2">
+          <button className="text-[#4f46e5] hover:bg-purple-50 p-1.5 rounded-full transition-colors shrink-0 ml-2">
             <Edit2 className="w-4 h-4" />
           </button>
         </div>
@@ -53,7 +53,7 @@ export default async function PermissionTemplateDetailsPage({ params }: { params
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 bg-[#F8F9FA] p-8 overflow-y-auto">
+      <div className="flex-1 bg-[#f8fafc] p-8 overflow-y-auto">
         
         {/* Header Metadata */}
         <div className="flex justify-between items-start mb-8">
@@ -66,7 +66,7 @@ export default async function PermissionTemplateDetailsPage({ params }: { params
             </div>
             <div className="flex items-center mt-1">
               <span>Last Modified On: <span className="font-semibold text-gray-700">{""}</span> | Last Modified by:</span>
-              <div className="w-4 h-4 rounded-full bg-[#E8E2F7] flex items-center justify-center text-[8px] font-bold text-[#613cbc] ml-1 border border-[#d6cbf0]">SI</div>
+              <div className="w-4 h-4 rounded-full bg-[#E8E2F7] flex items-center justify-center text-[8px] font-bold text-[#4f46e5] ml-1 border border-[#d6cbf0]">SI</div>
             </div>
           </div>
         </div>
@@ -77,7 +77,7 @@ export default async function PermissionTemplateDetailsPage({ params }: { params
           <input 
             type="text" 
             placeholder="Search" 
-            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-[#613cbc] bg-white shadow-sm"
+            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-[#4f46e5] bg-white shadow-sm"
           />
         </div>
 

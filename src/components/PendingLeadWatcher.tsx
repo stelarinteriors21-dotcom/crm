@@ -194,7 +194,7 @@ export default function PendingLeadWatcher({ userId }: { userId?: string }) {
              <div>
                <div className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Lead Name</div>
                <div className="text-xl font-bold text-gray-900 flex items-center">
-                 <User className="w-5 h-5 mr-2 text-[#613cbc]" />
+                 <User className="w-5 h-5 mr-2 text-[#4f46e5]" />
                  {pendingLead.name}
                </div>
              </div>
@@ -233,11 +233,11 @@ export default function PendingLeadWatcher({ userId }: { userId?: string }) {
           
           {isAdminAlert && callers.length > 0 ? (
             <div className="flex items-center space-x-3 mb-4 p-4 border border-purple-100 rounded-lg bg-purple-50">
-              <Users className="w-5 h-5 text-[#613cbc]" />
+              <Users className="w-5 h-5 text-[#4f46e5]" />
               <select 
                 value={selectedAssignee}
                 onChange={(e) => setSelectedAssignee(e.target.value)}
-                className="flex-1 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#613cbc] focus:border-[#613cbc] block p-2.5"
+                className="flex-1 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#4f46e5] focus:border-[#4f46e5] block p-2.5"
               >
                 {callers.map(caller => (
                   <option key={caller.id} value={caller.id}>{caller.name}</option>
@@ -246,7 +246,7 @@ export default function PendingLeadWatcher({ userId }: { userId?: string }) {
               <button 
                 onClick={handleAssign}
                 disabled={processing}
-                className="bg-[#613cbc] hover:bg-purple-800 text-white font-bold py-2.5 px-4 md:px-6 rounded-lg transition-colors disabled:opacity-50"
+                className="bg-[#4f46e5] hover:bg-purple-800 text-white font-bold py-2.5 px-4 md:px-6 rounded-lg transition-colors disabled:opacity-50"
               >
                 {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Assign'}
               </button>

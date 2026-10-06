@@ -25,13 +25,13 @@ export default function ReportDownloadPage() {
       {/* Header */}
       <div className="h-16 px-4 md:px-6 flex items-center border-b border-gray-100 shrink-0">
         <h1 className="text-[17px] font-bold text-gray-800 flex items-center">
-          Report Download <RefreshCw className="w-4 h-4 ml-2 text-[#613cbc] cursor-pointer" />
+          Report Download <RefreshCw className="w-4 h-4 ml-2 text-[#4f46e5] cursor-pointer" />
         </h1>
       </div>
 
       {/* Tabs */}
       <div className="px-2 border-b border-gray-100 shrink-0 overflow-x-auto flex relative hide-scrollbar">
-        <button className="whitespace-nowrap px-4 py-3 text-[13px] font-bold text-[#613cbc] border-b-2 border-[#613cbc]">All</button>
+        <button className="whitespace-nowrap px-4 py-3 text-[13px] font-bold text-[#4f46e5] border-b-2 border-[#4f46e5]">All</button>
         <button className="whitespace-nowrap px-4 py-3 text-[13px] font-bold text-gray-500 hover:text-gray-700">Leads</button>
         <button className="whitespace-nowrap px-4 py-3 text-[13px] font-bold text-gray-500 hover:text-gray-700">Tasks</button>
         <button className="whitespace-nowrap px-4 py-3 text-[13px] font-bold text-gray-500 hover:text-gray-700">Leaderboard</button>
@@ -67,7 +67,7 @@ export default function ReportDownloadPage() {
                   <div className="flex items-start">
                     <FileSpreadsheet className="w-4 h-4 text-green-600 mr-3 mt-0.5 shrink-0" />
                     <div>
-                      <div className="text-[13px] font-medium text-[#613cbc] cursor-pointer hover:underline truncate max-w-[280px]">
+                      <div className="text-[13px] font-medium text-[#4f46e5] cursor-pointer hover:underline truncate max-w-[280px]">
                         {report.name}
                       </div>
                       <div className="text-[11px] text-gray-400 mt-0.5">Size: {report.size}</div>
@@ -88,14 +88,14 @@ export default function ReportDownloadPage() {
                 </td>
                 <td className="px-4 md:px-6 py-3">
                   <div className="flex items-center">
-                    <div className="w-5 h-5 rounded-full bg-purple-100 text-[#613cbc] flex items-center justify-center text-[9px] font-bold mr-2">
+                    <div className="w-5 h-5 rounded-full bg-purple-100 text-[#4f46e5] flex items-center justify-center text-[9px] font-bold mr-2">
                       SI
                     </div>
                     <span className="text-[13px] text-gray-600">Stelar Interiors</span>
                   </div>
                 </td>
                 <td className="px-4 md:px-6 py-3 text-center">
-                  <button className="text-[#613cbc] hover:bg-purple-50 p-1.5 rounded-full transition-colors opacity-80 hover:opacity-100">
+                  <button className="text-[#4f46e5] hover:bg-purple-50 p-1.5 rounded-full transition-colors opacity-80 hover:opacity-100">
                     <Download className="w-4 h-4" />
                   </button>
                 </td>

@@ -14,7 +14,7 @@ export default function APITemplatesPage() {
                 <Cloud className="w-6 h-6 text-gray-700 absolute" />
                 <span className="absolute bottom-0 right-0 text-[8px] font-bold bg-white text-gray-900 px-0.5 rounded">API</span>
               </span>
-              API Templates <span className="ml-2 text-[#613cbc] text-sm cursor-pointer">↺</span>
+              API Templates <span className="ml-2 text-[#4f46e5] text-sm cursor-pointer">↺</span>
             </h1>
             <p className="text-sm text-gray-500 mt-1">Create an API template once and use it everywhere</p>
           </div>
@@ -39,10 +39,10 @@ export default function APITemplatesPage() {
             </thead>
             <tbody>
               <tr>
-                <td colSpan={7} className="px-4 md:px-6 py-12 text-center bg-[#F8F9FA]">
+                <td colSpan={7} className="px-4 md:px-6 py-12 text-center bg-[#f8fafc]">
                   <div className="flex items-center justify-center text-[17px] text-gray-400 italic">
                     No API templates found, 
-                    <Link href="/all-custom-api-templates/create" className="text-[#613cbc] font-medium ml-1 flex items-center hover:underline">
+                    <Link href="/all-custom-api-templates/create" className="text-[#4f46e5] font-medium ml-1 flex items-center hover:underline">
                       + Create new
                     </Link>
                   </div>

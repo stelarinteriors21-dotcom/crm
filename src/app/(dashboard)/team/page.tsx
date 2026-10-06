@@ -92,7 +92,7 @@ export default async function UserManagementPage() {
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-9 h-9 rounded-full bg-[#E8E2F7] flex items-center justify-center text-[#613cbc] font-black text-xs mr-3 flex-shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-[#E8E2F7] flex items-center justify-center text-[#4f46e5] font-black text-xs mr-3 flex-shrink-0">
                           {initials}
                         </div>
                         <div>
@@ -116,7 +116,7 @@ export default async function UserManagementPage() {
                       <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Link
                           href={`/team/permissions/${user.id}`}
-                          className="text-[11px] font-bold text-[#613cbc] border border-[#613cbc] px-2 py-1 rounded hover:bg-purple-50 transition-colors"
+                          className="text-[11px] font-bold text-[#4f46e5] border border-[#4f46e5] px-2 py-1 rounded hover:bg-purple-50 transition-colors"
                         >
                           Permissions
                         </Link>
@@ -133,7 +133,7 @@ export default async function UserManagementPage() {
           {users.length === 0 && (
             <div className="text-center py-12">
               <div className="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                <User className="w-6 h-6 text-[#613cbc]" />
+                <User className="w-6 h-6 text-[#4f46e5]" />
               </div>
               <div className="text-[14px] font-bold text-gray-600">No team members yet</div>
               <div className="text-[12px] text-gray-400 mt-1">Click "Add Employee" to get started</div>

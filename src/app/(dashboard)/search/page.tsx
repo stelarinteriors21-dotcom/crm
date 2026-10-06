@@ -37,10 +37,10 @@ export default async function SearchPage({
               name="q"
               defaultValue={query}
               placeholder="Search for a lead's name, phone or other details" 
-              className="w-full pl-4 pr-10 py-3 border border-gray-200 rounded-lg outline-none focus:border-[#613cbc] focus:ring-1 focus:ring-[#613cbc] text-sm"
+              className="w-full pl-4 pr-10 py-3 border border-gray-200 rounded-lg outline-none focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5] text-sm"
               autoFocus
             />
-            <button type="submit" className="absolute right-3 text-gray-400 hover:text-[#613cbc]">
+            <button type="submit" className="absolute right-3 text-gray-400 hover:text-[#4f46e5]">
               <SearchIcon className="w-5 h-5" />
             </button>
           </div>
@@ -48,7 +48,7 @@ export default async function SearchPage({
           <div className="flex space-x-2">
             {['Auto', 'Phone', 'Text', 'Email'].map((filter) => (
               <label key={filter} className={`px-4 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-colors border ${
-                type === filter ? 'bg-[#613cbc] text-white border-[#613cbc]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                type === filter ? 'bg-[#4f46e5] text-white border-[#4f46e5]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
               }`}>
                 <input type="radio" name="type" value={filter} className="hidden" defaultChecked={type === filter} onChange={(e) => e.target.form?.submit()} />
                 {filter}
@@ -66,7 +66,7 @@ export default async function SearchPage({
         ) : (
           <div className="space-y-3 max-w-3xl">
             {results.map(lead => (
-              <Link key={lead.id} href={`/leads/${lead.id}`} className="block bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:border-[#613cbc] transition-colors">
+              <Link key={lead.id} href={`/leads/${lead.id}`} className="block bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:border-[#4f46e5] transition-colors">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-sm font-bold text-gray-900">{lead.name}</h3>

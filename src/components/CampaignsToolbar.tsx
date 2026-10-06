@@ -16,7 +16,7 @@ export default function CampaignsToolbar() {
         <input 
           type="text" 
           placeholder="Search campaign" 
-          className="w-full pl-9 pr-3 py-1.5 border border-gray-200 rounded text-[13px] focus:outline-none focus:border-[#613cbc] bg-white"
+          className="w-full pl-9 pr-3 py-1.5 border border-gray-200 rounded text-[13px] focus:outline-none focus:border-[#4f46e5] bg-white"
         />
       </div>
       
@@ -25,7 +25,7 @@ export default function CampaignsToolbar() {
         <button 
           onClick={() => setPriorityOpen(!priorityOpen)}
           onBlur={() => setTimeout(() => setPriorityOpen(false), 200)}
-          className="w-full flex items-center justify-between border border-gray-200 bg-white rounded px-3 py-1.5 text-[13px] text-gray-700 hover:border-[#613cbc] transition-colors"
+          className="w-full flex items-center justify-between border border-gray-200 bg-white rounded px-3 py-1.5 text-[13px] text-gray-700 hover:border-[#4f46e5] transition-colors"
         >
           Priority <ChevronDown className="w-4 h-4 text-gray-400" />
         </button>
@@ -43,7 +43,7 @@ export default function CampaignsToolbar() {
         <button 
           onClick={() => setDateOpen(!dateOpen)}
           onBlur={() => setTimeout(() => setDateOpen(false), 200)}
-          className="w-full flex items-center justify-between border border-gray-200 bg-white rounded px-3 py-1.5 text-[13px] text-gray-700 hover:border-[#613cbc] transition-colors"
+          className="w-full flex items-center justify-between border border-gray-200 bg-white rounded px-3 py-1.5 text-[13px] text-gray-700 hover:border-[#4f46e5] transition-colors"
         >
           Date <ChevronDown className="w-4 h-4 text-gray-400" />
         </button>
@@ -61,7 +61,7 @@ export default function CampaignsToolbar() {
         <button 
           onClick={() => setAssigneeOpen(!assigneeOpen)}
           onBlur={() => setTimeout(() => setAssigneeOpen(false), 200)}
-          className="w-full flex items-center justify-between border border-gray-200 bg-white rounded px-3 py-1.5 text-[13px] text-gray-700 hover:border-[#613cbc] transition-colors"
+          className="w-full flex items-center justify-between border border-gray-200 bg-white rounded px-3 py-1.5 text-[13px] text-gray-700 hover:border-[#4f46e5] transition-colors"
         >
           Select Assignee <ChevronDown className="w-4 h-4 text-gray-400" />
         </button>
@@ -79,7 +79,7 @@ export default function CampaignsToolbar() {
         <button 
           onClick={() => setCreatedByOpen(!createdByOpen)}
           onBlur={() => setTimeout(() => setCreatedByOpen(false), 200)}
-          className="w-full flex items-center justify-between border border-gray-200 bg-white rounded px-3 py-1.5 text-[13px] text-gray-700 hover:border-[#613cbc] transition-colors"
+          className="w-full flex items-center justify-between border border-gray-200 bg-white rounded px-3 py-1.5 text-[13px] text-gray-700 hover:border-[#4f46e5] transition-colors"
         >
           Select Created by <ChevronDown className="w-4 h-4 text-gray-400" />
         </button>

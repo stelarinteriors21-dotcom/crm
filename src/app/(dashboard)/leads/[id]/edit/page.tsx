@@ -44,18 +44,18 @@ export default async function EditLeadPage({ params }: { params: { id: string } 
       <form action={updateLead} className="space-y-6">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
-          <input type="text" name="name" id="name" defaultValue={lead.name} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#613cbc] focus:border-[#613cbc] sm:text-sm" />
+          <input type="text" name="name" id="name" defaultValue={lead.name} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm" />
         </div>
 
         <div>
           <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone Number</label>
-          <input type="tel" name="phone" id="phone" defaultValue={lead.phone} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#613cbc] focus:border-[#613cbc] sm:text-sm" />
+          <input type="tel" name="phone" id="phone" defaultValue={lead.phone} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
-            <select name="status" id="status" defaultValue={lead.status} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#613cbc] focus:border-[#613cbc] sm:text-sm">
+            <select name="status" id="status" defaultValue={lead.status} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm">
               <option value="NEW">Interested / New</option>
               <option value="CONTACTED">Job Enquiries / Contacted</option>
               <option value="WARM">RNR / Warm</option>
@@ -65,7 +65,7 @@ export default async function EditLeadPage({ params }: { params: { id: string } 
           </div>
           <div>
             <label htmlFor="source" className="block text-sm font-medium text-gray-700">Lead Source</label>
-            <select name="source" id="source" defaultValue={lead.source} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#613cbc] focus:border-[#613cbc] sm:text-sm">
+            <select name="source" id="source" defaultValue={lead.source} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm">
               <option value="Manual">Manual Entry</option>
               <option value="Facebook Ads">Facebook Ads</option>
               <option value="Google Ads">Google Ads</option>
@@ -77,22 +77,22 @@ export default async function EditLeadPage({ params }: { params: { id: string } 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="budget" className="block text-sm font-medium text-gray-700">Budget (Optional)</label>
-            <input type="text" name="budget" id="budget" defaultValue={lead.budget || ''} placeholder="e.g. ₹1l - ₹5l" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#613cbc] focus:border-[#613cbc] sm:text-sm" />
+            <input type="text" name="budget" id="budget" defaultValue={lead.budget || ''} placeholder="e.g. ₹1l - ₹5l" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm" />
           </div>
           <div>
             <label htmlFor="city" className="block text-sm font-medium text-gray-700">City (Optional)</label>
-            <input type="text" name="city" id="city" defaultValue={lead.city || ''} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#613cbc] focus:border-[#613cbc] sm:text-sm" />
+            <input type="text" name="city" id="city" defaultValue={lead.city || ''} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm" />
           </div>
         </div>
 
         <div>
           <label htmlFor="tag" className="block text-sm font-medium text-gray-700">Tag (Optional)</label>
-          <input type="text" name="tag" id="tag" defaultValue={lead.tag || ''} placeholder="e.g. Urgent" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#613cbc] focus:border-[#613cbc] sm:text-sm" />
+          <input type="text" name="tag" id="tag" defaultValue={lead.tag || ''} placeholder="e.g. Urgent" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm" />
         </div>
 
         <div className="pt-4 flex justify-end space-x-3">
           <Link href="/leads" className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</Link>
-          <button type="submit" className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#613cbc] hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#613cbc]">
+          <button type="submit" className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4f46e5] hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4f46e5]">
             Update Lead
           </button>
         </div>

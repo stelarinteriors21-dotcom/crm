@@ -17,7 +17,7 @@ export default function IntegrationDetailsPage() {
         {/* Left Sidebar - Linked Accounts */}
         <div className="w-[300px] bg-white border-r border-gray-100 p-6 flex flex-col">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-[13px] font-bold text-gray-400 border-b-2 border-[#613cbc] pb-1">Linked Account</h3>
+            <h3 className="text-[13px] font-bold text-gray-400 border-b-2 border-[#4f46e5] pb-1">Linked Account</h3>
             <button className="bg-[#4d3691] text-white px-3 py-1 rounded text-xs font-medium hover:bg-purple-900 transition-colors">
               + Add New
             </button>
@@ -33,7 +33,7 @@ export default function IntegrationDetailsPage() {
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-[#613cbc]">Arunraj RA</h4>
+                <h4 className="text-sm font-bold text-[#4f46e5]">Arunraj RA</h4>
                 <p className="text-[11px] text-gray-500">Integrated with:</p>
               </div>
             </div>
@@ -60,7 +60,7 @@ export default function IntegrationDetailsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono mb-4">
                 <div className="bg-white p-3 rounded-lg border border-purple-200">
                   <span className="text-[10px] font-bold text-gray-400 block uppercase mb-1">Callback URL</span>
-                  <span className="font-bold text-[#613cbc] select-all">https://telecrm-clone.vercel.app/api/webhooks/meta</span>
+                  <span className="font-bold text-[#4f46e5] select-all">https://telecrm-clone.vercel.app/api/webhooks/meta</span>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-purple-200">
                   <span className="text-[10px] font-bold text-gray-400 block uppercase mb-1">Verify Token</span>
@@ -69,7 +69,7 @@ export default function IntegrationDetailsPage() {
               </div>
 
               <div className="space-y-1.5 text-xs text-gray-700 font-medium">
-                <div>1. Go to <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" className="text-[#613cbc] font-bold underline">developers.facebook.com</a> &gt; Select your App &gt; <strong>Webhooks</strong>.</div>
+                <div>1. Go to <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" className="text-[#4f46e5] font-bold underline">developers.facebook.com</a> &gt; Select your App &gt; <strong>Webhooks</strong>.</div>
                 <div>2. Select <strong>Page</strong> object and click <strong>Subscribe to this object</strong>.</div>
                 <div>3. Paste the <strong>Callback URL</strong> and <strong>Verify Token</strong> above.</div>
                 <div>4. Subscribe to the <strong>leadgen</strong> event field.</div>
@@ -90,7 +90,7 @@ export default function IntegrationDetailsPage() {
               <input 
                 type="text" 
                 placeholder="Search with page and form name" 
-                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#613cbc] bg-gray-50"
+                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#4f46e5] bg-gray-50"
               />
             </div>
             

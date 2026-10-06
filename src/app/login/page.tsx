@@ -36,10 +36,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100 w-full max-w-md">
         <div className="flex justify-center mb-6">
-          <div className="w-12 h-12 bg-[#613cbc] rounded-xl flex items-center justify-center">
+          <div className="w-12 h-12 bg-[#4f46e5] rounded-xl flex items-center justify-center">
             <span className="text-white font-bold text-2xl leading-none">S</span>
           </div>
         </div>
@@ -56,7 +56,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="off"
-              className="w-full px-4 py-2 text-gray-900 bg-white placeholder-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#613cbc]/20 focus:border-[#613cbc]"
+              className="w-full px-4 py-2 text-gray-900 bg-white placeholder-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4f46e5]/20 focus:border-[#4f46e5]"
               placeholder="user@example.com"
             />
           </div>
@@ -68,14 +68,14 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
-              className="w-full px-4 py-2 text-gray-900 bg-white placeholder-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#613cbc]/20 focus:border-[#613cbc]"
+              className="w-full px-4 py-2 text-gray-900 bg-white placeholder-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4f46e5]/20 focus:border-[#4f46e5]"
               placeholder="••••••••"
             />
           </div>
           <button 
             type="submit"
             disabled={loading}
-            className="w-full bg-[#613cbc] hover:bg-[#502fa1] text-white font-bold py-2.5 rounded-lg transition-colors disabled:opacity-50"
+            className="w-full bg-[#4f46e5] hover:bg-[#502fa1] text-white font-bold py-2.5 rounded-lg transition-colors disabled:opacity-50"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>

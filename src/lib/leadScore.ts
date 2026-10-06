@@ -1,4 +1,4 @@
-export const SCORE_MAX = 20.00;
+export const SCORE_MAX = 25.00;
 
 export const SCORE_FACTORS = {
   // Stage 02 - Qualification
@@ -6,33 +6,27 @@ export const SCORE_FACTORS = {
     stage: "Qualification",
     label: "Location",
     levels: ["None", "Outside", "Kerala", "Near TVM", "TVM"],
-    scores:  [0,      5.00,      10.00,    15.00,       20.00],
+    scores:  [0,      6.25,      12.50,    18.75,       25.00],
   },
   scoreBudget: {
     stage: "Qualification",
     label: "Budget",
     levels: ["None", "1L - 3L", "3L - 6L", "6L - 9L", "9L - 12L", "12L - 15L", "15L+"],
-    scores:  [0,      3.33,      6.66,      10.00,     13.33,      16.66,       20.00],
+    scores:  [0,      4.16,      8.33,      12.50,     16.66,      20.83,       25.00],
   },
   scoreTimeline: {
     stage: "Qualification",
     label: "Buying Timeline",
     levels: ["None", "6M+", "3-6M", "1-3M", "1M"],
-    scores:  [0,       5.00,  10.00,  15.00,  20.00],
+    scores:  [0,       6.25,  12.50,  18.75,  25.00],
   },
 
   // Stage 04 - Sales
-  scoreSiteVisit: {
-    stage: "Sales",
-    label: "Site Visit",
-    levels: ["None", "Scheduled", "Rescheduled", "Done"],
-    scores:  [0,       6.66,        13.33,         20.00],
-  },
   scoreQuotation: {
     stage: "Sales",
     label: "Quotation",
     levels: ["None", "Estimate", "Revised", "Final"],
-    scores:  [0,       6.66,       13.33,     20.00],
+    scores:  [0,       8.33,       16.66,     25.00],
   },
 } as const;
 
@@ -42,7 +36,6 @@ export type LeadScoreInput = {
   scoreLocation: string;
   scoreBudget: string;
   scoreTimeline: string;
-  scoreSiteVisit: string;
   scoreQuotation: string;
 };
 

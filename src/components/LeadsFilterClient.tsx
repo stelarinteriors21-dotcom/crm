@@ -113,7 +113,7 @@ export default function LeadsFilterClient() {
         <div className="relative" ref={assigneeRef}>
           <button 
             onClick={() => setShowAssigneeMenu(!showAssigneeMenu)}
-            className={`flex items-center px-3 py-1.5 border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 ${currentAssignee ? 'bg-purple-50 text-[#613cbc] border-purple-200' : 'bg-white'}`}
+            className={`flex items-center px-3 py-1.5 border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 ${currentAssignee ? 'bg-purple-50 text-[#4f46e5] border-purple-200' : 'bg-white'}`}
           >
             <span className="mr-2">👤</span> {currentAssignee ? `Assignee: ${currentAssignee}` : 'Assignee'} <ChevronDown className="w-4 h-4 ml-1 text-gray-400" />
           </button>
@@ -130,7 +130,7 @@ export default function LeadsFilterClient() {
         <div className="relative" ref={statusRef}>
           <button 
             onClick={() => setShowStatusMenu(!showStatusMenu)}
-            className={`flex items-center px-3 py-1.5 border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 ${currentStatus ? 'bg-purple-50 text-[#613cbc] border-purple-200' : 'bg-white'}`}
+            className={`flex items-center px-3 py-1.5 border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 ${currentStatus ? 'bg-purple-50 text-[#4f46e5] border-purple-200' : 'bg-white'}`}
           >
             {currentStatus ? `Status: ${currentStatus}` : 'Status'} <ChevronDown className="w-4 h-4 ml-1 text-gray-400" />
           </button>
@@ -150,7 +150,7 @@ export default function LeadsFilterClient() {
         <div className="relative" ref={dateRef}>
           <button 
             onClick={() => setShowDateMenu(!showDateMenu)}
-            className={`flex items-center px-3 py-1.5 border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 ${currentDate ? 'bg-purple-50 text-[#613cbc] border-purple-200' : 'bg-white'}`}
+            className={`flex items-center px-3 py-1.5 border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 ${currentDate ? 'bg-purple-50 text-[#4f46e5] border-purple-200' : 'bg-white'}`}
           >
             📅 {currentDate ? `Date: ${currentDate}` : 'Creation Date'} <ChevronDown className="w-4 h-4 ml-1 text-gray-400" />
           </button>
@@ -169,7 +169,7 @@ export default function LeadsFilterClient() {
         {/* Advanced Filters Button */}
         <button 
           onClick={() => setShowAdvancedFilters(true)}
-          className="flex items-center px-3 py-1.5 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 text-[#613cbc] font-medium"
+          className="flex items-center px-3 py-1.5 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 text-[#4f46e5] font-medium"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
           Filters
@@ -204,9 +204,9 @@ export default function LeadsFilterClient() {
                   <ChevronDown className="w-4 h-4 text-gray-400 group-open:-rotate-180 transition-transform" />
                 </summary>
                 <div className="px-4 pb-4 space-y-2">
-                  <button onClick={() => updateUrl('date', 'Today')} className="block w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-purple-50 hover:text-[#613cbc] rounded">Today</button>
-                  <button onClick={() => updateUrl('date', 'Yesterday')} className="block w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-purple-50 hover:text-[#613cbc] rounded">Yesterday</button>
-                  <button onClick={() => updateUrl('date', 'This Month')} className="block w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-purple-50 hover:text-[#613cbc] rounded">This Month</button>
+                  <button onClick={() => updateUrl('date', 'Today')} className="block w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-purple-50 hover:text-[#4f46e5] rounded">Today</button>
+                  <button onClick={() => updateUrl('date', 'Yesterday')} className="block w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-purple-50 hover:text-[#4f46e5] rounded">Yesterday</button>
+                  <button onClick={() => updateUrl('date', 'This Month')} className="block w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-purple-50 hover:text-[#4f46e5] rounded">This Month</button>
                   <div className="flex space-x-2 mt-2">
                     <input type="date" className="flex-1 border border-gray-300 rounded px-2 py-1 text-xs" />
                     <span className="text-gray-400 self-center">-</span>
@@ -222,15 +222,15 @@ export default function LeadsFilterClient() {
                 </summary>
                 <div className="px-4 pb-4 space-y-2">
                   <label className="flex items-center space-x-2">
-                    <input type="checkbox" onChange={() => updateUrl('status', 'NEW')} checked={currentStatus === 'NEW'} className="rounded text-[#613cbc] border-gray-300" />
+                    <input type="checkbox" onChange={() => updateUrl('status', 'NEW')} checked={currentStatus === 'NEW'} className="rounded text-[#4f46e5] border-gray-300" />
                     <span className="text-sm text-gray-600">Interested / New</span>
                   </label>
                   <label className="flex items-center space-x-2">
-                    <input type="checkbox" onChange={() => updateUrl('status', 'CONTACTED')} checked={currentStatus === 'CONTACTED'} className="rounded text-[#613cbc] border-gray-300" />
+                    <input type="checkbox" onChange={() => updateUrl('status', 'CONTACTED')} checked={currentStatus === 'CONTACTED'} className="rounded text-[#4f46e5] border-gray-300" />
                     <span className="text-sm text-gray-600">Job Enquiries</span>
                   </label>
                   <label className="flex items-center space-x-2">
-                    <input type="checkbox" onChange={() => updateUrl('status', 'DEAD')} checked={currentStatus === 'DEAD'} className="rounded text-[#613cbc] border-gray-300" />
+                    <input type="checkbox" onChange={() => updateUrl('status', 'DEAD')} checked={currentStatus === 'DEAD'} className="rounded text-[#4f46e5] border-gray-300" />
                     <span className="text-sm text-gray-600">Lost / Dead</span>
                   </label>
                 </div>
@@ -266,7 +266,7 @@ export default function LeadsFilterClient() {
             <div className="p-4 border-t border-gray-200">
               <button 
                 onClick={() => setShowAdvancedFilters(false)}
-                className="w-full bg-[#613cbc] text-white py-2 rounded font-medium shadow hover:bg-purple-700"
+                className="w-full bg-[#4f46e5] text-white py-2 rounded font-medium shadow hover:bg-purple-700"
               >
                 Apply
               </button>

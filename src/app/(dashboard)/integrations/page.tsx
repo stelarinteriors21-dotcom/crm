@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function IntegrationsPage() {
   return (
-    <div className="h-full bg-[#F8F9FA] p-8 overflow-y-auto flex flex-col items-center">
+    <div className="h-full bg-[#f8fafc] p-8 overflow-y-auto flex flex-col items-center">
       <div className="w-full max-w-4xl">
         
         {/* Top Navbar Simulation */}
@@ -45,7 +45,7 @@ export default function IntegrationsPage() {
                     </span>
                   </td>
                   <td className="px-4 md:px-6 py-4 text-right">
-                    <Link href="/integrations/facebook" className="inline-block px-4 py-1.5 border border-[#613cbc] text-[#613cbc] rounded-full text-sm font-medium hover:bg-purple-50 transition-colors">
+                    <Link href="/integrations/facebook" className="inline-block px-4 py-1.5 border border-[#4f46e5] text-[#4f46e5] rounded-full text-sm font-medium hover:bg-purple-50 transition-colors">
                       Manage
                     </Link>
                   </td>
@@ -63,7 +63,7 @@ export default function IntegrationsPage() {
                     </span>
                   </td>
                   <td className="px-4 md:px-6 py-4 text-right">
-                    <button className="px-4 py-1.5 border border-[#613cbc] text-[#613cbc] rounded-full text-sm font-medium hover:bg-purple-50 transition-colors">
+                    <button className="px-4 py-1.5 border border-[#4f46e5] text-[#4f46e5] rounded-full text-sm font-medium hover:bg-purple-50 transition-colors">
                       Manage
                     </button>
                   </td>
@@ -111,7 +111,7 @@ export default function IntegrationsPage() {
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-3 text-right">
-                      <button className="px-4 py-1.5 border border-[#613cbc] text-[#613cbc] rounded-full text-sm font-medium hover:bg-purple-50 transition-colors">
+                      <button className="px-4 py-1.5 border border-[#4f46e5] text-[#4f46e5] rounded-full text-sm font-medium hover:bg-purple-50 transition-colors">
                         Activate now
                       </button>
                     </td>

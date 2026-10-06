@@ -39,7 +39,7 @@ export default function ReassignButton({ leadId, currentAssigneeId, callers }: {
               <select 
                 value={selectedAssignee}
                 onChange={(e) => setSelectedAssignee(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-[#613cbc] focus:border-[#613cbc]"
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-[#4f46e5] focus:border-[#4f46e5]"
               >
                 <option value="">-- Select --</option>
                 {callers.map(c => (
@@ -58,7 +58,7 @@ export default function ReassignButton({ leadId, currentAssigneeId, callers }: {
               <button 
                 onClick={handleAssign}
                 disabled={processing || !selectedAssignee}
-                className="flex items-center px-4 py-2 bg-[#613cbc] hover:bg-purple-800 text-white text-sm font-bold rounded-lg disabled:opacity-50"
+                className="flex items-center px-4 py-2 bg-[#4f46e5] hover:bg-purple-800 text-white text-sm font-bold rounded-lg disabled:opacity-50"
               >
                 {processing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Confirm

@@ -20,7 +20,7 @@ export default function UserDropdown({ initials, name, email }: { initials: stri
       <div className="relative">
         <button 
           onClick={() => setIsOpen(!isOpen)}
-          className="w-8 h-8 rounded-full bg-purple-100 text-[#613cbc] flex items-center justify-center text-sm font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#613cbc] focus:ring-offset-2"
+          className="w-8 h-8 rounded-full bg-purple-100 text-[#4f46e5] flex items-center justify-center text-sm font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:ring-offset-2"
         >
           {initials}
         </button>

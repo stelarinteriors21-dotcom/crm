@@ -8,17 +8,17 @@ export default function InboxPage() {
       <div className="w-80 border-r border-gray-200 flex flex-col h-full bg-gray-50/50">
         <div className="p-4 border-b border-gray-200 bg-white">
           <h2 className="text-lg font-bold text-gray-800 flex items-center mb-4">
-            <InboxIcon className="w-5 h-5 mr-2 text-[#613cbc]" /> Unified Inbox
+            <InboxIcon className="w-5 h-5 mr-2 text-[#4f46e5]" /> Unified Inbox
           </h2>
           <div className="relative">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-            <input type="text" placeholder="Search messages..." className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#613cbc]" />
+            <input type="text" placeholder="Search messages..." className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#4f46e5]" />
           </div>
         </div>
         
         <div className="flex-1 overflow-y-auto">
           {[1, 2, 3, 4, 5].map((item) => (
-            <div key={item} className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors ${item === 1 ? 'bg-purple-50/50 border-l-4 border-l-[#613cbc]' : ''}`}>
+            <div key={item} className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors ${item === 1 ? 'bg-purple-50/50 border-l-4 border-l-[#4f46e5]' : ''}`}>
               <div className="flex justify-between items-start mb-1">
                 <h4 className="font-semibold text-gray-900 text-sm">Lead Name #{item}</h4>
                 <span className="text-xs text-gray-500">10:4{item} AM</span>
@@ -57,8 +57,8 @@ export default function InboxPage() {
 
         <div className="p-4 border-t border-gray-200 bg-white">
           <div className="flex space-x-2">
-            <input type="text" placeholder="Type a message..." className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#613cbc]" />
-            <button className="bg-[#613cbc] text-white px-4 md:px-6 py-2 rounded-lg font-medium hover:bg-purple-700">Send</button>
+            <input type="text" placeholder="Type a message..." className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#4f46e5]" />
+            <button className="bg-[#4f46e5] text-white px-4 md:px-6 py-2 rounded-lg font-medium hover:bg-purple-700">Send</button>
           </div>
         </div>
       </div>

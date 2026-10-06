@@ -32,13 +32,13 @@ export default async function ReportsPage({ searchParams }: { searchParams: { ta
       {/* Top Header */}
       <div className="h-16 border-b border-gray-100 flex items-center px-4 md:px-6 shrink-0 justify-between">
         <h1 className="text-[17px] font-bold text-gray-800 flex items-center">
-          Reports <span className="ml-2 bg-purple-100 text-[#613cbc] text-xs px-2 py-0.5 rounded-full font-bold">ZUSH+1</span>
+          Reports <span className="ml-2 bg-purple-100 text-[#4f46e5] text-xs px-2 py-0.5 rounded-full font-bold">ZUSH+1</span>
         </h1>
         <div className="flex bg-gray-100 rounded-lg p-1">
-          <Link href="/reports?tab=overview" className={`px-4 py-1.5 text-sm font-bold rounded-md transition-colors ${tab === "overview" ? "bg-white shadow text-[#613cbc]" : "text-gray-500 hover:text-gray-900"}`}>
+          <Link href="/reports?tab=overview" className={`px-4 py-1.5 text-sm font-bold rounded-md transition-colors ${tab === "overview" ? "bg-white shadow text-[#4f46e5]" : "text-gray-500 hover:text-gray-900"}`}>
             Overview
           </Link>
-          <Link href="/reports?tab=activity" className={`px-4 py-1.5 text-sm font-bold rounded-md transition-colors ${tab === "activity" ? "bg-white shadow text-[#613cbc]" : "text-gray-500 hover:text-gray-900"}`}>
+          <Link href="/reports?tab=activity" className={`px-4 py-1.5 text-sm font-bold rounded-md transition-colors ${tab === "activity" ? "bg-white shadow text-[#4f46e5]" : "text-gray-500 hover:text-gray-900"}`}>
             User Activity Logs
           </Link>
         </div>
@@ -52,14 +52,14 @@ export default async function ReportsPage({ searchParams }: { searchParams: { ta
           {tab === "overview" ? (
             <>
               <div className="flex border-b border-gray-200 mb-6">
-                <button className="flex-1 py-3 text-[13px] font-bold text-[#613cbc] border-b-[3px] border-[#613cbc]">DAY</button>
+                <button className="flex-1 py-3 text-[13px] font-bold text-[#4f46e5] border-b-[3px] border-[#4f46e5]">DAY</button>
                 <button className="flex-1 py-3 text-[13px] font-bold text-gray-500 hover:text-gray-700">WEEK</button>
                 <button className="flex-1 py-3 text-[13px] font-bold text-gray-500 hover:text-gray-700">MONTH</button>
                 <button className="flex-1 py-3 text-[13px] font-bold text-gray-500 hover:text-gray-700">YEAR</button>
               </div>
 
               <div className="flex justify-end mb-6">
-                <button className="border border-[#613cbc] text-[#613cbc] px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-sm">
+                <button className="border border-[#4f46e5] text-[#4f46e5] px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-sm">
                   Today <span className="ml-1 text-[10px]">▼</span>
                 </button>
               </div>
@@ -119,7 +119,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: { ta
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900">
-                            <span className="font-bold text-[#613cbc]">{log.user.name}</span>
+                            <span className="font-bold text-[#4f46e5]">{log.user.name}</span>
                             {" "}performed <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{log.action}</span>
                           </p>
                           {log.details && (

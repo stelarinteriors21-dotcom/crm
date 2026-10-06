@@ -21,7 +21,7 @@ export default function SettingsClient({ initialEmails, initialLabels, initialTa
   const [newVal, setNewVal] = useState("");
 
   const [newTagName, setNewTagName] = useState("");
-  const [newTagColor, setNewTagColor] = useState("#613cbc");
+  const [newTagColor, setNewTagColor] = useState("#4f46e5");
 
   const handleSaveEmails = async () => {
     setLoadingEmails(true);
@@ -99,13 +99,13 @@ export default function SettingsClient({ initialEmails, initialLabels, initialTa
             value={emails}
             onChange={(e) => setEmails(e.target.value)}
             placeholder="admin1@example.com, admin2@example.com"
-            className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#613cbc] focus:border-[#613cbc] block p-3 mb-4"
+            className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#4f46e5] focus:border-[#4f46e5] block p-3 mb-4"
           />
 
           <button
             onClick={handleSaveEmails}
             disabled={loadingEmails}
-            className="flex items-center bg-[#613cbc] hover:bg-purple-800 text-white font-bold py-2.5 px-6 rounded-lg transition-colors disabled:opacity-50"
+            className="flex items-center bg-[#4f46e5] hover:bg-purple-800 text-white font-bold py-2.5 px-6 rounded-lg transition-colors disabled:opacity-50"
           >
             {loadingEmails ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
             {savedEmails ? "Saved!" : "Save Settings"}
@@ -155,7 +155,7 @@ export default function SettingsClient({ initialEmails, initialLabels, initialTa
               value={newTagName}
               onChange={e => setNewTagName(e.target.value)}
               placeholder="Tag Name (e.g. VIP Client)"
-              className="w-1/3 bg-white border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#613cbc] focus:border-[#613cbc] block p-2.5"
+              className="w-1/3 bg-white border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#4f46e5] focus:border-[#4f46e5] block p-2.5"
             />
             <input 
               type="color" 
@@ -176,7 +176,7 @@ export default function SettingsClient({ initialEmails, initialLabels, initialTa
             <button
               onClick={handleSaveTags}
               disabled={loadingTags}
-              className="flex items-center bg-[#613cbc] hover:bg-purple-800 text-white font-bold py-2.5 px-6 rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center bg-[#4f46e5] hover:bg-purple-800 text-white font-bold py-2.5 px-6 rounded-lg transition-colors disabled:opacity-50"
             >
               {loadingTags ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               {savedTags ? "Saved!" : "Save Tags"}
@@ -188,7 +188,7 @@ export default function SettingsClient({ initialEmails, initialLabels, initialTa
       {/* Dynamic Fields Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center space-x-3 mb-4">
-          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-[#613cbc]">
+          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-[#4f46e5]">
             <FileText className="w-5 h-5" />
           </div>
           <div>
@@ -211,7 +211,7 @@ export default function SettingsClient({ initialEmails, initialLabels, initialTa
                 type="text" 
                 value={val}
                 onChange={e => setLabels(prev => ({ ...prev, [key]: e.target.value }))}
-                className="w-1/3 bg-white border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#613cbc] focus:border-[#613cbc] block p-2.5"
+                className="w-1/3 bg-white border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#4f46e5] focus:border-[#4f46e5] block p-2.5"
               />
               <button 
                 onClick={() => removeLabel(key)}
@@ -228,7 +228,7 @@ export default function SettingsClient({ initialEmails, initialLabels, initialTa
               value={newKey}
               onChange={e => setNewKey(e.target.value)}
               placeholder="Raw key (e.g. ad_id)"
-              className="w-1/3 bg-white border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#613cbc] focus:border-[#613cbc] block p-2.5"
+              className="w-1/3 bg-white border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#4f46e5] focus:border-[#4f46e5] block p-2.5"
             />
             <span className="text-gray-400">→</span>
             <input 
@@ -236,7 +236,7 @@ export default function SettingsClient({ initialEmails, initialLabels, initialTa
               value={newVal}
               onChange={e => setNewVal(e.target.value)}
               placeholder="Display name (e.g. Ad ID)"
-              className="w-1/3 bg-white border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#613cbc] focus:border-[#613cbc] block p-2.5"
+              className="w-1/3 bg-white border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#4f46e5] focus:border-[#4f46e5] block p-2.5"
             />
             <button 
               onClick={addLabel}
@@ -251,7 +251,7 @@ export default function SettingsClient({ initialEmails, initialLabels, initialTa
             <button
               onClick={handleSaveLabels}
               disabled={loadingLabels}
-              className="flex items-center bg-[#613cbc] hover:bg-purple-800 text-white font-bold py-2.5 px-6 rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center bg-[#4f46e5] hover:bg-purple-800 text-white font-bold py-2.5 px-6 rounded-lg transition-colors disabled:opacity-50"
             >
               {loadingLabels ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               {savedLabels ? "Saved!" : "Save Mapping"}

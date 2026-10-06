@@ -92,7 +92,7 @@ export default function LeadScoreWidget({ leadId, initialScores, onSave }: Props
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center">
-          <Target className="w-4 h-4 text-[#613cbc] mr-2" />
+          <Target className="w-4 h-4 text-[#4f46e5] mr-2" />
           <span className="text-[14px] font-bold text-gray-800">Lead Score</span>
         </div>
         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -196,8 +196,8 @@ export default function LeadScoreWidget({ leadId, initialScores, onSave }: Props
                                 onClick={() => handleChange(factor.key, level)}
                                 className={`px-2 py-1 rounded text-[11px] font-semibold border transition-all ${
                                   isSelected
-                                    ? "bg-[#613cbc] text-white border-[#613cbc] shadow-sm"
-                                    : "bg-white text-gray-600 border-gray-200 hover:border-[#613cbc] hover:text-[#613cbc]"
+                                    ? "bg-[#4f46e5] text-white border-[#4f46e5] shadow-sm"
+                                    : "bg-white text-gray-600 border-gray-200 hover:border-[#4f46e5] hover:text-[#4f46e5]"
                                 }`}
                               >
                                 {level}
@@ -241,7 +241,7 @@ export default function LeadScoreWidget({ leadId, initialScores, onSave }: Props
               className={`w-full flex items-center justify-center py-2.5 rounded-lg text-[13px] font-bold transition-all ${
                 saved
                   ? "bg-green-600 text-white"
-                  : "bg-[#613cbc] text-white hover:bg-purple-800"
+                  : "bg-[#4f46e5] text-white hover:bg-purple-800"
               } disabled:opacity-60`}
             >
               {saved ? (

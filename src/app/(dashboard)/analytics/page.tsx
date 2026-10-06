@@ -55,7 +55,7 @@ export default async function AnalyticsPage() {
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
           <div className="text-sm font-medium text-gray-500">Avg Duration</div>
-          <div className="mt-2 text-3xl font-bold text-[#613cbc]">
+          <div className="mt-2 text-3xl font-bold text-[#4f46e5]">
             {Math.round(teamStats.reduce((sum, u) => sum + (u.totalCalls > 0 ? (u.totalCalls * parseInt(u.avgDurationFormatted)) : 0), 0) / (teamStats.reduce((sum, u) => sum + u.totalCalls, 0) || 1))}s
           </div>
         </div>

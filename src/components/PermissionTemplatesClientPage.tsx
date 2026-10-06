@@ -8,14 +8,14 @@ export default function PermissionTemplatesClientPage({ templates }: { templates
   const [showModal, setShowModal] = useState(false);
 
   return (
-    <div className="h-full flex flex-col items-center bg-[#F8F9FA] p-8 overflow-y-auto">
+    <div className="h-full flex flex-col items-center bg-[#f8fafc] p-8 overflow-y-auto">
       <div className="w-full max-w-4xl relative">
         
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-[22px] font-bold text-gray-800 flex items-center">
             <ShieldAlert className="w-5 h-5 mr-2 text-gray-700" />
-            Permission Templates <span className="text-[#613cbc] ml-2 text-sm">↺</span>
+            Permission Templates <span className="text-[#4f46e5] ml-2 text-sm">↺</span>
           </h1>
           <button 
             onClick={() => setShowModal(true)}
@@ -28,7 +28,7 @@ export default function PermissionTemplatesClientPage({ templates }: { templates
 
         {/* Tabs */}
         <div className="flex space-x-6 border-b border-gray-200 mb-6">
-          <button className="py-2 text-sm font-bold border-b-2 border-[#613cbc] text-[#613cbc]">
+          <button className="py-2 text-sm font-bold border-b-2 border-[#4f46e5] text-[#4f46e5]">
             All
           </button>
           <button className="py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">
@@ -42,7 +42,7 @@ export default function PermissionTemplatesClientPage({ templates }: { templates
           <input 
             type="text" 
             placeholder="Search..." 
-            className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded text-sm focus:outline-none focus:border-[#613cbc]"
+            className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded text-sm focus:outline-none focus:border-[#4f46e5]"
           />
         </div>
         <div className="text-xs text-gray-400 mb-4">{templates.length} templates found</div>
@@ -63,7 +63,7 @@ export default function PermissionTemplatesClientPage({ templates }: { templates
                 <tr key={template.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-800 flex items-center">
                     <ShieldAlert className="w-4 h-4 mr-2 text-gray-400" />
-                    <Link href={`/team/permissions/${template.id}`} className="hover:text-[#613cbc]">
+                    <Link href={`/team/permissions/${template.id}`} className="hover:text-[#4f46e5]">
                       {template.name}
                     </Link>
                   </td>
@@ -78,7 +78,7 @@ export default function PermissionTemplatesClientPage({ templates }: { templates
                       {template.name === 'Default Root Permissions' ? (
                          <button className="text-gray-400 hover:text-gray-600"><Eye className="w-4 h-4" /></button>
                       ) : (
-                         <button className="text-gray-400 hover:text-[#613cbc]"><Edit2 className="w-4 h-4" /></button>
+                         <button className="text-gray-400 hover:text-[#4f46e5]"><Edit2 className="w-4 h-4" /></button>
                       )}
                       <button className="text-red-300 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
                     </div>
@@ -112,7 +112,7 @@ export default function PermissionTemplatesClientPage({ templates }: { templates
                 <input 
                   type="text" 
                   placeholder="Enter your key here" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#613cbc]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#4f46e5]"
                 />
               </div>
 
@@ -124,7 +124,7 @@ export default function PermissionTemplatesClientPage({ templates }: { templates
                   Cancel
                 </button>
                 <button 
-                  className="px-4 md:px-6 py-2 bg-[#b8a6eb] text-white text-sm font-medium rounded-lg hover:bg-[#613cbc] transition-colors"
+                  className="px-4 md:px-6 py-2 bg-[#b8a6eb] text-white text-sm font-medium rounded-lg hover:bg-[#4f46e5] transition-colors"
                 >
                   Proceed
                 </button>

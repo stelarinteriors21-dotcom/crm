@@ -78,12 +78,12 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
   const scoreColor = getScoreColor(total);
 
   return (
-    <div className="h-full bg-[#F8F9FA] -m-3 md:-m-6 overflow-y-auto">
+    <div className="h-full bg-[#f8fafc] -m-3 md:-m-6 overflow-y-auto">
       
       {/* Top Bar */}
       <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sticky top-0 z-10">
         <div className="flex items-center">
-          <Link href="/leads" className="flex items-center text-[13px] text-gray-500 hover:text-[#613cbc] mr-4 transition-colors">
+          <Link href="/leads" className="flex items-center text-[13px] text-gray-500 hover:text-[#4f46e5] mr-4 transition-colors">
             <ArrowLeft className="w-4 h-4 mr-1" /> Leads
           </Link>
           <span className="text-gray-300 mr-4">/</span>
@@ -133,7 +133,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
           {lead.phone && (
             <a
               href={`tel:${lead.phone}`}
-              className="flex items-center px-3 py-1.5 text-[12px] font-bold text-white bg-[#613cbc] rounded-lg hover:bg-purple-800 transition-colors"
+              className="flex items-center px-3 py-1.5 text-[12px] font-bold text-white bg-[#4f46e5] rounded-lg hover:bg-purple-800 transition-colors"
             >
               <PhoneCall className="w-3.5 h-3.5 mr-1.5" /> Call Now
             </a>
@@ -149,7 +149,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
           {/* Profile Card */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
             <div className="flex items-center mb-4">
-              <div className="w-14 h-14 rounded-full bg-[#E8E2F7] text-[#613cbc] flex items-center justify-center text-xl font-black mr-4 flex-shrink-0">
+              <div className="w-14 h-14 rounded-full bg-[#E8E2F7] text-[#4f46e5] flex items-center justify-center text-xl font-black mr-4 flex-shrink-0">
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
@@ -165,7 +165,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
                     <f.icon className="w-3.5 h-3.5 text-gray-400 mr-2.5 flex-shrink-0" />
                     <span className="text-gray-500 w-20 flex-shrink-0">{f.label}</span>
                     {f.link ? (
-                      <a href={f.link} className="text-[#613cbc] hover:underline font-medium truncate">{f.value}</a>
+                      <a href={f.link} className="text-[#4f46e5] hover:underline font-medium truncate">{f.value}</a>
                     ) : (
                       <span className="text-gray-800 font-medium truncate">{f.value}</span>
                     )}
@@ -179,7 +179,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
           {lead.customFields && Object.keys(lead.customFields as object).length > 0 && (
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
               <h3 className="text-[13px] font-bold text-gray-700 mb-3 flex items-center">
-                <FileText className="w-4 h-4 mr-2 text-[#613cbc]" /> Additional Information
+                <FileText className="w-4 h-4 mr-2 text-[#4f46e5]" /> Additional Information
               </h3>
               <div className="space-y-3">
                 {Object.entries(lead.customFields as object).map(([key, value]) => {
@@ -199,7 +199,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
           {/* Schedule Follow-up */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
             <h3 className="text-[13px] font-bold text-gray-700 mb-3 flex items-center">
-              <Calendar className="w-4 h-4 mr-2 text-[#613cbc]" /> Schedule Follow-up
+              <Calendar className="w-4 h-4 mr-2 text-[#4f46e5]" /> Schedule Follow-up
             </h3>
             <form action={async (formData) => {
               "use server";
@@ -225,15 +225,15 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
                 name="title"
                 required
                 placeholder="e.g. Call back about pricing"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[12px] outline-none focus:border-[#613cbc]"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[12px] outline-none focus:border-[#4f46e5]"
               />
               <input
                 type="datetime-local"
                 name="dueDate"
                 required
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[12px] outline-none focus:border-[#613cbc]"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[12px] outline-none focus:border-[#4f46e5]"
               />
-              <button type="submit" className="w-full bg-[#613cbc] text-white py-2 rounded-lg text-[12px] font-bold hover:bg-purple-800 transition-colors">
+              <button type="submit" className="w-full bg-[#4f46e5] text-white py-2 rounded-lg text-[12px] font-bold hover:bg-purple-800 transition-colors">
                 Save Follow-up
               </button>
             </form>
@@ -245,7 +245,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
                 {lead.tasks.map((task: any) => (
                   <div key={task.id} className="flex flex-col bg-purple-50/50 p-2.5 rounded-lg border border-purple-100">
                     <span className="text-[12px] font-bold text-gray-800">{task.title}</span>
-                    <span className="text-[10px] text-[#613cbc] font-semibold mt-0.5">
+                    <span className="text-[10px] text-[#4f46e5] font-semibold mt-0.5">
                       {new Date(task.dueDate).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                     </span>
                   </div>
@@ -266,7 +266,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
           {/* Call Stats Summary */}
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
-              <div className="text-2xl font-black text-[#613cbc]">{lead.calls.length}</div>
+              <div className="text-2xl font-black text-[#4f46e5]">{lead.calls.length}</div>
               <div className="text-[11px] text-gray-500 mt-1">Total Calls</div>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
@@ -294,7 +294,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-[14px] font-bold text-gray-800 flex items-center">
-                <PhoneCall className="w-4 h-4 mr-2 text-[#613cbc]" /> Call History
+                <PhoneCall className="w-4 h-4 mr-2 text-[#4f46e5]" /> Call History
               </h2>
               <span className="text-[11px] text-gray-400">{lead.calls.length} call{lead.calls.length !== 1 ? "s" : ""}</span>
             </div>
@@ -303,7 +303,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
               {lead.calls.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <PhoneCall className="w-6 h-6 text-[#613cbc]" />
+                    <PhoneCall className="w-6 h-6 text-[#4f46e5]" />
                   </div>
                   <div className="text-[13px] font-semibold text-gray-600">No calls logged yet</div>
                   <div className="text-[11px] text-gray-400 mt-1">Use the mobile app to make a call!</div>
@@ -314,6 +314,18 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
                 ))
               )}
               <ManualCallLogForm leadId={lead.id} />
+            </div>
+          </div>
+
+          {/* WhatsApp Communication */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm mt-6">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="text-[14px] font-bold text-gray-800 flex items-center">
+                <MessageCircle className="w-4 h-4 mr-2 text-[#25D366]" /> WhatsApp Communication
+              </h2>
+            </div>
+            <div className="p-4 bg-gray-50 border-b border-gray-100 rounded-b-xl">
+              <WhatsAppLogForm leadId={lead.id} phone={lead.phone} />
             </div>
           </div>
 

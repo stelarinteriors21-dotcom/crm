@@ -15,7 +15,7 @@ export default function APITemplateManagerPage() {
       </div>
 
       {/* API Template Manager Overlay */}
-      <div className="absolute inset-x-0 inset-y-0 mx-auto w-[90%] max-w-5xl my-8 bg-[#F8F9FA] shadow-2xl rounded-xl flex flex-col z-50 overflow-hidden">
+      <div className="absolute inset-x-0 inset-y-0 mx-auto w-[90%] max-w-5xl my-8 bg-[#f8fafc] shadow-2xl rounded-xl flex flex-col z-50 overflow-hidden">
         
         {/* Top Navbar */}
         <div className="h-16 bg-white border-b border-gray-200 flex items-center px-4 md:px-6 shrink-0 justify-between">
@@ -47,7 +47,7 @@ export default function APITemplateManagerPage() {
               <p className="text-sm text-gray-600 mb-4 leading-relaxed">
                 Check our documentation for detailed guides on creating templates.
               </p>
-              <a href="#" className="text-[#613cbc] text-sm font-semibold flex items-center hover:underline">
+              <a href="#" className="text-[#4f46e5] text-sm font-semibold flex items-center hover:underline">
                 View Documentation <ArrowRight className="w-4 h-4 ml-1" />
               </a>
             </div>
@@ -70,13 +70,13 @@ export default function APITemplateManagerPage() {
               <div className="space-y-6">
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Template Name <span className="text-red-500">*</span></label>
-                  <input type="text" placeholder="My Awesome API" className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-[#613cbc]" />
+                  <input type="text" placeholder="My Awesome API" className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-[#4f46e5]" />
                 </div>
 
                 <div className="flex gap-4">
                   <div className="w-1/4">
                     <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">HTTP Method <span className="text-red-500">*</span></label>
-                    <select className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#613cbc]">
+                    <select className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#4f46e5]">
                       <option>POST</option>
                       <option>GET</option>
                       <option>PUT</option>
@@ -86,10 +86,10 @@ export default function APITemplateManagerPage() {
                   <div className="flex-1 relative">
                     <div className="flex justify-between">
                       <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">API Endpoint URL <span className="text-red-500">*</span></label>
-                      <button className="text-[11px] font-bold text-[#613cbc] border border-purple-200 bg-purple-50 px-2 py-0.5 rounded-sm">Add Variable</button>
+                      <button className="text-[11px] font-bold text-[#4f46e5] border border-purple-200 bg-purple-50 px-2 py-0.5 rounded-sm">Add Variable</button>
                     </div>
                     <div className="flex items-center">
-                      <input type="text" placeholder="https://awesome-api.com/customers/{{lead.id}}" className="flex-1 px-3 py-2 border border-gray-200 rounded-l-md text-sm focus:outline-none focus:border-[#613cbc]" />
+                      <input type="text" placeholder="https://awesome-api.com/customers/{{lead.id}}" className="flex-1 px-3 py-2 border border-gray-200 rounded-l-md text-sm focus:outline-none focus:border-[#4f46e5]" />
                       <button className="px-3 py-2 border border-l-0 border-gray-200 bg-gray-50 rounded-r-md text-gray-400">
                         <Copy className="w-4 h-4" />
                       </button>
@@ -99,13 +99,13 @@ export default function APITemplateManagerPage() {
 
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">API Timeout (s) <span className="text-red-500">*</span></label>
-                  <input type="text" defaultValue="3" className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-[#613cbc]" />
+                  <input type="text" defaultValue="3" className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-[#4f46e5]" />
                 </div>
 
                 {/* Tabs */}
                 <div className="border-b border-gray-200 mt-8 mb-4">
                   <div className="flex space-x-6">
-                    <button className="py-2 text-sm font-bold text-[#613cbc] border-b-2 border-[#613cbc]">Headers</button>
+                    <button className="py-2 text-sm font-bold text-[#4f46e5] border-b-2 border-[#4f46e5]">Headers</button>
                     <button className="py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Body</button>
                     <button className="py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Query Params</button>
                     <button className="py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Auth</button>
@@ -130,7 +130,7 @@ export default function APITemplateManagerPage() {
                 </div>
 
                 <div className="flex justify-end">
-                  <button className="bg-[#b8a6eb] text-white px-4 md:px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-[#613cbc] transition-colors">
+                  <button className="bg-[#b8a6eb] text-white px-4 md:px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-[#4f46e5] transition-colors">
                     Test Template
                   </button>
                 </div>

@@ -62,7 +62,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
             <div className="text-3xl font-black text-gray-800 mt-1">{myActivity?.calls || 0}</div>
           </div>
           <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center">
-            <PhoneCall className="w-6 h-6 text-[#613cbc]" />
+            <PhoneCall className="w-6 h-6 text-[#4f46e5]" />
           </div>
         </div>
 
@@ -70,7 +70,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full border-2 border-gray-200 flex items-center justify-center bg-gray-50 text-[#613cbc] font-bold text-lg">
+              <div className="w-12 h-12 rounded-full border-2 border-gray-200 flex items-center justify-center bg-gray-50 text-[#4f46e5] font-bold text-lg">
                 {myInitials}
               </div>
               <div>
@@ -86,8 +86,8 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
           
           <div className="flex divide-x divide-gray-100 p-6 text-center">
             <div className="flex-1">
-              <div className="text-4xl font-black text-[#613cbc] mb-1">{myActivity?.calls || 0}</div>
-              <div className="text-sm font-bold text-[#613cbc] uppercase tracking-wide">Calls</div>
+              <div className="text-4xl font-black text-[#4f46e5] mb-1">{myActivity?.calls || 0}</div>
+              <div className="text-sm font-bold text-[#4f46e5] uppercase tracking-wide">Calls</div>
             </div>
             <div className="flex-1">
               <div className="text-4xl font-black text-gray-700 mb-1">{myActivity?.duration || "0s"}</div>
@@ -147,7 +147,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
   }
 
   return (
-    <div className="h-full bg-[#F8F9FA] flex flex-col -m-3 md:-m-6 overflow-y-auto">
+    <div className="h-full bg-[#f8fafc] flex flex-col -m-3 md:-m-6 overflow-y-auto">
 
       {/* Header */}
       <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex items-center bg-white shrink-0">
@@ -156,7 +156,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
             onClick={() => setActiveTab("default")}
             className={`pb-3 px-1 text-sm font-bold border-b-2 transition-colors ${
               activeTab === "default" 
-                ? "border-[#613cbc] text-white bg-[#613cbc] rounded-t-md px-4" 
+                ? "border-[#4f46e5] text-white bg-[#4f46e5] rounded-t-md px-4" 
                 : "text-gray-500 hover:bg-gray-100"
             }`}
           >
@@ -166,7 +166,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
             onClick={() => setActiveTab("pending")}
             className={`text-sm font-bold px-4 py-2 rounded-lg flex items-center transition-colors whitespace-nowrap ${
               activeTab === "pending"
-                ? "bg-[#613cbc] text-white shadow-sm"
+                ? "bg-[#4f46e5] text-white shadow-sm"
                 : "text-gray-500 hover:bg-gray-100"
             }`}
           >
@@ -186,14 +186,14 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
         <div className="p-3 md:p-6">
           <h3 className="text-[15px] font-bold text-gray-800 mb-4 flex items-center">
             New Leads Assigned to You
-            <span className="ml-2 bg-[#613cbc] text-white text-[11px] font-black px-2 py-0.5 rounded-full">
+            <span className="ml-2 bg-[#4f46e5] text-white text-[11px] font-black px-2 py-0.5 rounded-full">
               {pending.length}
             </span>
           </h3>
           {pending.length === 0 ? (
             <div className="bg-white border border-gray-200 rounded-xl p-10 text-center shadow-sm">
               <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-[#613cbc]" />
+                <CheckCircle className="w-8 h-8 text-[#4f46e5]" />
               </div>
               <div className="text-[15px] font-bold text-gray-700">All caught up!</div>
               <div className="text-[13px] text-gray-400 mt-1">No pending leads to accept or reject.</div>
@@ -229,7 +229,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
               {pending.map(lead => (
                 <div key={lead.id} className="bg-white border border-yellow-200 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex-1">
-                    <Link href={`/leads/${lead.id}`} className="font-bold text-[15px] text-[#613cbc] hover:underline cursor-pointer">
+                    <Link href={`/leads/${lead.id}`} className="font-bold text-[15px] text-[#4f46e5] hover:underline cursor-pointer">
                       {lead.name}
                     </Link>
                     <div className="text-[13px] text-gray-500 mt-1 flex items-center">
@@ -280,13 +280,13 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
               <div className="text-[13px] font-bold text-gray-800">Recent Leads</div>
-              <button className="text-[11px] text-[#613cbc] font-bold hover:underline">View All →</button>
+              <button className="text-[11px] text-[#4f46e5] font-bold hover:underline">View All →</button>
             </div>
             <div className="divide-y divide-gray-50 overflow-y-auto max-h-80">
               {allLeads.slice(0, 15).map(lead => (
                 <div key={lead.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
                   <div className="min-w-0 flex-1 mr-2">
-                    <Link href={`/leads/${lead.id}`} className="text-[13px] font-semibold text-[#613cbc] cursor-pointer hover:underline truncate block">
+                    <Link href={`/leads/${lead.id}`} className="text-[13px] font-semibold text-[#4f46e5] cursor-pointer hover:underline truncate block">
                       {lead.name}
                     </Link>
                     <div className="text-[11px] text-gray-400 truncate">{lead.phone ?? "--"} · {timeAgo(lead.createdAt)}</div>
@@ -296,7 +296,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
                         {lead.status ?? "Fresh"}
                       </span>
                       {lead.assignedTo && (
-                      <div className="w-5 h-5 rounded-full bg-[#E8E2F7] text-[#613cbc] hidden sm:flex items-center justify-center text-[9px] font-bold" title={lead.assignedTo.name ?? ""}>
+                      <div className="w-5 h-5 rounded-full bg-[#E8E2F7] text-[#4f46e5] hidden sm:flex items-center justify-center text-[9px] font-bold" title={lead.assignedTo.name ?? ""}>
                         {(lead.assignedTo.name ?? "?").split(" ").map((p: string) => p[0]).join("").slice(0, 2).toUpperCase()}
                       </div>
                     )}
@@ -325,7 +325,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
                     {teamActivity.map(m => (
                       <div key={m.name} className="flex py-3 items-center text-sm">
                         <div className="flex-1 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-purple-100 text-[#613cbc] font-bold flex items-center justify-center text-xs">
+                          <div className="w-8 h-8 rounded-full bg-purple-100 text-[#4f46e5] font-bold flex items-center justify-center text-xs">
                             {m.initials}
                           </div>
                           <span className="font-semibold text-gray-700">{m.name}</span>
@@ -335,7 +335,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
                         <div className="w-24 text-center">
                           <button
                             onClick={() => setSelectedUserReport(m.name)}
-                            className="text-[10px] font-bold text-[#613cbc] hover:underline"
+                            className="text-[10px] font-bold text-[#4f46e5] hover:underline"
                           >
                             View Report
                           </button>
@@ -429,7 +429,7 @@ function AllLeadsWidget({ statusBreakdown, totalLeads, title = "All Leads" }: { 
       {/* Header */}
       <div className="p-4 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center">
-          <TrendingUp className="w-4 h-4 text-[#613cbc] mr-2" />
+          <TrendingUp className="w-4 h-4 text-[#4f46e5] mr-2" />
           <div>
             <div className="text-[13px] font-bold text-gray-800">{title}</div>
             <div className="text-[10px] text-gray-400">Total Leads: {totalLeads}</div>
@@ -440,7 +440,7 @@ function AllLeadsWidget({ statusBreakdown, totalLeads, title = "All Leads" }: { 
         <div className="relative">
           <button
             onClick={() => setDateOpen(!dateOpen)}
-            className="text-[11px] font-bold text-gray-600 flex items-center border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-gray-50 hover:border-[#613cbc] transition-colors"
+            className="text-[11px] font-bold text-gray-600 flex items-center border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-gray-50 hover:border-[#4f46e5] transition-colors"
           >
             <span className="mr-1">📅</span> {dateFilter} <ChevronDown className={`w-3 h-3 ml-1 transition-transform ${dateOpen ? "rotate-180" : ""}`} />
           </button>
@@ -450,12 +450,12 @@ function AllLeadsWidget({ statusBreakdown, totalLeads, title = "All Leads" }: { 
                 <button
                   key={opt}
                   onClick={() => { setDateFilter(opt); setDateOpen(false); }}
-                  className={`w-full text-left px-4 py-2 text-[12px] hover:bg-purple-50 hover:text-[#613cbc] transition-colors flex items-center justify-between ${
-                    dateFilter === opt ? "text-[#613cbc] font-bold bg-purple-50" : "text-gray-700"
+                  className={`w-full text-left px-4 py-2 text-[12px] hover:bg-purple-50 hover:text-[#4f46e5] transition-colors flex items-center justify-between ${
+                    dateFilter === opt ? "text-[#4f46e5] font-bold bg-purple-50" : "text-gray-700"
                   }`}
                 >
                   {opt}
-                  {dateFilter === opt && <span className="text-[#613cbc]">✓</span>}
+                  {dateFilter === opt && <span className="text-[#4f46e5]">✓</span>}
                 </button>
               ))}
             </div>
@@ -476,8 +476,8 @@ function AllLeadsWidget({ statusBreakdown, totalLeads, title = "All Leads" }: { 
             onClick={() => setSort(s.key)}
             className={`px-2.5 py-1 rounded font-bold transition-colors ${
               sort === s.key
-                ? "bg-[#613cbc] text-white"
-                : "text-gray-500 border border-gray-200 hover:bg-gray-50 hover:border-[#613cbc]"
+                ? "bg-[#4f46e5] text-white"
+                : "text-gray-500 border border-gray-200 hover:bg-gray-50 hover:border-[#4f46e5]"
             }`}
           >
             {s.label}
@@ -517,7 +517,7 @@ function AllLeadsWidget({ statusBreakdown, totalLeads, title = "All Leads" }: { 
       {dateFilter !== "All Time" && (
         <div className="px-4 py-2 border-t border-gray-100 text-[10px] text-gray-400 flex items-center">
           <span className="mr-1">📅</span> Showing: <span className="font-bold text-gray-600 ml-1">{dateFilter}</span>
-          <button onClick={() => setDateFilter("All Time")} className="ml-auto text-[#613cbc] hover:underline">Clear</button>
+          <button onClick={() => setDateFilter("All Time")} className="ml-auto text-[#4f46e5] hover:underline">Clear</button>
         </div>
       )}
     </div>
@@ -572,7 +572,7 @@ function UserReportModal({ userName, onClose, allLeads, teamActivity }: { userNa
         <div className="p-4 border-b border-gray-100 bg-gray-50 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#E8E2F7] text-[#613cbc] font-bold flex items-center justify-center text-sm">
+              <div className="w-10 h-10 rounded-full bg-[#E8E2F7] text-[#4f46e5] font-bold flex items-center justify-center text-sm">
                 {userName.split(" ").map((p: string) => p[0]).join("").slice(0, 2).toUpperCase()}
               </div>
               <div>
@@ -587,7 +587,7 @@ function UserReportModal({ userName, onClose, allLeads, teamActivity }: { userNa
             </div>
             {activeTab === "overview" && (
               <div className="flex items-center gap-2 mr-8 md:mr-10">
-                <button onClick={downloadCSV} className="flex items-center gap-2 bg-[#613cbc] text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-purple-700 transition-colors">
+                <button onClick={downloadCSV} className="flex items-center gap-2 bg-[#4f46e5] text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-purple-700 transition-colors">
                   <Download className="w-4 h-4" /> Download CSV
                 </button>
               </div>
@@ -596,13 +596,13 @@ function UserReportModal({ userName, onClose, allLeads, teamActivity }: { userNa
           <div className="flex gap-4 border-b border-gray-200 px-2">
             <button 
               onClick={() => setActiveTab("overview")} 
-              className={`px-3 py-2 text-sm font-bold border-b-2 transition-colors ${activeTab === "overview" ? "border-[#613cbc] text-[#613cbc]" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+              className={`px-3 py-2 text-sm font-bold border-b-2 transition-colors ${activeTab === "overview" ? "border-[#4f46e5] text-[#4f46e5]" : "border-transparent text-gray-500 hover:text-gray-700"}`}
             >
               Overview
             </button>
             <button 
               onClick={() => setActiveTab("logs")} 
-              className={`px-3 py-2 text-sm font-bold border-b-2 transition-colors ${activeTab === "logs" ? "border-[#613cbc] text-[#613cbc]" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+              className={`px-3 py-2 text-sm font-bold border-b-2 transition-colors ${activeTab === "logs" ? "border-[#4f46e5] text-[#4f46e5]" : "border-transparent text-gray-500 hover:text-gray-700"}`}
             >
               Activity Logs
             </button>
@@ -617,7 +617,7 @@ function UserReportModal({ userName, onClose, allLeads, teamActivity }: { userNa
                 logs.map(log => (
                   <div key={log.id} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
                     <div className="flex justify-between items-start mb-1">
-                      <span className="font-bold text-[#613cbc] text-sm">{log.action}</span>
+                      <span className="font-bold text-[#4f46e5] text-sm">{log.action}</span>
                       <span className="text-xs text-gray-400 flex items-center"><Clock className="w-3 h-3 mr-1" /> {new Date(log.createdAt).toLocaleString()}</span>
                     </div>
                     {log.details && <p className="text-sm text-gray-600">{log.details}</p>}

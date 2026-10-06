@@ -12,6 +12,17 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        primary: "#4F46E5",
+        secondary: "#7C3AED",
+        tertiary: "#F97316",
+        neutral: "#64748B",
+        surface: "#FFFFFF",
+        "surface-tint": "#F1F5F9",
+        "canvas": "#F8FAFC",
+      },
+      fontFamily: {
+        sans: ['var(--font-inter)', 'sans-serif'],
+        display: ['var(--font-plus-jakarta)', 'sans-serif'],
       },
     },
   },

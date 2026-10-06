@@ -6,7 +6,7 @@ export default function MentionsPage() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <AtSign className="w-6 h-6 mr-3 text-[#613cbc]" /> Team Mentions
+            <AtSign className="w-6 h-6 mr-3 text-[#4f46e5]" /> Team Mentions
           </h1>
           <p className="text-gray-500 mt-1">Track when teammates tag you in lead notes.</p>
         </div>

@@ -13,7 +13,7 @@ export default function CallIQPage() {
               Call-IQ <span className="ml-2 text-[10px] font-bold text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded border border-purple-200">BETA</span> <RefreshCw className="w-4 h-4 ml-2 text-gray-400 cursor-pointer hover:text-gray-600" />
             </h1>
             <p className="text-sm text-gray-500 mt-1 pl-9">
-              Your intelligent assistants <span className="text-[#613cbc] border-b border-purple-200 cursor-pointer ml-1">Learn More</span>
+              Your intelligent assistants <span className="text-[#4f46e5] border-b border-purple-200 cursor-pointer ml-1">Learn More</span>
             </p>
           </div>
           <button className="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">

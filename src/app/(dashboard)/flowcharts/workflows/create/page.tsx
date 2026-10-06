@@ -9,7 +9,7 @@ export default function AutomationCreatePage() {
   const [triggerModalOpen, setTriggerModalOpen] = useState(false);
 
   return (
-    <div className="h-full bg-[#f8f9fa] flex flex-col">
+    <div className="h-full bg-[#f8fafc] flex flex-col">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 flex items-center justify-between shrink-0 shadow-sm z-10">
         <div className="flex items-center space-x-4">
@@ -24,7 +24,7 @@ export default function AutomationCreatePage() {
           <button className="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
             Save Draft
           </button>
-          <button className="bg-[#613cbc] hover:bg-purple-700 text-white px-5 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center">
+          <button className="bg-[#4f46e5] hover:bg-purple-700 text-white px-5 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center">
             <CheckCircle className="w-4 h-4 mr-2" /> Publish Automation
           </button>
         </div>
@@ -41,7 +41,7 @@ export default function AutomationCreatePage() {
               type="text" 
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-lg font-bold text-gray-900 outline-none focus:border-[#613cbc] focus:ring-2 focus:ring-purple-100 transition-all shadow-sm"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-lg font-bold text-gray-900 outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-purple-100 transition-all shadow-sm"
               placeholder="E.g. Facebook Lead Follow-up"
             />
           </div>
@@ -51,7 +51,7 @@ export default function AutomationCreatePage() {
             <div className="relative">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">When this happens</label>
               <div 
-                className="bg-white border-2 border-purple-200 hover:border-[#613cbc] rounded-xl p-5 shadow-sm cursor-pointer transition-colors group"
+                className="bg-white border-2 border-purple-200 hover:border-[#4f46e5] rounded-xl p-5 shadow-sm cursor-pointer transition-colors group"
                 onClick={() => setTriggerModalOpen(true)}
               >
                 <div className="flex items-center justify-between">
@@ -64,7 +64,7 @@ export default function AutomationCreatePage() {
                       <p className="text-sm text-gray-500 mt-0.5">When a lead is created from WhatsApp</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-[#613cbc] transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-[#4f46e5] transition-colors" />
                 </div>
               </div>
             </div>
@@ -78,18 +78,18 @@ export default function AutomationCreatePage() {
             <div className="relative">
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">If these conditions are true</label>
-                <button className="text-xs font-bold text-[#613cbc] hover:bg-purple-50 px-2 py-1 rounded transition-colors flex items-center">
+                <button className="text-xs font-bold text-[#4f46e5] hover:bg-purple-50 px-2 py-1 rounded transition-colors flex items-center">
                   <Plus className="w-3 h-3 mr-1" /> Add condition
                 </button>
               </div>
               <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex items-center space-x-3">
-                <select className="bg-gray-50 border border-gray-200 text-sm font-medium rounded-lg px-3 py-2 outline-none focus:border-[#613cbc] flex-1">
+                <select className="bg-gray-50 border border-gray-200 text-sm font-medium rounded-lg px-3 py-2 outline-none focus:border-[#4f46e5] flex-1">
                   <option>Lead Source</option>
                   <option>Lead Rating</option>
                   <option>Status</option>
                 </select>
                 <span className="text-sm text-gray-400 font-medium">is</span>
-                <select className="bg-gray-50 border border-gray-200 text-sm font-medium rounded-lg px-3 py-2 outline-none focus:border-[#613cbc] flex-1">
+                <select className="bg-gray-50 border border-gray-200 text-sm font-medium rounded-lg px-3 py-2 outline-none focus:border-[#4f46e5] flex-1">
                   <option>WhatsApp</option>
                   <option>Facebook</option>
                   <option>Website</option>
@@ -109,7 +109,7 @@ export default function AutomationCreatePage() {
             <div className="relative">
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Then do this</label>
-                <button className="text-xs font-bold text-[#613cbc] hover:bg-purple-50 px-2 py-1 rounded transition-colors flex items-center">
+                <button className="text-xs font-bold text-[#4f46e5] hover:bg-purple-50 px-2 py-1 rounded transition-colors flex items-center">
                   <Plus className="w-3 h-3 mr-1" /> Add action
                 </button>
               </div>
@@ -130,7 +130,7 @@ export default function AutomationCreatePage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <UserPlus className="w-4 h-4 text-[#613cbc]" />
+                      <UserPlus className="w-4 h-4 text-[#4f46e5]" />
                     </div>
                     <span className="font-bold text-gray-900 text-sm">Assign Lead</span>
                   </div>

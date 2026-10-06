@@ -56,7 +56,7 @@ export default function AddSingleLeadPage() {
             className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border-none rounded text-xs focus:outline-none"
           />
         </div>
-        <button className="flex items-center justify-center text-[#613cbc] border border-purple-200 bg-purple-50 px-4 py-2 sm:py-1.5 rounded-full text-[11px] font-bold hover:bg-purple-100 transition-colors w-full sm:w-auto">
+        <button className="flex items-center justify-center text-[#4f46e5] border border-purple-200 bg-purple-50 px-4 py-2 sm:py-1.5 rounded-full text-[11px] font-bold hover:bg-purple-100 transition-colors w-full sm:w-auto">
           <ExternalLink className="w-3.5 h-3.5 mr-2" /> Previously uploaded leads
         </button>
       </div>
@@ -90,7 +90,7 @@ export default function AddSingleLeadPage() {
           <div>
             <div className="flex items-center mb-2">
               <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone</label>
-              <span className="ml-3 bg-purple-100 text-[#613cbc] text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center">
+              <span className="ml-3 bg-purple-100 text-[#4f46e5] text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center">
                 <svg className="w-2.5 h-2.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
                 Lead ID
               </span>
@@ -173,7 +173,7 @@ export default function AddSingleLeadPage() {
           <button 
             onClick={handleSubmit}
             disabled={loading}
-            className={`bg-[#613cbc] hover:bg-purple-800 text-white font-bold text-sm px-10 py-2.5 rounded shadow-sm transition-colors ${loading ? "opacity-50" : ""}`}
+            className={`bg-[#4f46e5] hover:bg-purple-800 text-white font-bold text-sm px-10 py-2.5 rounded shadow-sm transition-colors ${loading ? "opacity-50" : ""}`}
           >
             {loading ? "SAVING..." : success ? "SAVED!" : "ADD LEAD"}
           </button>

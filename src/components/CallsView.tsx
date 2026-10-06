@@ -23,10 +23,10 @@ export default function CallsView({ leads }: { leads: any[] }) {
             <div 
               key={lead.id} 
               onClick={() => { setSelectedLeadId(lead.id); setShowMobileDetail(true); }}
-              className={`p-4 border-b border-gray-100 cursor-pointer ${isSelected ? 'bg-purple-50 border-l-4 border-l-[#613cbc]' : 'hover:bg-gray-50'}`}
+              className={`p-4 border-b border-gray-100 cursor-pointer ${isSelected ? 'bg-purple-50 border-l-4 border-l-[#4f46e5]' : 'hover:bg-gray-50'}`}
             >
               <div className="flex justify-between items-start mb-1">
-                <div className={`text-[15px] font-bold truncate pr-2 ${isSelected ? 'text-[#613cbc]' : 'text-gray-800'}`}>
+                <div className={`text-[15px] font-bold truncate pr-2 ${isSelected ? 'text-[#4f46e5]' : 'text-gray-800'}`}>
                   {lead.name}
                 </div>
                 <div className="flex items-center shrink-0 space-x-2">
@@ -40,7 +40,7 @@ export default function CallsView({ leads }: { leads: any[] }) {
                     </a>
                   )}
                   <div className="flex items-center text-gray-400 text-[11px] font-medium shrink-0 ml-1">
-                    <div className="w-6 h-6 rounded-full bg-[#E8E2F7] text-[#613cbc] flex items-center justify-center text-[10px] font-bold mr-1">
+                    <div className="w-6 h-6 rounded-full bg-[#E8E2F7] text-[#4f46e5] flex items-center justify-center text-[10px] font-bold mr-1">
                       {lead.assignedTo?.name ? lead.assignedTo.name.substring(0,2).toUpperCase() : 'UN'}
                     </div>
                     <ChevronRight className="w-4 h-4 hidden md:block" />
@@ -81,13 +81,13 @@ export default function CallsView({ leads }: { leads: any[] }) {
             {/* Header Card */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
               {/* Mobile Back Button */}
-              <button onClick={() => setShowMobileDetail(false)} className="md:hidden flex items-center text-[#613cbc] font-bold text-sm mb-4 bg-purple-50 px-3 py-1.5 rounded-lg">
+              <button onClick={() => setShowMobileDetail(false)} className="md:hidden flex items-center text-[#4f46e5] font-bold text-sm mb-4 bg-purple-50 px-3 py-1.5 rounded-lg">
                 <ChevronRight className="w-4 h-4 mr-1 rotate-180" /> Back to Leads
               </button>
               <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-1">{selectedLead.name}</h2>
-                  <div className="text-sm font-medium text-[#613cbc] bg-purple-50 inline-flex px-3 py-1 rounded-full">
+                  <div className="text-sm font-medium text-[#4f46e5] bg-purple-50 inline-flex px-3 py-1 rounded-full">
                     {selectedLead.status}
                   </div>
                 </div>
@@ -223,14 +223,14 @@ function CallLogItem({ call }: { call: any }) {
           <textarea 
             value={noteText}
             onChange={(e) => setNoteText(e.target.value)}
-            className="w-full border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-[#613cbc] min-h-[80px]"
+            className="w-full border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-[#4f46e5] min-h-[80px]"
             placeholder="Write a note about this call..."
           />
           <div className="flex space-x-2 mt-2">
             <button 
               onClick={handleSave} 
               disabled={saving}
-              className="bg-[#613cbc] text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-purple-800 disabled:opacity-50"
+              className="bg-[#4f46e5] text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-purple-800 disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save Note"}
             </button>
@@ -249,7 +249,7 @@ function CallLogItem({ call }: { call: any }) {
               setNoteText(call.notes || "");
               setIsEditing(true);
             }}
-            className="text-xs font-semibold text-[#613cbc] hover:underline"
+            className="text-xs font-semibold text-[#4f46e5] hover:underline"
           >
             {call.notes ? "Edit Note" : "+ Add Note"}
           </button>

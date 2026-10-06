@@ -19,7 +19,7 @@ export default function BillingPage() {
 
         {/* Tab */}
         <div className="border-b border-gray-200 mb-6">
-          <div className="inline-flex items-center px-2 py-3 border-b-2 border-[#613cbc] text-sm font-bold text-[#613cbc]">
+          <div className="inline-flex items-center px-2 py-3 border-b-2 border-[#4f46e5] text-sm font-bold text-[#4f46e5]">
             <span className="mr-2">🧾</span> Transaction History
           </div>
         </div>
@@ -43,7 +43,7 @@ export default function BillingPage() {
             <thead className="border-b border-gray-200">
               <tr>
                 <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-700">Order ID</th>
-                <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-[#613cbc] bg-[#f8f6fd]">Date ⬇</th>
+                <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-[#4f46e5] bg-[#f8f6fd]">Date ⬇</th>
                 <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-700">Amount ⇅</th>
                 <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-700">Billing Cycle</th>
                 <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-700">Status</th>

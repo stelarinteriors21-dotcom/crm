@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, ChevronRight, Edit3, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronRight, Edit3, GripVertical, History } from "lucide-react";
+import { getCallHistoryByPhone } from "@/app/actions/leadActions";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 import LeadActionsMenu from "@/components/LeadActionsMenu";
@@ -17,25 +18,72 @@ const BASE_COLUMNS = [
   { id: "score", label: "Lead Score", type: "⭐", defaultVisible: true },
   { id: "approximateBudget", label: "Approximate Budget", type: "💰", defaultVisible: true },
   { id: "city", label: "City", type: "T", defaultVisible: true },
-  { id: "propertyStatus", label: "Property status", type: "🏠", defaultVisible: true },
-  { id: "siteVisitDate", label: "Site Visit Date", type: "📅", defaultVisible: true },
+    { id: "siteVisitDate", label: "Site Visit Date", type: "📅", defaultVisible: true },
   { id: "email", label: "Email", type: "📧", defaultVisible: true },
   { id: "typeOfSpace", label: "Type of space", type: "🏢", defaultVisible: false },
   { id: "alternatePhone", label: "Alternate Phone", type: "📱", defaultVisible: false },
-  { id: "captureFrequency", label: "Capture Frequency", type: "#", defaultVisible: false },
-  { id: "capturedOn", label: "Captured On", type: "📅", defaultVisible: true },
+    { id: "capturedOn", label: "Captured On", type: "📅", defaultVisible: true },
   { id: "createdOn", label: "Created On", type: "📅", defaultVisible: true },
   { id: "facebookAd", label: "Facebook Ad", type: "T", defaultVisible: true },
   { id: "facebookCampaign", label: "Facebook Campaign", type: "T", defaultVisible: false },
   { id: "leadSource", label: "Lead Source", type: "🌐", defaultVisible: true },
   { id: "modifiedOn", label: "Modified On", type: "📅", defaultVisible: false },
-  { id: "rating", label: "Rating", type: "⭐", defaultVisible: false },
-  { id: "tag", label: "Tag", type: "🏷️", defaultVisible: true },
+    { id: "tag", label: "Tag", type: "🏷️", defaultVisible: true },
   { id: "assignee", label: "Assignee", type: "👤", defaultVisible: true },
   { id: "phone", label: "Phone", type: "📱", defaultVisible: true }
 ];
 
+
+const CallHistoryModal = ({ phone, onClose }: { phone: string, onClose: () => void }) => {
+  const [logs, setLogs] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    getCallHistoryByPhone(phone).then(res => {
+      setLogs(res);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [phone]);
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col">
+        <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+          <h3 className="font-bold text-gray-800 flex items-center">
+            <History className="w-4 h-4 mr-2 text-[#4f46e5]" />
+            Call History: {phone}
+          </h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+        </div>
+        <div className="p-4 overflow-y-auto max-h-[60vh]">
+          {loading ? <p className="text-gray-500 text-sm text-center py-4">Loading calls...</p> : 
+           logs.length === 0 ? <p className="text-gray-500 text-sm text-center py-4">No calls logged yet.</p> :
+           <div className="space-y-3">
+             {logs.map(log => (
+               <div key={log.id} className="border border-gray-100 p-3 rounded-lg bg-white shadow-sm text-sm">
+                 <div className="flex justify-between text-[11px] text-gray-500 mb-2 pb-2 border-b border-gray-50">
+                   <span className="font-bold text-[#4f46e5]">{log.user?.name || "User"}</span>
+                   <span>{new Date(log.createdAt).toLocaleString('en-IN', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})}</span>
+                 </div>
+                 <div className="font-medium text-gray-800 flex justify-between items-center">
+                    <span>Lead: {log.lead?.name || "Unknown"}</span>
+                    <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">
+                      Duration: {Math.floor(log.duration/60)}m {log.duration%60}s
+                    </span>
+                 </div>
+                 {log.notes && <p className="mt-2 text-gray-600 text-xs italic bg-gray-50 p-2 rounded">"{log.notes}"</p>}
+               </div>
+             ))}
+           </div>
+          }
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function LeadsTableClient({ leads, totalLeads, customTags = [], isAdmin = false }: { leads: Lead[], totalLeads: number, customTags?: any[], isAdmin?: boolean }) {
+  const [historyPhone, setHistoryPhone] = React.useState<string | null>(null);
   // Extract custom fields from leads
   const customFieldKeys = new Set<string>();
   let customLabels: Record<string, string> = {};
@@ -222,7 +270,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
               type="checkbox" 
               checked={filteredLeads.length > 0 && selectedLeads.length === filteredLeads.length}
               onChange={toggleSelectAll}
-              className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc]" 
+              className="rounded border-gray-300 text-[#4f46e5] focus:ring-[#4f46e5]" 
             />
             <span className="bg-gray-100 px-2 py-0.5 rounded text-xs flex items-center shrink-0">
               {selectedLeads.length > 0 ? `${selectedLeads.length} selected` : `1-${filteredLeads.length} of ${totalLeads}`} <ChevronRight className="w-3 h-3 ml-1" />
@@ -263,7 +311,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
               type="checkbox" 
               checked={isCol(col.id)} 
               onChange={() => toggleCol(col.id)} 
-              className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc] mr-2"
+              className="rounded border-gray-300 text-[#4f46e5] focus:ring-[#4f46e5] mr-2"
             />
             <span className="text-xs text-gray-700 select-none">{col.label}</span>
           </label>
@@ -282,7 +330,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
               if (selectedLeads.length === 0) alert("Please select at least one lead first.");
               else setShowBulkEdit(true);
             }}
-            className={`flex items-center px-3 py-1 border rounded text-sm transition-colors ${selectedLeads.length > 0 ? 'border-[#613cbc] text-[#613cbc] bg-purple-50' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+            className={`flex items-center px-3 py-1 border rounded text-sm transition-colors ${selectedLeads.length > 0 ? 'border-[#4f46e5] text-[#4f46e5] bg-purple-50' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
           >
             <Edit3 className="w-3.5 h-3.5 mr-1" /> Bulk Edit
           </button>
@@ -296,14 +344,14 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                <form onSubmit={handleBulkEditSubmit} className="p-4 space-y-4">
                  <div>
                    <label className="block text-xs font-medium text-gray-500 mb-1">Update Status</label>
-                   <select name="status" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#613cbc]">
+                   <select name="status" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#4f46e5]">
                      <option value="">Select new status...</option>
                       {LEAD_STATUS_OPTIONS.map(opt => (
                         <option key={opt} value={opt} className="bg-white text-gray-900 font-medium">{opt}</option>
                       ))}
                    </select>
                  </div>
-                 <button type="submit" className="w-full bg-[#613cbc] text-white rounded py-2 text-sm font-medium hover:bg-purple-700 transition-colors">
+                 <button type="submit" className="w-full bg-[#4f46e5] text-white rounded py-2 text-sm font-medium hover:bg-purple-700 transition-colors">
                    Apply Changes
                  </button>
                </form>
@@ -320,10 +368,10 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
               {showMoreMenu && (
                 <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
                   <div className="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100">Actions</div>
-                  <button onClick={downloadExcel} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-[#613cbc] transition-colors">
+                  <button onClick={downloadExcel} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-[#4f46e5] transition-colors">
                     📊 Download Excel
                   </button>
-                  <button onClick={downloadPDF} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-[#613cbc] transition-colors">
+                  <button onClick={downloadPDF} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-[#4f46e5] transition-colors">
                     📄 Download PDF
                   </button>
                 </div>
@@ -381,7 +429,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
             <thead className="bg-gray-100/80 sticky top-0 z-10">
               <tr>
                 <th className="px-4 py-3 text-left w-10">
-                  <input type="checkbox" checked={filteredLeads.length > 0 && selectedLeads.length === filteredLeads.length} onChange={toggleSelectAll} className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc]" />
+                  <input type="checkbox" checked={filteredLeads.length > 0 && selectedLeads.length === filteredLeads.length} onChange={toggleSelectAll} className="rounded border-gray-300 text-[#4f46e5] focus:ring-[#4f46e5]" />
                 </th>
                 {columnOrder.filter(id => isCol(id)).map(colId => {
                   switch(colId) {
@@ -394,8 +442,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                     case 'assignee': return <React.Fragment key="assignee"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Assignee</th></React.Fragment>;
                     case 'capturedOn': return <React.Fragment key="capturedOn"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Captured On ⇕</th></React.Fragment>;
                     case 'city': return <React.Fragment key="city"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">City</th></React.Fragment>;
-                    case 'propertyStatus': return <React.Fragment key="propertyStatus"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Property status</th></React.Fragment>;
-                    case 'siteVisitDate': return <React.Fragment key="siteVisitDate"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Site Visit Date ⇕</th></React.Fragment>;
+                                        case 'siteVisitDate': return <React.Fragment key="siteVisitDate"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Site Visit Date ⇕</th></React.Fragment>;
                     case 'createdOn': return <React.Fragment key="createdOn"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Created On ▴</th></React.Fragment>;
                     case 'email': return <React.Fragment key="email"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Email</th></React.Fragment>;
                     case 'typeOfSpace': return <React.Fragment key="typeOfSpace"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Type of space</th></React.Fragment>;
@@ -420,13 +467,13 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                       type="checkbox" 
                       checked={selectedLeads.includes(lead.id)}
                       onChange={() => toggleSelectLead(lead.id)}
-                      className="rounded border-gray-300 text-[#613cbc] focus:ring-[#613cbc]" 
+                      className="rounded border-gray-300 text-[#4f46e5] focus:ring-[#4f46e5]" 
                     />
                   </td>
                   {columnOrder.filter(id => isCol(id)).map(colId => {
                     switch(colId) {
                       case 'name': return <React.Fragment key="name"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
-                    <Link href={`/leads/${lead.id}`} className="text-[#613cbc] font-medium hover:underline">
+                    <Link href={`/leads/${lead.id}`} className="text-[#4f46e5] font-medium hover:underline">
                       {lead.name}
                     </Link>
                   </td></React.Fragment>;
@@ -511,7 +558,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                       {customTags.map((t: any) => (
                         <option key={t.name} value={t.name}>{t.name}</option>
                       ))}
-                      {isAdmin && <option value="__ADD_NEW__" className="text-[#613cbc] font-bold">+ Add New Tag</option>}
+                      {isAdmin && <option value="__ADD_NEW__" className="text-[#4f46e5] font-bold">+ Add New Tag</option>}
                     </select>
                   </td></React.Fragment>;
                       case 'leadSource': return <React.Fragment key="leadSource"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
@@ -528,7 +575,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                       {lead.budget || '₹1l - ₹5l'}
                     </span>
                   </td></React.Fragment>;
-                      case 'assignee': return <React.Fragment key="assignee"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-[#613cbc] font-medium text-xs">
+                      case 'assignee': return <React.Fragment key="assignee"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-[#4f46e5] font-medium text-xs">
                     <div className="flex items-center">
                     {lead.assignedTo ? (
                       <>
@@ -548,13 +595,8 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                       case 'city': return <React.Fragment key="city"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
                     {lead.city || 'Thiruvananthapuram'}
                   </td></React.Fragment>;
-                      case 'propertyStatus': return <React.Fragment key="propertyStatus"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
-                    <span className="inline-flex px-2 py-0.5 rounded bg-orange-50 text-orange-800 text-xs font-medium">
-                      {lead.propertyStatus || 'Not specified'}
-                    </span>
-                  </td></React.Fragment>;
-                      case 'siteVisitDate': return <React.Fragment key="siteVisitDate"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-400">
-                    --
+                                            case 'siteVisitDate': return <React.Fragment key="siteVisitDate"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
+                    {lead.customFields?.['Site Visit Date'] || lead.customFields?.['Site_Visit_Date'] || '--'}
                   </td></React.Fragment>;
                       case 'createdOn': return <React.Fragment key="createdOn"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
                     {timeAgo(lead.createdAt)}
@@ -572,10 +614,12 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                     --
                   </td></React.Fragment>;
                       case 'phone': return <React.Fragment key="phone"><td className="px-4 py-2.5 whitespace-nowrap text-gray-900 font-medium">
-<div className="flex items-center justify-between">
-
-                    <span>{lead.phone}</span>
-                    <div className="flex space-x-2 ml-4">
+  <div className="flex items-center justify-between">
+  <span>{lead.phone}</span>
+  <div className="flex space-x-2 ml-4">
+    <button onClick={() => setHistoryPhone(lead.phone)} title="Call History" className="p-1 bg-purple-50 text-[#4f46e5] rounded hover:bg-purple-100 flex items-center justify-center">
+      <History className="w-3.5 h-3.5" />
+    </button>
                       <a href={`tel:${lead.phone}`} title="Call Lead" className="p-1 bg-green-50 text-green-600 rounded hover:bg-green-100 flex items-center justify-center">📞</a>
                       <a href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" title="WhatsApp" className="p-1 bg-green-50 text-emerald-500 rounded hover:bg-green-100 flex items-center justify-center">💬</a>
                       <div className="relative flex items-center justify-center">
@@ -601,6 +645,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
             ))}
           </tbody>
         </table>
+        {historyPhone && <CallHistoryModal phone={historyPhone} onClose={() => setHistoryPhone(null)} />}
       </div>
     </>
   );

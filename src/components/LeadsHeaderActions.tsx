@@ -53,7 +53,7 @@ export default function LeadsHeaderActions() {
               <button
                 key={view.id}
                 onClick={() => handleSelectView(view)}
-                className={`w-full text-left px-4 py-2 text-[13px] hover:bg-purple-50 hover:text-[#613cbc] ${currentView === view.name ? "bg-purple-50 text-[#613cbc] font-medium" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-[13px] hover:bg-purple-50 hover:text-[#4f46e5] ${currentView === view.name ? "bg-purple-50 text-[#4f46e5] font-medium" : "text-gray-700"}`}
               >
                 {view.name}
               </button>
@@ -71,7 +71,7 @@ export default function LeadsHeaderActions() {
             url.searchParams.delete('view');
             router.push(url.pathname + url.search);
           }}
-          className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${!isKanban ? 'bg-white text-[#613cbc] shadow-sm' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'}`}
+          className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${!isKanban ? 'bg-white text-[#4f46e5] shadow-sm' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'}`}
         >
           <List className="w-3.5 h-3.5 mr-1.5" /> Table
         </button>
@@ -81,7 +81,7 @@ export default function LeadsHeaderActions() {
             url.searchParams.set('view', 'kanban');
             router.push(url.pathname + url.search);
           }}
-          className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${isKanban ? 'bg-white text-[#613cbc] shadow-sm' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'}`}
+          className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${isKanban ? 'bg-white text-[#4f46e5] shadow-sm' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'}`}
         >
           <LayoutGrid className="w-3.5 h-3.5 mr-1.5" /> Board
         </button>

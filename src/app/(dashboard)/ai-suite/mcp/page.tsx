@@ -2,7 +2,7 @@ import { Cpu, Copy, Plus, Trash2, Edit2, Link as LinkIcon, Info } from "lucide-r
 
 export default function MCPPage() {
   return (
-    <div className="h-full bg-[#F8F9FA] flex flex-col p-8 overflow-y-auto">
+    <div className="h-full bg-[#f8fafc] flex flex-col p-8 overflow-y-auto">
       <div className="w-full max-w-4xl mx-auto">
         
         {/* Header */}

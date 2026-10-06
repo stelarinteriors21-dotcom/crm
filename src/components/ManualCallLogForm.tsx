@@ -55,7 +55,7 @@ export default function ManualCallLogForm({ leadId }: { leadId: string }) {
           <UploadCloud className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
           <span className="text-xs text-gray-500 truncate">{file ? file.name : "Upload .mp3"}</span>
         </div>
-        <button type="submit" disabled={loading} className="px-4 py-2 bg-[#613cbc] text-white rounded-md text-sm font-bold hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center whitespace-nowrap">
+        <button type="submit" disabled={loading} className="px-4 py-2 bg-[#4f46e5] text-white rounded-md text-sm font-bold hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center whitespace-nowrap">
           {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : "Save Log"}
         </button>
       </div>

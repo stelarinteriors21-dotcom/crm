@@ -25,10 +25,10 @@ export default function AutomationPage() {
             <GitBranch className="w-5 h-5 mr-2" /> Workflows <span className="text-blue-500 ml-2 cursor-pointer text-xl">↻</span>
           </h1>
           <p className="text-gray-400 text-sm mt-1">
-            To execute complex automations with ease <span className="text-[#613cbc] border-b border-[#613cbc] border-dashed cursor-pointer">Learn More</span>
+            To execute complex automations with ease <span className="text-[#4f46e5] border-b border-[#4f46e5] border-dashed cursor-pointer">Learn More</span>
           </p>
         </div>
-        <button onClick={() => alert('Opening Visual Workflow Builder...')} className="bg-[#613cbc] text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors">
+        <button onClick={() => alert('Opening Visual Workflow Builder...')} className="bg-[#4f46e5] text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors">
           Create Workflow +
         </button>
       </div>
@@ -59,7 +59,7 @@ export default function AutomationPage() {
 
       {/* Tabs */}
       <div className="border-b border-gray-200 flex space-x-8 px-2">
-        <button className="py-3 text-sm font-semibold text-gray-900 border-b-2 border-[#613cbc]">Published</button>
+        <button className="py-3 text-sm font-semibold text-gray-900 border-b-2 border-[#4f46e5]">Published</button>
         <button className="py-3 text-sm font-medium text-gray-500 hover:text-gray-700">Draft</button>
       </div>
 
@@ -67,7 +67,7 @@ export default function AutomationPage() {
       <div className="flex space-x-4">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-          <input type="text" placeholder="Search flowchart by Name" className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-md text-sm outline-none focus:border-[#613cbc]" />
+          <input type="text" placeholder="Search flowchart by Name" className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-md text-sm outline-none focus:border-[#4f46e5]" />
         </div>
         <select className="w-48 px-3 py-2 border border-purple-200 bg-purple-50 text-purple-700 rounded-md text-sm outline-none">
           <option>On</option>
@@ -102,7 +102,7 @@ export default function AutomationPage() {
             <div key={i} className="flex items-center px-4 md:px-6 py-4 hover:bg-gray-50 transition-colors">
               <div className="w-1/3">
                 <p className="text-sm font-medium text-gray-800">{wf.name}</p>
-                {wf.isDraft && <span className="text-[10px] text-[#613cbc] border-b border-[#613cbc] border-dashed cursor-pointer">View Draft</span>}
+                {wf.isDraft && <span className="text-[10px] text-[#4f46e5] border-b border-[#4f46e5] border-dashed cursor-pointer">View Draft</span>}
               </div>
               <div className="w-1/6">
                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-medium ${wf.eventColor}`}>
@@ -110,7 +110,7 @@ export default function AutomationPage() {
                 </span>
               </div>
               <div className="w-1/6 text-center flex flex-col items-center justify-center">
-                <div onClick={() => alert('Workflow toggled')} className={`w-10 h-5 rounded-full relative cursor-pointer ${wf.status ? 'bg-[#613cbc]' : 'bg-gray-200'}`}>
+                <div onClick={() => alert('Workflow toggled')} className={`w-10 h-5 rounded-full relative cursor-pointer ${wf.status ? 'bg-[#4f46e5]' : 'bg-gray-200'}`}>
                   <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${wf.status ? 'right-0.5' : 'left-0.5'}`}></div>
                 </div>
                 <span className="text-[10px] text-gray-400 mt-1">{wf.time}</span>

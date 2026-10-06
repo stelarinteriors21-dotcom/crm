@@ -22,7 +22,7 @@ export default function SalesformCreatePage() {
             </div>
           </div>
           <div className="flex space-x-6 border-b border-gray-200 mb-4 px-2">
-            <button className="py-2 text-sm font-bold border-b-2 border-[#613cbc] text-[#613cbc]">Published</button>
+            <button className="py-2 text-sm font-bold border-b-2 border-[#4f46e5] text-[#4f46e5]">Published</button>
             <button className="py-2 text-sm font-medium border-b-2 border-transparent text-gray-500">Draft</button>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm h-[400px]"></div>
@@ -49,7 +49,7 @@ export default function SalesformCreatePage() {
             <input 
               type="text" 
               placeholder="Search for event e.g. b" 
-              className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#613cbc]"
+              className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#4f46e5]"
             />
             <Search className="w-4 h-4 text-gray-300 absolute right-10 top-1/2 transform -translate-y-1/2" />
           </div>

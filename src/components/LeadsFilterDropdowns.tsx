@@ -5,7 +5,7 @@ import { ChevronDown, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getCallers } from "@/app/actions/leadActions";
 
-export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?: any[] }) {
+export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [] }: { customTags?: any[], uniqueCities?: string[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -13,9 +13,16 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
   const [tagMenuOpen, setTagMenuOpen] = useState(false);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const [dateMenuOpen, setDateMenuOpen] = useState(false);
+  const [cityMenuOpen, setCityMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const initialStatus = searchParams.get("status");
+  const initialCity = searchParams.get("city");
+  
+  const [selectedCity, setSelectedCity] = useState<string[]>(
+    initialCity ? initialCity.split(",") : []
+  );
+
   const [selectedStatus, setSelectedStatus] = useState<string[]>(
     initialStatus ? initialStatus.split(",") : []
   );
@@ -54,10 +61,10 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setAssigneeOpen(false);
-        setTagMenuOpen(false);
-        setStatusMenuOpen(false);
-        setDateMenuOpen(false);
+        setAssigneeOpen(false); setCityMenuOpen(false);
+        setTagMenuOpen(false); setCityMenuOpen(false);
+        setStatusMenuOpen(false); setCityMenuOpen(false);
+        setDateMenuOpen(false); setCityMenuOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -83,7 +90,7 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
     else params.delete("endDate");
     
     router.push(`?` + params.toString());
-    setDateMenuOpen(false);
+    setDateMenuOpen(false); setCityMenuOpen(false);
   };
 
   const clearDateRange = () => {
@@ -93,7 +100,7 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
     params.delete("startDate");
     params.delete("endDate");
     router.push(`?` + params.toString());
-    setDateMenuOpen(false);
+    setDateMenuOpen(false); setCityMenuOpen(false);
   };
 
   const toggleStatus = (s: string) => {
@@ -102,25 +109,40 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
 
   const applyStatus = () => {
     updateURL("status", selectedStatus.length > 0 ? selectedStatus.join(",") : "");
-    setStatusMenuOpen(false);
+    setStatusMenuOpen(false); setCityMenuOpen(false);
   };
 
   const clearStatus = () => {
     setSelectedStatus([]);
     updateURL("status", "");
-    setStatusMenuOpen(false);
+    setStatusMenuOpen(false); setCityMenuOpen(false);
+  };
+
+  const toggleCity = (c: string) => {
+    setSelectedCity(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
+  };
+
+  const applyCity = () => {
+    updateURL("city", selectedCity.length > 0 ? selectedCity.join(",") : "");
+    setCityMenuOpen(false);
+  };
+
+  const clearCity = () => {
+    setSelectedCity([]);
+    updateURL("city", "");
+    setCityMenuOpen(false);
   };
 
   const handleAssigneeChange = (id: string) => {
     setSelectedAssignee(id);
     updateURL("assigned", id);
-    setAssigneeOpen(false);
+    setAssigneeOpen(false); setCityMenuOpen(false);
   };
 
   const handleTagChange = (tag: string) => {
     setSelectedTag(tag);
     updateURL("tag", tag);
-    setTagMenuOpen(false);
+    setTagMenuOpen(false); setCityMenuOpen(false);
   };
 
   return (
@@ -130,12 +152,12 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
         <button 
           onClick={() => {
             setAssigneeOpen(!assigneeOpen);
-            setTagMenuOpen(false);
-            setStatusMenuOpen(false);
-            setDateMenuOpen(false);
+            setTagMenuOpen(false); setCityMenuOpen(false);
+            setStatusMenuOpen(false); setCityMenuOpen(false);
+            setDateMenuOpen(false); setCityMenuOpen(false);
           }}
           className={`flex items-center text-xs font-medium border rounded px-3 py-1.5 transition-colors ${
-            selectedAssignee ? 'bg-purple-50 text-[#613cbc] border-purple-200' : 'text-gray-600 border-gray-200 hover:bg-gray-50'
+            selectedAssignee ? 'bg-purple-50 text-[#4f46e5] border-purple-200' : 'text-gray-600 border-gray-200 hover:bg-gray-50'
           }`}
         >
           Assignee {selectedAssignee && selectedAssignee !== "all" && "(1)"} <ChevronDown className="w-3 h-3 ml-2" />
@@ -145,7 +167,7 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
           <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col">
             <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <span className="text-sm font-semibold text-gray-700">Assignees</span>
-              <span className="text-xs text-[#613cbc] cursor-pointer" onClick={() => handleAssigneeChange("all")}>Clear All</span>
+              <span className="text-xs text-[#4f46e5] cursor-pointer" onClick={() => handleAssigneeChange("all")}>Clear All</span>
             </div>
             <div className="p-2 overflow-y-auto max-h-72">
               <label className="flex items-center text-[13px] text-gray-700 cursor-pointer hover:bg-gray-50 px-2 py-2 rounded mb-1">
@@ -154,7 +176,7 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
                   name="assignee"
                   checked={!selectedAssignee || selectedAssignee === "all"}
                   onChange={() => handleAssigneeChange("all")}
-                  className="w-3.5 h-3.5 mr-3 border-gray-300 rounded text-[#613cbc] focus:ring-[#613cbc]" 
+                  className="w-3.5 h-3.5 mr-3 border-gray-300 rounded text-[#4f46e5] focus:ring-[#4f46e5]" 
                 /> 
                 <span className="font-medium">Anyone</span>
               </label>
@@ -165,7 +187,7 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
                     name="assignee"
                     checked={selectedAssignee === caller.id}
                     onChange={() => handleAssigneeChange(caller.id)}
-                    className="w-3.5 h-3.5 mr-3 border-gray-300 rounded text-[#613cbc] focus:ring-[#613cbc]" 
+                    className="w-3.5 h-3.5 mr-3 border-gray-300 rounded text-[#4f46e5] focus:ring-[#4f46e5]" 
                   /> 
                   <span className="font-medium">{caller.name}</span>
                 </label>
@@ -180,12 +202,12 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
         <button 
           onClick={() => {
             setTagMenuOpen(!tagMenuOpen);
-            setAssigneeOpen(false);
-            setStatusMenuOpen(false);
-            setDateMenuOpen(false);
+            setAssigneeOpen(false); setCityMenuOpen(false);
+            setStatusMenuOpen(false); setCityMenuOpen(false);
+            setDateMenuOpen(false); setCityMenuOpen(false);
           }}
           className={`flex items-center text-xs font-medium border rounded px-3 py-1.5 transition-colors ${
-            selectedTag && selectedTag !== "All" ? 'bg-purple-50 text-[#613cbc] border-purple-200' : 'text-gray-600 border-gray-200 hover:bg-gray-50'
+            selectedTag && selectedTag !== "All" ? 'bg-purple-50 text-[#4f46e5] border-purple-200' : 'text-gray-600 border-gray-200 hover:bg-gray-50'
           }`}
         >
           Tag {selectedTag && selectedTag !== "All" && "(1)"} <ChevronDown className="w-3 h-3 ml-2" />
@@ -195,7 +217,7 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
           <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col">
             <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <span className="text-sm font-semibold text-gray-700">Tags</span>
-              <span className="text-xs text-[#613cbc] cursor-pointer" onClick={() => handleTagChange("All")}>Clear All</span>
+              <span className="text-xs text-[#4f46e5] cursor-pointer" onClick={() => handleTagChange("All")}>Clear All</span>
             </div>
             <div className="p-2 overflow-y-auto max-h-72">
               {TAG_OPTIONS.map(tagOption => {
@@ -208,7 +230,7 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
                       value={tagOption}
                       checked={selectedTag === tagOption}
                       onChange={() => handleTagChange(tagOption)}
-                      className="w-3.5 h-3.5 mr-3 border-gray-300 text-[#613cbc] focus:ring-[#613cbc]" 
+                      className="w-3.5 h-3.5 mr-3 border-gray-300 text-[#4f46e5] focus:ring-[#4f46e5]" 
                     /> 
                     {tagColor && <span className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: tagColor }} />}
                     <span className="font-medium">{tagOption === "All" ? "All Tags" : tagOption}</span>
@@ -225,13 +247,13 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
         <button 
           onClick={() => {
             setStatusMenuOpen(!statusMenuOpen);
-            setAssigneeOpen(false);
-            setTagMenuOpen(false);
-            setDateMenuOpen(false);
+            setAssigneeOpen(false); setCityMenuOpen(false);
+            setTagMenuOpen(false); setCityMenuOpen(false);
+            setDateMenuOpen(false); setCityMenuOpen(false);
           }}
           className={`flex items-center text-xs font-medium border rounded px-3 py-1.5 transition-colors ${
             selectedStatus.length > 0 
-              ? 'bg-purple-50 text-[#613cbc] border-purple-200' 
+              ? 'bg-purple-50 text-[#4f46e5] border-purple-200' 
               : 'text-gray-600 border-gray-200 hover:bg-gray-50'
           }`}
         >
@@ -241,7 +263,7 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
           <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col">
             <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <span className="text-sm font-semibold text-gray-700">Select Status</span>
-              <span className="text-xs text-[#613cbc] cursor-pointer" onClick={clearStatus}>Clear</span>
+              <span className="text-xs text-[#4f46e5] cursor-pointer" onClick={clearStatus}>Clear</span>
             </div>
             <div className="p-2 max-h-64 overflow-y-auto space-y-1">
               {STATUS_OPTIONS.map(s => (
@@ -250,14 +272,63 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
                     type="checkbox" 
                     checked={selectedStatus.includes(s)}
                     onChange={() => toggleStatus(s)}
-                    className="w-3.5 h-3.5 mr-3 border-gray-300 rounded text-[#613cbc] focus:ring-[#613cbc]" 
+                    className="w-3.5 h-3.5 mr-3 border-gray-300 rounded text-[#4f46e5] focus:ring-[#4f46e5]" 
                   /> 
                   {s}
                 </label>
               ))}
             </div>
             <div className="p-3 border-t border-gray-100">
-              <button onClick={applyStatus} className="w-full bg-[#613cbc] hover:bg-purple-800 text-white text-xs font-bold py-2 rounded-lg transition-colors">
+              <button onClick={applyStatus} className="w-full bg-[#4f46e5] hover:bg-purple-800 text-white text-xs font-bold py-2 rounded-lg transition-colors">
+                Apply
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* City Filter */}
+      <div className="relative">
+        <button 
+          onClick={() => {
+            setCityMenuOpen(!cityMenuOpen);
+            setAssigneeOpen(false);
+            setTagMenuOpen(false);
+            setStatusMenuOpen(false);
+            setDateMenuOpen(false);
+          }}
+          className={`flex items-center text-xs font-medium border rounded px-3 py-1.5 transition-colors ${
+            selectedCity.length > 0 
+              ? 'bg-purple-50 text-[#4f46e5] border-purple-200' 
+              : 'text-gray-600 border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          City {selectedCity.length > 0 && `(${selectedCity.length})`} <ChevronDown className="w-3 h-3 ml-2" />
+        </button>
+        {cityMenuOpen && (
+          <div className="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col">
+            <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <span className="text-sm font-semibold text-gray-700">Select City</span>
+              <span className="text-xs text-[#4f46e5] cursor-pointer" onClick={clearCity}>Clear</span>
+            </div>
+            <div className="p-2 max-h-64 overflow-y-auto space-y-1">
+              {uniqueCities.length === 0 && (
+                <div className="text-xs text-gray-500 p-2 text-center">No cities found</div>
+              )}
+              {uniqueCities.map(c => (
+                <label key={c} className="flex items-center text-[13px] text-gray-700 cursor-pointer hover:bg-gray-50 px-2 py-1.5 rounded">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedCity.includes(c)}
+                    onChange={() => toggleCity(c)}
+                    className="w-3.5 h-3.5 mr-3 border-gray-300 rounded text-[#4f46e5] focus:ring-[#4f46e5]" 
+                  /> 
+                  {c}
+                </label>
+              ))}
+            </div>
+            <div className="p-3 border-t border-gray-100">
+              <button onClick={applyCity} className="w-full bg-[#4f46e5] hover:bg-purple-800 text-white text-xs font-bold py-2 rounded-lg transition-colors">
                 Apply
               </button>
             </div>
@@ -270,13 +341,13 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
         <button 
           onClick={() => {
             setDateMenuOpen(!dateMenuOpen);
-            setAssigneeOpen(false);
-            setTagMenuOpen(false);
-            setStatusMenuOpen(false);
+            setAssigneeOpen(false); setCityMenuOpen(false);
+            setTagMenuOpen(false); setCityMenuOpen(false);
+            setStatusMenuOpen(false); setCityMenuOpen(false);
           }}
           className={`flex items-center text-xs font-medium border rounded px-3 py-1.5 transition-colors ${
             (startDate || endDate)
-              ? 'bg-purple-50 text-[#613cbc] border-purple-200' 
+              ? 'bg-purple-50 text-[#4f46e5] border-purple-200' 
               : 'text-gray-600 border-gray-200 hover:bg-gray-50'
           }`}
         >
@@ -286,7 +357,7 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
           <div className="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col">
             <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <span className="text-sm font-semibold text-gray-700">Date Range</span>
-              <span className="text-xs text-[#613cbc] cursor-pointer" onClick={clearDateRange}>Clear</span>
+              <span className="text-xs text-[#4f46e5] cursor-pointer" onClick={clearDateRange}>Clear</span>
             </div>
             <div className="p-3 space-y-3">
               <div>
@@ -295,7 +366,7 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-[#613cbc] text-gray-700"
+                  className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-[#4f46e5] text-gray-700"
                 />
               </div>
               <div>
@@ -304,12 +375,12 @@ export default function LeadsFilterDropdowns({ customTags = [] }: { customTags?:
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-[#613cbc] text-gray-700"
+                  className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-[#4f46e5] text-gray-700"
                 />
               </div>
             </div>
             <div className="p-3 border-t border-gray-100">
-              <button onClick={applyDateRange} className="w-full bg-[#613cbc] hover:bg-purple-800 text-white text-xs font-bold py-2 rounded-lg transition-colors">
+              <button onClick={applyDateRange} className="w-full bg-[#4f46e5] hover:bg-purple-800 text-white text-xs font-bold py-2 rounded-lg transition-colors">
                 Apply Date Filter
               </button>
             </div>

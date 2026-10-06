@@ -28,10 +28,10 @@ export default function MobileBottomNav({ isAdmin }: { isAdmin: boolean }) {
             key={item.href}
             href={item.href}
             className={`flex flex-col items-center justify-center p-1.5 transition-colors ${
-              isActive ? "text-[#613cbc] font-bold" : "text-gray-500 hover:text-[#613cbc]"
+              isActive ? "text-[#4f46e5] font-bold" : "text-gray-500 hover:text-[#4f46e5]"
             }`}
           >
-            <Icon className={`w-5 h-5 mb-0.5 ${isActive ? "text-[#613cbc]" : "text-gray-500"}`} strokeWidth={isActive ? 2.5 : 1.8} />
+            <Icon className={`w-5 h-5 mb-0.5 ${isActive ? "text-[#4f46e5]" : "text-gray-500"}`} strokeWidth={isActive ? 2.5 : 1.8} />
             <span className="text-[10px] tracking-tight">{item.label}</span>
           </Link>
         );

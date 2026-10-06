@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "./authActions";
 import { revalidatePath } from "next/cache";
 
-export async function getLeads(query?: string, searchField?: string, status?: string | string[], source?: string, assigned?: string, active?: boolean, startDate?: string, endDate?: string, tag?: string) {
+export async function getLeads(query?: string, searchField?: string, status?: string | string[], source?: string, assigned?: string, active?: boolean, startDate?: string, endDate?: string, tag?: string, city?: string | string[]) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
@@ -69,6 +69,16 @@ export async function getLeads(query?: string, searchField?: string, status?: st
       where.status = { in: status.split(",") };
     } else {
       where.status = status;
+    }
+  }
+
+  if (city) {
+    if (Array.isArray(city)) {
+      where.city = { in: city };
+    } else if (city.includes(",")) {
+      where.city = { in: city.split(",") };
+    } else {
+      where.city = city;
     }
   }
 
@@ -500,3 +510,87 @@ export async function notifyUser(userId: string, title: string, body: string, wa
 }
 
 export async function deleteTask(taskId: string, leadId: string) { await prisma.task.delete({ where: { id: taskId } }); revalidatePath('/leads/' + leadId); }
+
+export async function completeSiteVisit(taskId: string, leadId: string, noteContent: string) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error('Unauthorized');
+  
+  await prisma.note.create({
+    data: {
+      content: "[Site Visit Completed]: " + noteContent,
+      leadId,
+      userId: user.id
+    }
+  });
+  
+  await prisma.task.update({
+    where: { id: taskId },
+    data: { isCompleted: true }
+  });
+  
+  revalidatePath('/leads');
+  revalidatePath('/dashboard');
+  revalidatePath('/leads/' + leadId);
+}
+
+export async function getCallHistoryByPhone(phone: string) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error('Unauthorized');
+
+  const logs = await prisma.callLog.findMany({
+    where: {
+      lead: { phone, organizationId: user.organizationId }
+    },
+    include: {
+      user: { select: { name: true } },
+      lead: { select: { name: true } }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return logs;
+}
+
+export async function getUniqueCities() {
+  const user = await getCurrentUser();
+  if (!user) return [];
+  const leads = await prisma.lead.findMany({
+    where: { organizationId: user.organizationId },
+    select: { city: true },
+    distinct: ['city']
+  });
+  return leads.map(l => l.city).filter(Boolean);
+}
+
+export async function getLeadContextForAI(leadId: string) {
+  const lead = await prisma.lead.findUnique({
+    where: { id: leadId },
+    include: {
+      notes: { orderBy: { createdAt: "desc" }, take: 10 },
+      calls: { orderBy: { createdAt: "desc" }, take: 5 }
+    }
+  });
+  
+  if (!lead) return "No data available.";
+  
+  let context = `Lead Name: ${lead.name}\n`;
+  if (lead.customFields) {
+    context += `Custom Fields: ${JSON.stringify(lead.customFields)}\n`;
+  }
+  
+  if (lead.notes && lead.notes.length > 0) {
+    context += `\nRecent Notes:\n`;
+    lead.notes.forEach(n => {
+      context += `- ${n.content}\n`;
+    });
+  }
+  
+  if (lead.calls && lead.calls.length > 0) {
+    context += `\nRecent Calls:\n`;
+    lead.calls.forEach(c => {
+      context += `- Duration: ${c.duration}s. Notes: ${c.notes || 'None'}\n`;
+    });
+  }
+  
+  return context;
+}

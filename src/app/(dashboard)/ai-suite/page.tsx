@@ -17,7 +17,7 @@ export default function AISuitePage() {
       desc: "Call analysis & QA",
       details: "Listens to every recorded call, scores the rep, extracts intent and pushes a summary onto the lead.",
       button: "Manage Call IQ >",
-      btnClass: "border border-purple-200 text-[#613cbc] hover:bg-purple-50",
+      btnClass: "border border-purple-200 text-[#4f46e5] hover:bg-purple-50",
       action: () => {}
     },
     {
@@ -29,7 +29,7 @@ export default function AISuitePage() {
       desc: "Scoring & enrichment",
       details: "Reads the full lead trail and scores intent, so a rep knows what to say before the first call.",
       button: "Request Access",
-      btnClass: "border border-purple-200 text-[#613cbc] hover:bg-purple-50",
+      btnClass: "border border-purple-200 text-[#4f46e5] hover:bg-purple-50",
       action: () => setShowLeadIQModal(true)
     },
     {
@@ -41,7 +41,7 @@ export default function AISuitePage() {
       desc: "Model Context Protocol",
       details: "Connects Claude, ChatGPT or Gemini to your workspace so you can query leads and run summaries in plain language.",
       button: "Manage MCP >",
-      btnClass: "border border-purple-200 text-[#613cbc] hover:bg-purple-50",
+      btnClass: "border border-purple-200 text-[#4f46e5] hover:bg-purple-50",
       action: () => window.location.href = '/ai-suite/mcp'
     },
     {
@@ -64,7 +64,7 @@ export default function AISuitePage() {
         
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <Sparkles className="w-6 h-6 mr-3 text-[#613cbc]" />
+            <Sparkles className="w-6 h-6 mr-3 text-[#4f46e5]" />
             AI Suite
           </h1>
           <p className="text-sm text-gray-500 mt-1 pl-9">
@@ -116,7 +116,7 @@ export default function AISuitePage() {
             <div className="p-6 border-b border-gray-100 flex items-start justify-between">
               <div className="flex items-start">
                 <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center mr-4 shrink-0">
-                  <Mail className="w-5 h-5 text-[#613cbc]" />
+                  <Mail className="w-5 h-5 text-[#4f46e5]" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">Request access to Lead-IQ</h2>
@@ -128,7 +128,7 @@ export default function AISuitePage() {
               </button>
             </div>
 
-            <div className="p-6 bg-[#F8F9FA] flex-1">
+            <div className="p-6 bg-[#f8fafc] flex-1">
               
               <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-4 shadow-sm">
                 <div className="flex items-center px-4 py-3 border-b border-gray-100">

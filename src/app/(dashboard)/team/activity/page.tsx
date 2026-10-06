@@ -28,7 +28,7 @@ export default async function ActivityLogPage() {
     <div className="p-8 max-w-6xl mx-auto space-y-8 pb-32">
       <div>
         <h1 className="text-2xl font-black text-gray-900 flex items-center">
-          <Activity className="w-6 h-6 mr-3 text-[#613cbc]" />
+          <Activity className="w-6 h-6 mr-3 text-[#4f46e5]" />
           Team Activity & Involvement
         </h1>
         <p className="text-gray-500 mt-1">Monitor real-time activity and track daily involvement time for all users.</p>
@@ -41,7 +41,7 @@ export default async function ActivityLogPage() {
           {stats.map((stat, i) => (
             <div key={i} className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-[#613cbc] font-bold text-lg">
+                <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-[#4f46e5] font-bold text-lg">
                   {stat.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -86,7 +86,7 @@ export default async function ActivityLogPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900">
-                      <span className="font-bold text-[#613cbc]">{log.user.name}</span>
+                      <span className="font-bold text-[#4f46e5]">{log.user.name}</span>
                       {" "}performed <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{log.action}</span>
                     </p>
                     {log.details && (

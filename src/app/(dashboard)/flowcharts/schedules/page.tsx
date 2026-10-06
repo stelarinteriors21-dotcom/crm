@@ -11,10 +11,10 @@ export default function SchedulesPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center">
               <Calendar className="w-6 h-6 mr-3 text-gray-700" />
-              Schedules <span className="ml-2 text-[#613cbc] text-sm cursor-pointer">↺</span>
+              Schedules <span className="ml-2 text-[#4f46e5] text-sm cursor-pointer">↺</span>
             </h1>
             <p className="text-sm text-gray-500 mt-1">
-              To automatically keep in touch with your leads <span className="text-[#613cbc] border-b border-purple-200 cursor-pointer ml-1">Learn More</span>
+              To automatically keep in touch with your leads <span className="text-[#4f46e5] border-b border-purple-200 cursor-pointer ml-1">Learn More</span>
             </p>
           </div>
           <Link href="/flowcharts/schedules/create" className="bg-[#4d3691] hover:bg-purple-900 text-white px-4 py-2 rounded text-sm font-medium transition-colors shadow-sm">
@@ -62,7 +62,7 @@ export default function SchedulesPage() {
 
         {/* Tabs */}
         <div className="flex space-x-6 border-b border-gray-200 mb-6 px-2">
-          <button className="py-2 text-[15px] font-bold border-b-2 border-[#613cbc] text-gray-900">
+          <button className="py-2 text-[15px] font-bold border-b-2 border-[#4f46e5] text-gray-900">
             Published
           </button>
           <button className="py-2 text-[15px] font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">
@@ -77,7 +77,7 @@ export default function SchedulesPage() {
             <input 
               type="text" 
               placeholder="Search flowchart by Name" 
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-[#613cbc]"
+              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-[#4f46e5]"
             />
           </div>
           <div className="flex-1 bg-purple-50 border border-purple-200 rounded-md px-3 py-2 text-sm text-[#4d3691] flex justify-between items-center font-medium">
@@ -103,7 +103,7 @@ export default function SchedulesPage() {
             </thead>
             <tbody>
               <tr>
-                <td colSpan={6} className="px-4 md:px-6 py-12 text-center bg-[#F8F9FA]">
+                <td colSpan={6} className="px-4 md:px-6 py-12 text-center bg-[#f8fafc]">
                   <div className="text-[15px] font-bold text-gray-400">No Flowcharts Found</div>
                 </td>
               </tr>

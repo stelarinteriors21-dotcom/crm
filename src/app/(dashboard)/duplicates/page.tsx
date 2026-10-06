@@ -13,7 +13,7 @@ export default function DuplicatesPage() {
   ];
 
   return (
-    <div className="h-full bg-[#F8F9FA] flex flex-col -m-3 md:-m-6 relative overflow-hidden">
+    <div className="h-full bg-[#f8fafc] flex flex-col -m-3 md:-m-6 relative overflow-hidden">
       
       {/* Top Header */}
       <div className="h-16 bg-white border-b border-gray-100 flex items-center px-4 md:px-6 shrink-0 z-10">

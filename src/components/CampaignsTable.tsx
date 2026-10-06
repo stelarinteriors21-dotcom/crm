@@ -54,21 +54,21 @@ export default function CampaignsTable() {
                     </td>
                     <td className="px-4 py-4 text-center">
                       <div className="flex justify-center -space-x-2">
-                        <div className="w-6 h-6 rounded-full bg-[#E8E2F7] text-[#613cbc] flex items-center justify-center text-[9px] font-bold border border-white z-10" title="Assignee 1">ZU</div>
-                        <div className="w-6 h-6 rounded-full bg-[#E8E2F7] text-[#613cbc] flex items-center justify-center text-[9px] font-bold border border-white z-0" title="Assignee 2">SH</div>
+                        <div className="w-6 h-6 rounded-full bg-[#E8E2F7] text-[#4f46e5] flex items-center justify-center text-[9px] font-bold border border-white z-10" title="Assignee 1">ZU</div>
+                        <div className="w-6 h-6 rounded-full bg-[#E8E2F7] text-[#4f46e5] flex items-center justify-center text-[9px] font-bold border border-white z-0" title="Assignee 2">SH</div>
                       </div>
                     </td>
                     <td className="px-4 py-4 text-center text-[13px] font-bold text-gray-700">{campaign.leads}</td>
                     <td className="px-4 py-4 text-center">
-                      <div className="w-10 h-10 rounded-full border-4 border-gray-100 flex items-center justify-center text-[11px] font-bold text-gray-600 mx-auto cursor-pointer hover:border-[#613cbc] transition-colors" title="View Progress Details">
+                      <div className="w-10 h-10 rounded-full border-4 border-gray-100 flex items-center justify-center text-[11px] font-bold text-gray-600 mx-auto cursor-pointer hover:border-[#4f46e5] transition-colors" title="View Progress Details">
                         0%
                       </div>
                     </td>
                     <td className="px-4 py-4 text-[13px] text-gray-600">{campaign.time}</td>
                     <td className="px-4 py-4">
                       <div className="flex justify-center space-x-2">
-                        <button onClick={handleAnalytics} className="p-1.5 bg-gray-50 border border-gray-200 rounded hover:bg-[#613cbc] hover:text-white transition-colors text-gray-500" title="View Analytics"><BarChart2 className="w-3.5 h-3.5" /></button>
-                        <button onClick={handleRefresh} className="p-1.5 bg-gray-50 border border-gray-200 rounded hover:bg-[#613cbc] hover:text-white transition-colors text-gray-500" title="Sync Campaign"><RefreshCw className="w-3.5 h-3.5" /></button>
+                        <button onClick={handleAnalytics} className="p-1.5 bg-gray-50 border border-gray-200 rounded hover:bg-[#4f46e5] hover:text-white transition-colors text-gray-500" title="View Analytics"><BarChart2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={handleRefresh} className="p-1.5 bg-gray-50 border border-gray-200 rounded hover:bg-[#4f46e5] hover:text-white transition-colors text-gray-500" title="Sync Campaign"><RefreshCw className="w-3.5 h-3.5" /></button>
                         <button onClick={() => handleDelete(campaign.id)} className="p-1.5 bg-gray-50 border border-gray-200 rounded hover:bg-red-500 hover:border-red-500 hover:text-white transition-colors text-gray-500" title="Delete Campaign"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                     </td>
