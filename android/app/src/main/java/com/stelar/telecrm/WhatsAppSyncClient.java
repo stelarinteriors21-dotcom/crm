@@ -23,7 +23,7 @@ public class WhatsAppSyncClient {
     private static final java.util.concurrent.ExecutorService sExecutor = Executors.newFixedThreadPool(4);
     private static String sLastSyncedKey = "";
     private static long sLastSyncedTime = 0;
-    public static final String DEFAULT_SERVER_URL = "https://bullet-lounge-ccd-tri.trycloudflare.com";
+    public static final String DEFAULT_SERVER_URL = "https://telecrm-clone.vercel.app";
     public static final String LAN_SERVER_URL = "http://192.168.1.2:3000";
     private static final String PREF_NAME = "stelar_crm_prefs";
     private static final String KEY_SERVER_URL = "server_url";

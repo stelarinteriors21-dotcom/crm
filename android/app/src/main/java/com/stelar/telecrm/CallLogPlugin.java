@@ -49,7 +49,7 @@ import java.util.concurrent.Executors;
 )
 public class CallLogPlugin extends Plugin {
     private static final String TAG = "CallLogPlugin";
-    private static final String DEFAULT_SERVER_URL = "https://bullet-lounge-ccd-tri.trycloudflare.com/api/mobile/call-logs";
+    private static final String DEFAULT_SERVER_URL = "https://telecrm-clone.vercel.app/api/mobile/call-logs";
 
     private Long getLongValue(PluginCall call, String name) {
         if (call == null || call.getData() == null) return null;

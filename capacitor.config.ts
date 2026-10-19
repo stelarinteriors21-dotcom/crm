@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Stelar CRM',
   webDir: 'public',
   server: {
-    url: 'https://bullet-lounge-ccd-tri.trycloudflare.com',
+    url: 'https://telecrm-clone.vercel.app',
     cleartext: true
   },
   android: {
