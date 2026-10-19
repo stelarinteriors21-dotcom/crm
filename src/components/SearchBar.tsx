@@ -102,7 +102,7 @@ export default function SearchBar({ placeholder = "Search lead" }: { placeholder
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={searchField === 'phone' ? "Search lead by phone" : searchField === 'name' ? "Search lead by name" : searchField === 'email' ? "Search lead by email" : placeholder} 
-        className="w-full pl-[88px] pr-4 py-1.5 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5] bg-gray-50/50 hover:bg-white transition-colors"
+        className="w-full pl-[105px] pr-4 py-1.5 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5] bg-gray-50/50 hover:bg-white transition-colors"
       />
     </div>
   );

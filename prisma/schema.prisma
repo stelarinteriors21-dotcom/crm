@@ -16,6 +16,7 @@ model Organization {
   automationRules     AutomationRule[]
   messageTemplates    MessageTemplate[]
   permissionTemplates PermissionTemplate[]
+  requireGps          Boolean           @default(false)
   escalationEmails    String?           @default("stelarinteriors21@gmail.com,shaji2222222@gmail.com")
   customFieldLabels   Json?             @default("{}")
   customTags          Json?             @default("[{\"name\": \"Potential lead\", \"color\": \"#3b82f6\"}, {\"name\": \"Future potential lead\", \"color\": \"#8b5cf6\"}]")

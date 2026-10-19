@@ -6,43 +6,43 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function getCurrentUser() {
-  try {
-    const cookieStore = cookies();
-    const userEmail = cookieStore.get("mock_user_email")?.value;
-    
-    if (!userEmail) return null;
-
-    const user = await prisma.user.findUnique({
-      where: { email: userEmail },
-      include: {
-        organization: true,
-      },
-    });
-
-    if (!user) {
-      // If the user doesn't exist yet, we should create the initial org and user.
-      // This helps with cold starts.
-      const org = await prisma.organization.create({
-        data: { name: "Stelar Interiors Pvt Ltd" }
-      });
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const cookieStore = cookies();
+      const userEmail = cookieStore.get("mock_user_email")?.value;
       
-      const newUser = await prisma.user.create({
-        data: {
-          email: "stelarinteriors21@gmail.com",
-          name: "Stelar Interiors",
-          password: "mockpassword",
-          organizationId: org.id
+      if (!userEmail) return null;
+
+      const normalizedEmail = userEmail.toLowerCase().trim();
+
+      const user = await prisma.user.findUnique({
+        where: { email: normalizedEmail },
+        include: {
+          organization: true,
         },
-        include: { organization: true }
       });
-      return newUser;
+
+      if (!user) {
+        // Check if the primary admin user exists instead of blindly recreating it
+        const fallbackUser = await prisma.user.findUnique({
+          where: { email: "stelarinteriors21@gmail.com" },
+          include: { organization: true }
+        });
+        if (fallbackUser) return fallbackUser;
+        return null;
+      }
+      
+      return user;
+    } catch (error) {
+      console.warn(`Auth Error (attempt ${attempt + 1}/2):`, error);
+      if (attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 350));
+        continue;
+      }
+      return null;
     }
-    
-    return user;
-  } catch (error) {
-    console.error("Auth Error:", error);
-    throw error;
   }
+  return null;
 }
 
 import { logActivity } from "./activityActions";

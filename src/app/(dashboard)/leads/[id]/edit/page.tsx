@@ -11,30 +11,42 @@ export default async function EditLeadPage({ params }: { params: { id: string } 
     redirect("/leads");
   }
 
+  const currentAltPhone = ((lead.customFields as any)?.alternatePhone || (lead as any).alternatePhone || "") as string;
+
   async function updateLead(formData: FormData) {
     "use server"
     const name = formData.get("name") as string;
     const phone = formData.get("phone") as string;
+    const alternatePhone = (formData.get("alternatePhone") as string)?.trim() || null;
+    const email = (formData.get("email") as string)?.trim() || null;
     const source = formData.get("source") as string;
     const status = formData.get("status") as string;
     const budget = formData.get("budget") as string;
     const city = formData.get("city") as string;
     const tag = formData.get("tag") as string;
 
+    const currentLead = await prisma.lead.findUnique({ where: { id: params.id } });
+    const currentCustomFields = (currentLead?.customFields as Record<string, any>) || {};
+
     await prisma.lead.update({
       where: { id: params.id },
       data: {
         name,
         phone,
+        email,
         source: source || "Manual",
         status: status || "NEW",
         budget: budget || null,
         city: city || null,
         tag: tag || null,
+        customFields: {
+          ...currentCustomFields,
+          alternatePhone: alternatePhone || null,
+        }
       }
     });
 
-    redirect("/leads");
+    redirect(`/leads/${params.id}`);
   }
 
   return (
@@ -47,9 +59,20 @@ export default async function EditLeadPage({ params }: { params: { id: string } 
           <input type="text" name="name" id="name" defaultValue={lead.name} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm" />
         </div>
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone Number *</label>
+            <input type="tel" name="phone" id="phone" defaultValue={lead.phone} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm" />
+          </div>
+          <div>
+            <label htmlFor="alternatePhone" className="block text-sm font-medium text-gray-700">Alternate Phone (Optional)</label>
+            <input type="tel" name="alternatePhone" id="alternatePhone" defaultValue={currentAltPhone} placeholder="Secondary phone" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm" />
+          </div>
+        </div>
+
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone Number</label>
-          <input type="tel" name="phone" id="phone" defaultValue={lead.phone} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm" />
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email (Optional)</label>
+          <input type="email" name="email" id="email" defaultValue={lead.email || ''} placeholder="e.g. client@example.com" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">

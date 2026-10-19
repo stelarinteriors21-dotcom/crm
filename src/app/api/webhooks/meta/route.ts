@@ -4,7 +4,7 @@ import { notifyUser } from '@/app/actions/leadActions';
 import crypto from 'crypto';
 
 // These should be set in your .env file
-const META_VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || 'telecrm_meta_secure_token_2026';
+const META_VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || 'stelar_meta_secure_token_2026';
 
 // 1. Webhook Verification (GET)
 // Meta will send a GET request here when you configure the webhook in the App Dashboard.
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
                     const existingLead = await prisma.lead.findFirst({ where: { phone, organizationId: org.id } });
                     
                     if (!existingLead) {
-                      // Round-robin auto assignment across telecallers
+                      // Round-robin auto assignment across callers
                       const callers = await prisma.user.findMany({
                         where: { 
                           organizationId: org.id, 

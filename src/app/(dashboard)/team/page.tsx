@@ -4,8 +4,15 @@ import AddEmployeeButton from "@/components/AddEmployeeButton";
 import Link from "next/link";
 import DeleteEmployeeButton from "@/components/DeleteEmployeeButton";
 import EditPasswordModal from "@/components/EditPasswordModal";
+import { getCurrentUser } from "@/app/actions/authActions";
+import { redirect } from "next/navigation";
 
 export default async function UserManagementPage() {
+  const user = await getCurrentUser();
+  if (!user || (user.role !== "ADMIN" && user.role !== "ROOT")) {
+    redirect("/dashboard");
+  }
+
   const users = await prisma.user.findMany({
     include: { permissionTemplate: true },
     orderBy: { name: "asc" }

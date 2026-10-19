@@ -30,7 +30,7 @@ export default function MCPPage() {
             <input 
               type="text" 
               readOnly 
-              value="https://mcp.telecrm.in/6a1e96a0155d5239a59e6bcf/mcp" 
+              value="https://mcp.stelar.in/6a1e96a0155d5239a59e6bcf/mcp" 
               className="flex-1 bg-gray-50 border border-gray-200 rounded-l-md px-4 py-2.5 text-sm text-gray-600 font-mono outline-none"
             />
             <button className="bg-[#4d3691] hover:bg-purple-900 text-white px-5 py-2.5 rounded-r-md text-sm font-medium flex items-center transition-colors">

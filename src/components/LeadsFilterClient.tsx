@@ -152,7 +152,7 @@ export default function LeadsFilterClient() {
             onClick={() => setShowDateMenu(!showDateMenu)}
             className={`flex items-center px-3 py-1.5 border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 ${currentDate ? 'bg-purple-50 text-[#4f46e5] border-purple-200' : 'bg-white'}`}
           >
-            📅 {currentDate ? `Date: ${currentDate}` : 'Creation Date'} <ChevronDown className="w-4 h-4 ml-1 text-gray-400" />
+            📅 {currentDate ? `Date: ${currentDate}` : 'Captured Date'} <ChevronDown className="w-4 h-4 ml-1 text-gray-400" />
           </button>
           
           {showDateMenu && (
@@ -200,7 +200,7 @@ export default function LeadsFilterClient() {
               
               <details className="group border-b border-gray-100" open>
                 <summary className="flex items-center justify-between cursor-pointer px-4 py-4 text-sm font-semibold text-gray-800 hover:bg-gray-50">
-                  Creation Date
+                  Captured Date
                   <ChevronDown className="w-4 h-4 text-gray-400 group-open:-rotate-180 transition-transform" />
                 </summary>
                 <div className="px-4 pb-4 space-y-2">

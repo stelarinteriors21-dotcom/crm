@@ -1,10 +1,14 @@
 "use client";
+import DailyReportModal from "./DailyReportModal";
+import SiteVisitExecutiveCard from "./SiteVisitExecutiveCard";
+import SiteVisitorWorkdesk from "./SiteVisitorWorkdesk";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Settings, RefreshCw, ChevronDown, CheckCircle, XCircle, TrendingUp, Users, PhoneCall, Calendar, X, Download, Clock } from "lucide-react";
+import { Settings, RefreshCw, ChevronDown, CheckCircle, XCircle, TrendingUp, Users, User, PhoneCall, Calendar, X, Download, Clock, MapPin, FileText, BarChart3, Sparkles, MessageSquare, AlertTriangle, ArrowRight, CheckCircle2, ChevronRight, PhoneForwarded } from "lucide-react";
 import { acceptLead, rejectLead, acceptAllLeads, rejectAllLeads } from "@/app/actions/leadActions";
 import { getUserActivityLogs } from "@/app/actions/activityActions";
+import { triggerSmartCall } from "@/components/SmartCallManager";
 
 type Lead = {
   id: string;
@@ -17,12 +21,13 @@ type Lead = {
 };
 
 type StatusStat = { label: string; count: number; percent: string };
-type TeamMember = { initials: string; name: string; calls: number; duration: string; revenue: string; activeMinutes?: number };
+type TeamMember = { id?: string; initials: string; name: string; calls: number; duration: string; revenue: string; activeMinutes?: number };
 
 type Props = {
   pendingLeads: Lead[];
   allLeads: Lead[];
   hotLeads?: (Lead & { computedScore?: number })[];
+  scheduledLeads?: any[];
   statusBreakdown: StatusStat[];
   teamActivity: TeamMember[];
   totalLeads: number;
@@ -38,67 +43,349 @@ const STATUS_BAR_COLORS = [
   "bg-red-500", "bg-yellow-500", "bg-teal-500", "bg-indigo-500",
 ];
 
-export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [], statusBreakdown, teamActivity, totalLeads, userId, userRole, userName }: Props) {
+export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [], scheduledLeads = [], statusBreakdown, teamActivity, totalLeads, userId, userRole, userName }: Props) {
   const [activeTab, setActiveTab] = useState<"default" | "pending">(pendingLeads.length > 0 ? "pending" : "default");
   const [pending, setPending] = useState(pendingLeads);
   const [selectedUserReport, setSelectedUserReport] = useState<string | null>(null);
+  const [showDailyReport, setShowDailyReport] = useState(false);
+  const [callerTaskTab, setCallerTaskTab] = useState<"TODAY" | "UPCOMING">("TODAY");
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [bulkLoading, setBulkLoading] = useState<"accept" | "reject" | null>(null);
 
   const isAdmin = userRole === "ADMIN" || userRole === "ROOT";
+  const isSiteVisitor = userRole === "SITE_VISITOR";
+
+  if (isSiteVisitor) {
+    return (
+      <SiteVisitorWorkdesk
+        allLeads={allLeads}
+        userId={userId}
+        userName={userName}
+      />
+    );
+  }
 
   if (!isAdmin) {
-    const myActivity = teamActivity.find(m => m.name === userName);
+    const myActivity = teamActivity.find(m => (m.id && m.id === userId) || m.name === userName);
     const myInitials = userName?.split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase() || "ME";
     
+    // Categorize Caller Tasks:
+    // Only active leads assigned to this caller
+    const callerAssigned = allLeads.filter(l => 
+      (l as any).assignedToId === userId && 
+      !['JUNK', 'LOST', 'NOT_INTERESTED', 'WON'].includes(l.status || 'NEW')
+    );
+
+    const now = new Date();
+    const nowTime = now.getTime();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).getTime();
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+    const FIVE_HOURS_MS = 5 * 60 * 60 * 1000;
+
+    const todayTasks: any[] = [];
+    const upcomingTasks: any[] = [];
+
+    callerAssigned.forEach((lead: any) => {
+      const sLower = (lead.status || '').trim().toLowerCase();
+      const cf = lead.customFields || {};
+      const isFollowUp = sLower === 'follow up' || sLower === 'followup';
+      const isConvertedOrJunk = ['won', 'advance recieved', 'pay pending', 'junk', 'lost', 'job enquiry', 'just curious', 'hold'].includes(sLower);
+
+      // Determine when this lead entered its current status
+      let statusTimestamp: number;
+      if (cf.statusChangedAt) {
+        statusTimestamp = new Date(cf.statusChangedAt).getTime();
+      } else {
+        const possibleTimestamps: number[] = [new Date(lead.createdAt).getTime()];
+        if (cf.quotation?.timestamp) possibleTimestamps.push(new Date(cf.quotation.timestamp).getTime());
+        if (cf.siteVisit?.timestamp) possibleTimestamps.push(new Date(cf.siteVisit.timestamp).getTime());
+        if (cf.siteVisit?.verifiedAt) possibleTimestamps.push(new Date(cf.siteVisit.verifiedAt).getTime());
+        if (lead.notes?.[0]?.createdAt) possibleTimestamps.push(new Date(lead.notes[0].createdAt).getTime());
+        if (lead.calls?.[0]?.createdAt) possibleTimestamps.push(new Date(lead.calls[0].createdAt).getTime());
+        statusTimestamp = Math.max(...possibleTimestamps);
+      }
+
+      // Check if lead is in a converting stage (will be changed to follow-up automatically within 5 hours)
+      const isConvertingStage = !isFollowUp && !isConvertedOrJunk;
+      const timeInStatus = nowTime - statusTimestamp;
+      const timeRemainingUntilAutoFollowUp = FIVE_HOURS_MS - timeInStatus;
+      const isAutoFollowUpWithin5Hours = isConvertingStage && timeRemainingUntilAutoFollowUp > 0;
+      const isAutoFollowUpExpired = isConvertingStage && timeRemainingUntilAutoFollowUp <= 0;
+
+      // Scheduled follow-up / site visit
+      let scheduledDueDate: number | null = null;
+      let taskType = "Follow-up Call";
+
+      if (cf.siteVisit && (cf.siteVisit.type === "Scheduled" || cf.siteVisit.type === "Rescheduled") && cf.siteVisit.date) {
+        scheduledDueDate = new Date(`${cf.siteVisit.date}T${cf.siteVisit.time || '12:00'}`).getTime();
+        taskType = "Site Visit Follow-up";
+      } else if (isFollowUp && cf.followUpDate) {
+        scheduledDueDate = new Date(cf.followUpDate).getTime();
+        taskType = "Follow-up Call";
+      }
+
+      if (isAutoFollowUpWithin5Hours) {
+        // Lead's status will be changed to follow up automatically within 5 hours -> UPCOMING!
+        const autoDueDate = statusTimestamp + FIVE_HOURS_MS;
+        const minsLeft = Math.max(1, Math.round(timeRemainingUntilAutoFollowUp / 60000));
+        const hrs = Math.floor(minsLeft / 60);
+        const mins = minsLeft % 60;
+        const timeRemainingLabel = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+
+        const autoDueDateObj = new Date(autoDueDate);
+        let hours = autoDueDateObj.getHours();
+        const minutes = autoDueDateObj.getMinutes().toString().padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+        const autoDueDateStr = `${hours}:${minutes} ${ampm}`;
+
+        upcomingTasks.push({
+          ...lead,
+          taskType: "Auto Follow-up Pending",
+          taskDueDate: autoDueDate,
+          isAutoFollowUp: true,
+          timeRemainingLabel,
+          autoDueDateStr
+        });
+      } else if (scheduledDueDate && scheduledDueDate > endOfToday) {
+        // Scheduled task for future days -> UPCOMING!
+        upcomingTasks.push({
+          ...lead,
+          taskType,
+          taskDueDate: scheduledDueDate,
+          isUpcoming: true
+        });
+      } else if (isFollowUp || isAutoFollowUpExpired || lead.assignedStatus === 'PENDING') {
+        // Scheduled for today, past due, expired auto-followup, or fresh pending -> TODAY!
+        const dueTime = scheduledDueDate || (isAutoFollowUpExpired ? (statusTimestamp + FIVE_HOURS_MS) : nowTime);
+        todayTasks.push({
+          ...lead,
+          taskType,
+          taskDueDate: dueTime,
+          isToday: true
+        });
+      }
+    });
+
+    // Sort todayTasks: earlier due dates (including past-due) first, then newly assigned
+    todayTasks.sort((a, b) => {
+      const aTime = a.taskDueDate || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+      const bTime = b.taskDueDate || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+      return aTime - bTime;
+    });
+
+    // Sort upcomingTasks: earlier due dates first
+    upcomingTasks.sort((a, b) => {
+      const aTime = a.taskDueDate ? new Date(a.taskDueDate).getTime() : 0;
+      const bTime = b.taskDueDate ? new Date(b.taskDueDate).getTime() : 0;
+      return aTime - bTime;
+    });
+
+    const activeList = callerTaskTab === "UPCOMING" ? upcomingTasks : todayTasks;
+
     return (
-      <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+      <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
         
-        {/* Total Calls Today Card */}
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+        {/* Header with Quick Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="text-sm font-bold text-gray-400 uppercase tracking-wide">Total Calls Today</div>
-            <div className="text-3xl font-black text-gray-800 mt-1">{myActivity?.calls || 0}</div>
+            <h1 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+              Caller Daily Workdesk
+            </h1>
+            <p className="text-xs text-gray-500 font-medium mt-0.5">
+              Complete your daily call tasks. Carried-over and scheduled tasks appear directly in your Today&apos;s Tasks queue.
+            </p>
           </div>
-          <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center">
-            <PhoneCall className="w-6 h-6 text-[#4f46e5]" />
+
+        </div>
+
+        {/* Quick KPI Strip */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <div id="tour-calls-stat" className="bg-white p-2.5 sm:p-4 rounded-xl border border-gray-200 shadow-2xs flex flex-col sm:flex-row items-center sm:justify-between text-center sm:text-left">
+            <div>
+              <div className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Calls</div>
+              <div className="text-base sm:text-2xl font-black text-indigo-600 mt-0.5 sm:mt-1">{myActivity?.calls || 0}</div>
+            </div>
+            <div className="hidden sm:flex w-10 h-10 rounded-xl bg-indigo-50 items-center justify-center text-indigo-600">
+              <PhoneCall className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-white p-2.5 sm:p-4 rounded-xl border border-gray-200 shadow-2xs flex flex-col sm:flex-row items-center sm:justify-between text-center sm:text-left">
+            <div>
+              <div className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Duration</div>
+              <div className="text-base sm:text-2xl font-black text-gray-800 mt-0.5 sm:mt-1">{myActivity?.duration || "0s"}</div>
+            </div>
+            <div className="hidden sm:flex w-10 h-10 rounded-xl bg-purple-50 items-center justify-center text-purple-600">
+              <Clock className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div id="tour-today-stat" className="bg-white p-2.5 sm:p-4 rounded-xl border border-gray-200 shadow-2xs flex flex-col sm:flex-row items-center sm:justify-between text-center sm:text-left">
+            <div>
+              <div className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Due Tasks</div>
+              <div className="text-base sm:text-2xl font-black text-blue-600 mt-0.5 sm:mt-1">{todayTasks.length}</div>
+            </div>
+            <div className="hidden sm:flex w-10 h-10 rounded-xl bg-blue-50 items-center justify-center text-blue-600">
+              <Calendar className="w-5 h-5" />
+            </div>
           </div>
         </div>
 
-        {/* User Card */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full border-2 border-gray-200 flex items-center justify-center bg-gray-50 text-[#4f46e5] font-bold text-lg">
-                {myInitials}
-              </div>
-              <div>
-                <div className="font-bold text-gray-900 text-lg">{userName || "Sales Person"}</div>
-                <div className="text-sm text-gray-400">Caller</div>
-              </div>
-            </div>
-            <div className="text-right text-xs text-gray-500 font-medium">
-              <div>First Call: NA</div>
-              <div>Last Call: NA</div>
-            </div>
-          </div>
+        {/* Main Workdesk: Tasks Queue */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           
-          <div className="flex divide-x divide-gray-100 p-6 text-center">
-            <div className="flex-1">
-              <div className="text-4xl font-black text-[#4f46e5] mb-1">{myActivity?.calls || 0}</div>
-              <div className="text-sm font-bold text-[#4f46e5] uppercase tracking-wide">Calls</div>
+          {/* Navigation Tabs */}
+          <div className="px-5 py-3.5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3 bg-gray-50/50">
+            <div className="flex items-center gap-1.5 bg-gray-200/60 p-1 rounded-xl">
+              <button
+                id="tour-today-tab"
+                onClick={() => setCallerTaskTab("TODAY")}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                  callerTaskTab === "TODAY" 
+                    ? "bg-white text-indigo-700 shadow-xs" 
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                <span>Today's Tasks</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                  callerTaskTab === "TODAY" ? "bg-indigo-100 text-indigo-700" : "bg-gray-300 text-gray-700"
+                }`}>
+                  {todayTasks.length}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setCallerTaskTab("UPCOMING")}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                  callerTaskTab === "UPCOMING" 
+                    ? "bg-white text-indigo-700 shadow-xs" 
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                <span>Upcoming</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                  callerTaskTab === "UPCOMING" ? "bg-indigo-100 text-indigo-700" : "bg-gray-300 text-gray-700"
+                }`}>
+                  {upcomingTasks.length}
+                </span>
+              </button>
             </div>
-            <div className="flex-1">
-              <div className="text-4xl font-black text-gray-700 mb-1">{myActivity?.duration || "0s"}</div>
-              <div className="text-sm font-bold text-gray-400 uppercase tracking-wide">Duration</div>
-            </div>
-            <div className="flex-1">
-              <div className="text-4xl font-black text-gray-700 mb-1">0</div>
-              <div className="text-sm font-bold text-gray-400 uppercase tracking-wide">Sales</div>
+
+            <div className="text-xs text-gray-400 font-medium">
+              Showing <strong>{activeList.length}</strong> client{activeList.length !== 1 ? "s" : ""}
             </div>
           </div>
+
+          {/* Tasks List */}
+          <div className="divide-y divide-gray-100">
+            {activeList.length === 0 ? (
+              <div className="py-16 text-center text-gray-400 flex flex-col items-center justify-center">
+                <CheckCircle2 className="w-12 h-12 text-emerald-500 mb-3" />
+                <h4 className="text-base font-bold text-gray-700">All clear in this queue!</h4>
+                <p className="text-xs text-gray-400 mt-1 max-w-sm">
+                  {callerTaskTab === "TODAY" 
+                    ? "You have completed all scheduled tasks for today." 
+                    : "No leads due for automatic follow-up within 5 hours or scheduled upcoming."}
+                </p>
+              </div>
+            ) : (
+              activeList.map((lead: any) => {
+                const cf = lead.customFields || {};
+                let dueDateStr = "Today";
+                if (lead.taskDueDate) {
+                  const d = new Date(lead.taskDueDate);
+                  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                  const month = months[d.getMonth()];
+                  const day = d.getDate();
+                  let hours = d.getHours();
+                  const minutes = d.getMinutes().toString().padStart(2, "0");
+                  const ampm = hours >= 12 ? "PM" : "AM";
+                  hours = hours % 12 || 12;
+                  dueDateStr = `${month} ${day}, ${hours.toString().padStart(2, "0")}:${minutes} ${ampm}`;
+                }
+
+                return (
+                  <div 
+                    key={lead.id} 
+                    className="p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-colors hover:bg-gray-50/80"
+                  >
+                    {/* Client Details */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <Link 
+                          href={`/leads/${lead.id}`} 
+                          className="font-bold text-sm text-gray-900 hover:text-indigo-600 truncate hover:underline"
+                        >
+                          {lead.name}
+                        </Link>
+                        <span className="text-xs font-bold text-gray-500 font-mono">
+                          {lead.phone || "--"}
+                        </span>
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded border bg-blue-50 text-blue-700 border-blue-100">
+                          {lead.status || "NEW"}
+                        </span>
+                      </div>
+
+                      {/* Scheduled Time & Task Type */}
+                      <div className="text-xs text-gray-500 mt-1.5 flex flex-wrap items-center gap-3">
+                        {lead.isAutoFollowUp ? (
+                          <span suppressHydrationWarning className="flex items-center gap-1.5 font-bold text-amber-800 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md text-[11px]">
+                            <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                            Auto changes to Follow-up in {lead.timeRemainingLabel} ({lead.autoDueDateStr})
+                          </span>
+                        ) : (
+                          <span suppressHydrationWarning className="flex items-center gap-1 font-bold text-gray-600">
+                            <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                            Due: {dueDateStr}
+                          </span>
+                        )}
+
+                        {cf.project_type && (
+                          <span className="text-gray-400">
+                            • Project: <strong className="text-gray-600 font-semibold">{cf.project_type}</strong>
+                          </span>
+                        )}
+
+                        {lead.source && (
+                          <span className="text-gray-400">
+                            • Source: <strong className="text-gray-600 font-semibold">{lead.source}</strong>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (lead.phone) triggerSmartCall(lead.id, lead.name, lead.phone);
+                        }}
+                        className="p-2.5 rounded-xl border border-gray-200 hover:bg-gray-100 text-gray-700 transition-colors"
+                        title="Smart Call Lead"
+                      >
+                        <PhoneForwarded className="w-4 h-4 text-emerald-600" />
+                      </button>
+
+                      <Link
+                        id={lead === activeList[0] ? "tour-first-call-btn" : undefined}
+                        href={`/leads/${lead.id}`}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition-all hover:scale-105 flex items-center gap-1.5"
+                      >
+                        <PhoneCall className="w-3.5 h-3.5" />
+                        Call & Update
+                      </Link>
+                    </div>
+
+                  </div>
+                );
+              })
+            )}
+          </div>
+
         </div>
+
       </div>
     );
   }
@@ -148,210 +435,134 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
 
   return (
     <div className="h-full bg-[#f8fafc] flex flex-col -m-3 md:-m-6 overflow-y-auto">
-
-      {/* Header */}
-      <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex items-center bg-white shrink-0">
-        <div className="flex space-x-1 md:space-x-2 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab("default")}
-            className={`pb-3 px-1 text-sm font-bold border-b-2 transition-colors ${
-              activeTab === "default" 
-                ? "border-[#4f46e5] text-white bg-[#4f46e5] rounded-t-md px-4" 
-                : "text-gray-500 hover:bg-gray-100"
-            }`}
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => setActiveTab("pending")}
-            className={`text-sm font-bold px-4 py-2 rounded-lg flex items-center transition-colors whitespace-nowrap ${
-              activeTab === "pending"
-                ? "bg-[#4f46e5] text-white shadow-sm"
-                : "text-gray-500 hover:bg-gray-100"
-            }`}
-          >
-            <Users className="w-3.5 h-3.5 mr-1.5" />
-            Pending Leads
-            {pending.length > 0 && (
-              <span className="ml-2 bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
-                {pending.length}
-              </span>
-            )}
+      <div className="p-3 md:p-6 flex justify-between items-center bg-white border-b border-gray-200">
+        <h1 className="text-xl font-bold text-gray-800">Admin Dashboard</h1>
+        <div className="flex items-center gap-2">
+          <Link href="/audit" className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center transition-colors shadow-sm border border-slate-700">
+            <BarChart3 className="w-4 h-4 mr-2 text-indigo-400" /> Executive Audit & Reports
+          </Link>
+          <button onClick={() => setShowDailyReport(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center transition-colors shadow-sm">
+            <FileText className="w-4 h-4 mr-2" /> Daily Report
           </button>
         </div>
       </div>
-
-      {/* Pending Tab */}
-      {activeTab === "pending" && (
-        <div className="p-3 md:p-6">
-          <h3 className="text-[15px] font-bold text-gray-800 mb-4 flex items-center">
-            New Leads Assigned to You
-            <span className="ml-2 bg-[#4f46e5] text-white text-[11px] font-black px-2 py-0.5 rounded-full">
-              {pending.length}
-            </span>
-          </h3>
-          {pending.length === 0 ? (
-            <div className="bg-white border border-gray-200 rounded-xl p-10 text-center shadow-sm">
-              <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-[#4f46e5]" />
-              </div>
-              <div className="text-[15px] font-bold text-gray-700">All caught up!</div>
-              <div className="text-[13px] text-gray-400 mt-1">No pending leads to accept or reject.</div>
+      <div className="p-3 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          
+        {/* Active Team Tasks Overview */}
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-6 col-span-1 md:col-span-3">
+          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="text-[13px] font-bold text-gray-800 flex items-center">
+              <CheckCircle className="w-4 h-4 mr-2 text-[#4f46e5]" />
+              Team Pipeline Overview (Active Caller Tasks)
             </div>
-          ) : (
-            <>
-              {/* Bulk Action Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 gap-2">
-                <div className="text-[13px] text-amber-800 font-semibold">
-                  {pending.length} new lead{pending.length !== 1 ? "s" : ""} waiting for your response
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handleRejectAll}
-                    disabled={!!bulkLoading}
-                    className="flex items-center px-3 py-2 text-[12px] font-bold text-gray-600 border border-gray-300 bg-white rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50 transition-colors"
-                  >
-                    <XCircle className="w-4 h-4 mr-1.5" />
-                    {bulkLoading === "reject" ? "Rejecting..." : "Reject All"}
-                  </button>
-                  <button
-                    onClick={handleAcceptAll}
-                    disabled={!!bulkLoading}
-                    className="flex items-center px-3 py-2 text-[12px] font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-1.5" />
-                    {bulkLoading === "accept" ? "Accepting..." : `Accept All ${pending.length}`}
-                  </button>
-                </div>
-              </div>
-
-            <div className="space-y-3">
-              {pending.map(lead => (
-                <div key={lead.id} className="bg-white border border-yellow-200 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex-1">
-                    <Link href={`/leads/${lead.id}`} className="font-bold text-[15px] text-[#4f46e5] hover:underline cursor-pointer">
-                      {lead.name}
-                    </Link>
-                    <div className="text-[13px] text-gray-500 mt-1 flex items-center">
-                      {lead.phone} · {lead.source ?? "Unknown Source"}
-                    </div>
-                    <div className="text-[11px] text-red-500 mt-1 font-bold">
-                      ⏱ Accept within 10 minutes or it will be reassigned.
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => {
-                        handleAccept(lead.id);
-                        window.location.href = `tel:${lead.phone}`;
-                      }}
-                      disabled={loadingId === lead.id}
-                      className="flex items-center px-4 py-2 bg-green-600 text-white text-[12px] font-bold rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
-                    >
-                      <CheckCircle className="w-4 h-4 mr-1.5" /> Call
-                    </button>
-                    <button
-                      onClick={() => handleReject(lead.id)}
-                      disabled={loadingId === lead.id}
-                      className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 border border-gray-200 text-[12px] font-bold rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50 transition-colors"
-                    >
-                      <XCircle className="w-4 h-4 mr-1.5" /> Pass
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Default Tab */}
-      {activeTab === "default" && (
-        <div className="p-3 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-
-          {/* All Leads Status Widget */}
-          <AllLeadsWidget statusBreakdown={statusBreakdown} totalLeads={totalLeads} />
-
-          {/* Hot Leads Widget */}
-          <HotLeadsWidget hotLeads={hotLeads} />
-
-          {/* Recent Leads List */}
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-              <div className="text-[13px] font-bold text-gray-800">Recent Leads</div>
-              <button className="text-[11px] text-[#4f46e5] font-bold hover:underline">View All →</button>
-            </div>
-            <div className="divide-y divide-gray-50 overflow-y-auto max-h-80">
-              {allLeads.slice(0, 15).map(lead => (
-                <div key={lead.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
-                  <div className="min-w-0 flex-1 mr-2">
-                    <Link href={`/leads/${lead.id}`} className="text-[13px] font-semibold text-[#4f46e5] cursor-pointer hover:underline truncate block">
-                      {lead.name}
-                    </Link>
-                    <div className="text-[11px] text-gray-400 truncate">{lead.phone ?? "--"} · {timeAgo(lead.createdAt)}</div>
-                  </div>
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <span className={`text-[10px] font-bold text-white px-2 py-0.5 rounded ${LEAD_STATUS_COLORS[lead.status ?? ""] ?? "bg-gray-400"}`}>
-                        {lead.status ?? "Fresh"}
-                      </span>
-                      {lead.assignedTo && (
-                      <div className="w-5 h-5 rounded-full bg-[#E8E2F7] text-[#4f46e5] hidden sm:flex items-center justify-center text-[9px] font-bold" title={lead.assignedTo.name ?? ""}>
-                        {(lead.assignedTo.name ?? "?").split(" ").map((p: string) => p[0]).join("").slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+            <div className="text-[11px] font-bold text-gray-500">
+              Only showing active stages (Follow Up, Negotiation, etc.)
             </div>
           </div>
-
-          {/* Team Activity & Performance */}
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden col-span-1 md:col-span-3">
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-              <div className="text-[13px] font-bold text-gray-800">Activity & Performance</div>
-            </div>
-            
-            <div className="p-4">
-              {teamActivity.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <div className="flex text-xs font-bold text-gray-400 uppercase tracking-wider pb-3 border-b border-gray-100">
-                    <div className="flex-1">Team Member</div>
-                    <div className="w-16 text-center">Calls</div>
-                    <div className="w-20 text-center">Duration</div>
-                    <div className="w-24 text-center">Report</div>
-                  </div>
-                  <div className="divide-y divide-gray-50">
-                    {teamActivity.map(m => (
-                      <div key={m.name} className="flex py-3 items-center text-sm">
-                        <div className="flex-1 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-purple-100 text-[#4f46e5] font-bold flex items-center justify-center text-xs">
-                            {m.initials}
-                          </div>
-                          <span className="font-semibold text-gray-700">{m.name}</span>
-                        </div>
-                        <div className="w-16 text-center text-gray-600">{m.calls}</div>
-                        <div className="w-20 text-center text-gray-600">{m.duration}</div>
-                        <div className="w-24 text-center">
-                          <button
-                            onClick={() => setSelectedUserReport(m.name)}
-                            className="text-[10px] font-bold text-[#4f46e5] hover:underline"
-                          >
-                            View Report
-                          </button>
+          <div className="p-0 max-h-[400px] overflow-y-auto">
+            {(() => {
+              const activeTeamTasks = allLeads.filter(l => !['JUNK', 'LOST', 'NOT_INTERESTED', 'WON'].includes(l.status || 'NEW'));
+              if (activeTeamTasks.length === 0) return <div className="p-8 text-center text-gray-500 text-sm font-bold">No active tasks in the pipeline.</div>;
+              return (
+                <div className="divide-y divide-gray-100">
+                  {activeTeamTasks.map((lead: any) => (
+                    <div key={lead.id} className="p-3 px-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                      <div className="min-w-0 pr-4">
+                        <div className="font-bold text-[13px] text-gray-900 truncate">{lead.name}</div>
+                        <div className="text-[11px] font-medium text-gray-500 mt-1 flex items-center gap-2 truncate">
+                          <span className="inline-block px-2 py-0.5 rounded text-blue-700 bg-blue-50 font-bold border border-blue-100">
+                            {lead.status || 'NEW'}
+                          </span>
+                          <span className="text-gray-500 font-bold flex items-center bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
+                            <User className="w-3 h-3 mr-1" />
+                            {lead.assignedTo?.name || 'Unassigned'}
+                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                      <Link 
+                        href={`/leads/${lead.id}`}
+                        className="whitespace-nowrap px-4 py-1.5 bg-[#4f46e5] text-white text-[12px] font-bold rounded-lg hover:bg-indigo-600 shadow-sm flex items-center"
+                      >
+                        <PhoneCall className="w-3 h-3 mr-1.5" /> Manage Task
+                      </Link>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <div className="text-center text-gray-400 py-4 text-sm">No activity recorded yet.</div>
-              )}
-            </div>
+              );
+            })()}
           </div>
         </div>
-      )}
 
+        {/* Site Visit Schedules */}
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-6 col-span-1 md:col-span-3">
+          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="text-[13px] font-bold text-gray-800 flex items-center">
+              <MapPin className="w-4 h-4 mr-2 text-orange-500" />
+              Site Visit Overview (Field Team Tasks)
+            </div>
+            <Link href="/site-visits" className="text-[11px] text-[#4f46e5] font-bold hover:underline">View All &rarr;</Link>
+          </div>
+          <div className="p-4 space-y-4 max-h-[600px] overflow-y-auto bg-gray-50/50 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {scheduledLeads && scheduledLeads.length > 0 ? (
+              scheduledLeads.map((lead: any) => (
+                <SiteVisitExecutiveCard key={lead.id} lead={lead} overviewMode={true} />
+              ))
+            ) : (
+              <div className="text-center py-10 bg-white rounded-xl border border-dashed border-gray-300 col-span-1 md:col-span-2">
+                <p className="text-gray-500 text-xs">No Site Visits Scheduled</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Team Activity & Performance */}
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden col-span-1 md:col-span-3">
+          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="text-[13px] font-bold text-gray-800">Activity & Performance</div>
+          </div>
+          
+          <div className="p-4">
+            {teamActivity.length > 0 ? (
+              <div className="overflow-x-auto">
+                <div className="flex text-xs font-bold text-gray-400 uppercase tracking-wider pb-3 border-b border-gray-100">
+                  <div className="flex-1">Team Member</div>
+                  <div className="w-16 text-center">Calls</div>
+                  <div className="w-20 text-center">Duration</div>
+                  <div className="w-24 text-center">Report</div>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {teamActivity.map(m => (
+                    <div key={m.name} className="flex py-3 items-center text-sm">
+                      <div className="flex-1 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-purple-100 text-[#4f46e5] font-bold flex items-center justify-center text-xs">
+                          {m.initials}
+                        </div>
+                        <span className="font-semibold text-gray-700">{m.name}</span>
+                      </div>
+                      <div className="w-16 text-center text-gray-600">{m.calls}</div>
+                      <div className="w-20 text-center text-gray-600">{m.duration}</div>
+                      <div className="w-24 text-center">
+                        <button
+                          onClick={() => setSelectedUserReport(m.name)}
+                          className="text-[10px] font-bold text-[#4f46e5] hover:underline"
+                        >
+                          View Report
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-gray-400 py-4 text-sm">No activity recorded yet.</div>
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      {showDailyReport && <DailyReportModal onClose={() => setShowDailyReport(false)} />}
+      
       {selectedUserReport && (
         <UserReportModal 
           userName={selectedUserReport} 

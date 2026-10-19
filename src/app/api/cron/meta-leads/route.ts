@@ -5,6 +5,8 @@ import { notifyUser } from '@/app/actions/leadActions';
 const META_PAGE_ACCESS_TOKEN = process.env.META_PAGE_ACCESS_TOKEN || '';
 const META_PAGE_ID = process.env.META_PAGE_ID || '';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   try {
     // Basic authorization check (you can use Vercel Cron Secret in production)

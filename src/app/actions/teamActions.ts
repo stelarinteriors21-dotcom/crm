@@ -46,18 +46,25 @@ export async function deleteEmployee(userId: string) {
   }
 
   try {
-    // Find the admin to reassign leads to
-    const admin = await prisma.user.findFirst({
-      where: { organizationId: currentUser.organizationId, role: { in: ["ADMIN", "ROOT"] } },
+    // Find an active caller (TELECALLER) to reassign leads to, NEVER admin!
+    const caller = await prisma.user.findFirst({
+      where: { 
+        organizationId: currentUser.organizationId, 
+        role: "TELECALLER",
+        id: { not: userId } 
+      },
       orderBy: { id: "asc" }
     });
     
     // We must handle relations before deleting the user.
     await prisma.$transaction([
-      // Reassign leads to the admin
+      // Reassign leads to an active caller or unassigned (never admin!)
       prisma.lead.updateMany({
         where: { assignedToId: userId, organizationId: currentUser.organizationId },
-        data: { assignedToId: admin ? admin.id : null, assignedStatus: admin ? "PENDING" : "UNASSIGNED" }
+        data: { 
+          assignedToId: caller ? caller.id : null, 
+          assignedStatus: caller ? "PENDING" : "UNASSIGNED" 
+        }
       }),
       // Delete tasks
       prisma.task.deleteMany({

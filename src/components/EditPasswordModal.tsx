@@ -55,13 +55,13 @@ export default function EditPasswordModal({ userId, userName }: EditPasswordModa
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-3 sm:p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col animate-in fade-in zoom-in-95 duration-150">
             
             {/* Header */}
-            <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-amber-50/50">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-amber-50/50 shrink-0">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold shrink-0">
                   <KeyRound className="w-4 h-4" />
                 </div>
                 <div>
@@ -70,15 +70,16 @@ export default function EditPasswordModal({ userId, userName }: EditPasswordModa
                 </div>
               </div>
               <button 
+                type="button"
                 onClick={() => setIsOpen(false)} 
-                className="p-1 hover:bg-gray-200/60 rounded-lg text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-1 hover:bg-gray-200/60 rounded-lg text-gray-400 hover:text-gray-600 transition-colors shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">New Password</label>
                 <div className="relative">

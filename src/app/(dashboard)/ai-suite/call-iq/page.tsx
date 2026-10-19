@@ -31,8 +31,8 @@ export default function CallIQPage() {
                      <h2 className="text-7xl font-bold text-yellow-400 leading-none tracking-tighter">AI</h2>
                      <h3 className="text-4xl font-bold text-white mb-2">Is Now in</h3>
                      <div className="bg-white text-indigo-900 px-4 py-1 rounded inline-flex items-center text-3xl font-bold tracking-tight">
-                        <span className="w-6 h-6 bg-indigo-900 text-white rounded-sm flex items-center justify-center text-xs mr-2">T</span>
-                        telecrm
+                        <span className="w-6 h-6 bg-indigo-900 text-white rounded-sm flex items-center justify-center text-xs mr-2">S</span>
+                        Stelar CRM
                      </div>
                   </div>
                   
@@ -54,10 +54,10 @@ export default function CallIQPage() {
 
             {/* Thumbnail Header Text Overlay */}
             <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/60 to-transparent z-20 flex items-start">
-               <div className="w-8 h-8 rounded-full bg-purple-900 flex items-center justify-center mr-3 text-white font-bold text-xs">T</div>
+               <div className="w-8 h-8 rounded-full bg-purple-900 flex items-center justify-center mr-3 text-white font-bold text-xs">S</div>
                <div>
-                 <div className="text-white font-bold text-sm">telecrm is Now AI Enabled - Introducing AI Agent for Call Audits | telecrm Feature Update</div>
-                 <div className="text-gray-300 text-xs">telecrm</div>
+                 <div className="text-white font-bold text-sm">Stelar CRM is Now AI Enabled - Introducing AI Agent for Call Audits | CRM Feature Update</div>
+                 <div className="text-gray-300 text-xs">Stelar CRM</div>
                </div>
             </div>
 

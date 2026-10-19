@@ -6,7 +6,7 @@ import { logout } from "@/app/actions/authActions";
 import Link from "next/link";
 import ManageLeavesModal from "./ManageLeavesModal";
 
-export default function UserDropdown({ initials, name, email }: { initials: string, name: string, email: string }) {
+export default function UserDropdown({ initials, name, email, isAdmin = false }: { initials: string, name: string, email: string, isAdmin?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showLeavesModal, setShowLeavesModal] = useState(false);
 
@@ -40,13 +40,15 @@ export default function UserDropdown({ initials, name, email }: { initials: stri
                 >
                   <Calendar className="w-4 h-4 mr-2 text-gray-500" /> My Leaves
                 </button>
-                <Link
-                  href="/settings"
-                  className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium mb-1"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <Settings className="w-4 h-4 mr-2 text-gray-500" /> Settings
-                </Link>
+                {isAdmin && (
+                  <Link
+                    href="/settings"
+                    className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium mb-1"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <Settings className="w-4 h-4 mr-2 text-gray-500" /> Settings
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"

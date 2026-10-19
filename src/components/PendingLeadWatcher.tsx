@@ -1,109 +1,78 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { getPendingLeadForUser, acceptLead, escalateLead, getCallers, assignLeadToUser, acceptAndScheduleCall } from "@/app/actions/leadActions";
-import { saveFcmToken } from "@/app/actions/authActions";
-import { User, Phone, MapPin, Loader2, AlertCircle, Users } from "lucide-react";
-import { PushNotifications } from "@capacitor/push-notifications";
+import { getPendingLeadForUser, acceptLead, escalateLead, acceptAndScheduleCall, dismissRnrAlert, snoozeRnrLead } from "@/app/actions/leadActions";
+import { User, Phone, MapPin, Loader2, AlertCircle, Clock, PhoneMissed } from "lucide-react";
+import { triggerSmartCall } from "@/components/SmartCallManager";
+import { AlertNotificationManager } from "@/lib/alertNotifier";
 
 export default function PendingLeadWatcher({ userId }: { userId?: string }) {
   const [pendingLead, setPendingLead] = useState<any>(null);
   const [flashing, setFlashing] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(600);
-  const [callers, setCallers] = useState<any[]>([]);
-  const [selectedAssignee, setSelectedAssignee] = useState("");
-
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    // Initialize Push Notifications
-    const initPush = async () => {
-      try {
-        // Check if we are running inside the custom native Webview (telecrm-android-sync)
-        if (typeof window !== 'undefined' && (window as any).AndroidApp) {
-          if (userId && (window as any).AndroidApp.setUserId) { (window as any).AndroidApp.setUserId(userId); } const token = (window as any).AndroidApp.getFcmToken();
-          if (token) {
-            await saveFcmToken(token);
-          }
-          return; // Skip capacitor setup
-        }
-
-        let permStatus = await PushNotifications.checkPermissions();
-        if (permStatus.receive === 'prompt') {
-          permStatus = await PushNotifications.requestPermissions();
-        }
-        if (permStatus.receive !== 'granted') return;
-
-        await PushNotifications.createChannel({ id: 'default', name: 'Default', description: 'General Notifications', importance: 5, visibility: 1 });
-
-        await PushNotifications.register();
-
-        PushNotifications.addListener('registration', async (token) => {
-          await saveFcmToken(token.value);
-        });
-
-        PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          console.log('Push received: ', notification);
-        });
-      } catch (e) {
-        console.log("Push notifications not supported on web/simulator", e);
-      }
-    };
-    initPush();
-  }, []);
 
   useEffect(() => {
     let pollingTimer: NodeJS.Timeout;
 
     const checkLead = async () => {
       if (processing) return;
-      const lead = await getPendingLeadForUser();
-      
-      if (lead) {
-        setPendingLead(lead);
-        const assignedTime = new Date(lead.assignedAt || lead.createdAt).getTime();
-        const now = Date.now();
-        const diffSecs = Math.floor((now - assignedTime) / 1000);
-        setTimeLeft(Math.max(0, 600 - diffSecs));
-
-        // Fetch callers if this is an admin alert
-        if (lead.escalationLevel >= 2 && callers.length === 0) {
-          const fetchedCallers = await getCallers();
-          setCallers(fetchedCallers);
-          if (fetchedCallers.length > 0) {
-             setSelectedAssignee(fetchedCallers[0].id);
+      if (typeof window !== 'undefined' && localStorage.getItem("active_crm_call")) return;
+      try {
+        const lead = await getPendingLeadForUser();
+        
+        if (lead) {
+          setPendingLead(lead);
+          if ((lead as any).isRnrAlert) {
+            setTimeLeft(600);
+          } else {
+            const assignedTime = new Date((lead as any).assignedAt || (lead as any).createdAt).getTime();
+            const now = Date.now();
+            const diffSecs = Math.floor((now - assignedTime) / 1000);
+            setTimeLeft(Math.max(0, 600 - diffSecs));
           }
+        } else {
+          setPendingLead(null);
+          AlertNotificationManager.dismissEqualAlert();
         }
-      } else {
-        setPendingLead(null); if(audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+      } catch (err) {
+        // Silently swallow fetchServerAction abort or network jitter
+        console.warn("PendingLeadWatcher background check skipped:", err);
       }
     };
 
     checkLead();
-    pollingTimer = setInterval(checkLead, 5000);
+    pollingTimer = setInterval(checkLead, 35000);
 
     return () => clearInterval(pollingTimer);
-  }, [processing, callers.length]);
+  }, [processing]);
 
   useEffect(() => {
-    if (!pendingLead) return;
-
-    if (!audioRef.current) {
-      audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-      audioRef.current.loop = false;
+    if (!pendingLead) {
+      AlertNotificationManager.dismissEqualAlert();
+      return;
     }
+
+    const isRnr = pendingLead?.isRnrAlert === true;
+    const title = isRnr ? "🔔 RNR REDIAL ALERT!" : "🚨 NEW LEAD ASSIGNED!";
+    const body = isRnr 
+      ? `Time to redial ${pendingLead.name || 'Client'} (${pendingLead.phone || ''})`
+      : `New lead assigned: ${pendingLead.name || 'Client'} (${pendingLead.phone || ''})`;
+    const tag = isRnr ? "rnr_alert" : "pending_lead";
+    const titleFlashText = isRnr ? "RNR REDIAL DUE!" : "NEW LEAD ASSIGNED!";
+
+    // Trigger initial notification burst immediately
+    AlertNotificationManager.dispatchEqualAlert({ title, body, tag, titleFlashText });
 
     const flashTimer = setInterval(() => {
       setFlashing(f => !f);
-      if (audioRef.current) {
-        audioRef.current.play().catch(e => {
-          console.log("Audio autoplay blocked");
-        });
-      }
-    }, 2000);
+      AlertNotificationManager.dispatchEqualAlert({ title, body, tag, titleFlashText });
+    }, 4000);
 
-    return () => clearInterval(flashTimer);
+    return () => {
+      clearInterval(flashTimer);
+      AlertNotificationManager.dismissEqualAlert();
+    };
   }, [pendingLead]);
 
   useEffect(() => {
@@ -114,7 +83,11 @@ export default function PendingLeadWatcher({ userId }: { userId?: string }) {
         if (prev <= 1) {
           clearInterval(timer);
           if (prev === 1) {
-            handleReject(pendingLead.id, true);
+            if (pendingLead?.isRnrAlert) {
+              handlePassRnr();
+            } else {
+              handleReject(pendingLead.id, true);
+            }
           }
           return 0;
         }
@@ -125,11 +98,41 @@ export default function PendingLeadWatcher({ userId }: { userId?: string }) {
     return () => clearInterval(timer);
   }, [pendingLead]);
 
+  const handlePassRnr = async () => {
+    if (!pendingLead || processing) return;
+    setProcessing(true);
+    await dismissRnrAlert(pendingLead.id, pendingLead.rnrSlotId);
+    setPendingLead(null);
+    AlertNotificationManager.dismissEqualAlert();
+    setProcessing(false);
+  };
+
+  const handleSnoozeRnr = async () => {
+    if (!pendingLead || processing) return;
+    setProcessing(true);
+    await snoozeRnrLead(pendingLead.id, 15);
+    setPendingLead(null);
+    AlertNotificationManager.dismissEqualAlert();
+    setProcessing(false);
+  };
+
+  const handleCallRnr = async () => {
+    if (!pendingLead || processing) return;
+    setProcessing(true);
+    await dismissRnrAlert(pendingLead.id, pendingLead.rnrSlotId);
+    const targetLead = { ...pendingLead };
+    setPendingLead(null);
+    AlertNotificationManager.dismissEqualAlert();
+    setProcessing(false);
+    triggerSmartCall(targetLead.id, targetLead.name, targetLead.phone);
+  };
+
   const handleAccept = async () => {
     if (!pendingLead || processing) return;
     setProcessing(true);
     await acceptLead(pendingLead.id);
-    setPendingLead(null); if(audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+    setPendingLead(null);
+    AlertNotificationManager.dismissEqualAlert();
     setProcessing(false);
   };
 
@@ -137,7 +140,11 @@ export default function PendingLeadWatcher({ userId }: { userId?: string }) {
     if (!pendingLead || processing) return;
     setProcessing(true);
     await acceptAndScheduleCall(pendingLead.id, 15);
-    setPendingLead(null); if(audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("followup_scheduled", { detail: { leadId: pendingLead.id } }));
+    }
+    setPendingLead(null);
+    AlertNotificationManager.dismissEqualAlert();
     setProcessing(false);
   };
 
@@ -145,15 +152,8 @@ export default function PendingLeadWatcher({ userId }: { userId?: string }) {
     if (processing) return;
     setProcessing(true);
     await escalateLead(id, !auto);
-    setPendingLead(null); if(audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
-    setProcessing(false);
-  };
-
-  const handleAssign = async () => {
-    if (!pendingLead || !selectedAssignee || processing) return;
-    setProcessing(true);
-    await assignLeadToUser(pendingLead.id, selectedAssignee);
-    setPendingLead(null); if(audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+    setPendingLead(null);
+    AlertNotificationManager.dismissEqualAlert();
     setProcessing(false);
   };
 
@@ -161,30 +161,36 @@ export default function PendingLeadWatcher({ userId }: { userId?: string }) {
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
-  const isAdminAlert = pendingLead.escalationLevel >= 2;
+  const isRnrAlert = pendingLead?.isRnrAlert === true;
 
   return (
-    <div className={`fixed inset-0 z-[100] flex items-center justify-center transition-colors duration-300 backdrop-blur-sm ${flashing ? 'bg-red-500/30' : 'bg-black/40'}`}>
-      <div className={`bg-white w-full max-w-xl rounded-2xl shadow-2xl p-8 transform transition-transform duration-200 ${flashing ? 'scale-105' : 'scale-100'}`}>
+    <div className={`fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 transition-colors duration-300 backdrop-blur-sm ${flashing ? (isRnrAlert ? 'bg-amber-500/30' : 'bg-emerald-600/40') : 'bg-black/40'}`}>
+      <div className={`bg-white w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 transform transition-transform duration-200 ${flashing ? 'scale-105' : 'scale-100'}`}>
         
         <div className="flex items-center justify-center mb-6">
-          <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center animate-pulse">
-            <AlertCircle className="w-8 h-8" />
+          <div className={`w-16 h-16 ${isRnrAlert ? 'bg-amber-100 text-amber-600' : 'bg-red-100 text-red-600'} rounded-full flex items-center justify-center animate-pulse`}>
+            {isRnrAlert ? <PhoneMissed className="w-8 h-8" /> : <AlertCircle className="w-8 h-8" />}
           </div>
         </div>
 
-        {isAdminAlert ? (
+        {isRnrAlert ? (
           <>
-            <h2 className="text-2xl font-black text-center text-red-600 mb-2">ESCALATION ALERT!</h2>
-            <p className="text-center text-red-500 font-bold mb-6">
-              This lead was ignored/rejected by ALL sales people! Please re-assign it.
+            <div className="flex justify-center mb-3">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                <Clock className="w-3.5 h-3.5 mr-1 text-amber-600" />
+                {pendingLead.rnrSlotLabel || "Scheduled Redial Slot"}
+              </span>
+            </div>
+            <h2 className="text-2xl font-black text-center text-gray-900 mb-2">🔔 RNR REDIAL ALERT!</h2>
+            <p className="text-center text-amber-700 font-semibold mb-6 text-sm">
+              This lead was unanswered previously. Scheduled 2-hour redial slot is now active!
             </p>
           </>
         ) : (
           <>
             <h2 className="text-2xl font-black text-center text-gray-900 mb-2">NEW LEAD ASSIGNED!</h2>
             <p className="text-center text-gray-600 mb-6 font-medium">
-              You must accept or reject this lead to continue working.
+              You have a new incoming lead to call. Accept, snooze, or pass.
             </p>
           </>
         )}
@@ -199,10 +205,18 @@ export default function PendingLeadWatcher({ userId }: { userId?: string }) {
                </div>
              </div>
              <div className="text-right">
-               <div className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Source</div>
-               <div className="inline-block bg-purple-100 text-purple-800 text-xs font-bold px-2.5 py-1 rounded-full">
-                 {pendingLead.source}
+               <div className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">
+                 {isRnrAlert ? "Current Status" : "Source"}
                </div>
+               {isRnrAlert ? (
+                 <div className="inline-block bg-amber-100 text-amber-900 text-xs font-extrabold px-2.5 py-1 rounded-full border border-amber-300">
+                   RNR (Unanswered)
+                 </div>
+               ) : (
+                 <div className="inline-block bg-purple-100 text-purple-800 text-xs font-bold px-2.5 py-1 rounded-full">
+                   {pendingLead.source}
+                 </div>
+               )}
              </div>
           </div>
           
@@ -230,48 +244,26 @@ export default function PendingLeadWatcher({ userId }: { userId?: string }) {
           <div className="text-center font-bold text-red-600 tabular-nums text-lg mb-2">
             Time Remaining: {minutes}:{seconds.toString().padStart(2, '0')}
           </div>
-          
-          {isAdminAlert && callers.length > 0 ? (
-            <div className="flex items-center space-x-3 mb-4 p-4 border border-purple-100 rounded-lg bg-purple-50">
-              <Users className="w-5 h-5 text-[#4f46e5]" />
-              <select 
-                value={selectedAssignee}
-                onChange={(e) => setSelectedAssignee(e.target.value)}
-                className="flex-1 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#4f46e5] focus:border-[#4f46e5] block p-2.5"
-              >
-                {callers.map(caller => (
-                  <option key={caller.id} value={caller.id}>{caller.name}</option>
-                ))}
-              </select>
-              <button 
-                onClick={handleAssign}
-                disabled={processing}
-                className="bg-[#4f46e5] hover:bg-purple-800 text-white font-bold py-2.5 px-4 md:px-6 rounded-lg transition-colors disabled:opacity-50"
-              >
-                {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Assign'}
-              </button>
-            </div>
-          ) : null}
 
             <div className="grid grid-cols-3 gap-3">
               <button 
-                onClick={() => handleReject(pendingLead.id)}
+                onClick={isRnrAlert ? handlePassRnr : () => handleReject(pendingLead.id)}
                 disabled={processing}
                 className="col-span-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold py-3 rounded-xl transition-colors disabled:opacity-50 text-xs sm:text-sm border border-red-200"
               >
                 {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'PASS'}
               </button>
               <button 
-                onClick={handleCallIn15}
+                onClick={isRnrAlert ? handleSnoozeRnr : handleCallIn15}
                 disabled={processing}
                 className="col-span-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 transition-colors disabled:opacity-50 text-xs sm:text-sm"
               >
                 {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'SNOOZE'}
               </button>
               <button 
-                onClick={() => {
+                onClick={isRnrAlert ? handleCallRnr : () => {
                   handleAccept();
-                  window.location.href = `tel:${pendingLead.phone}`;
+                  triggerSmartCall(pendingLead.id, pendingLead.name, pendingLead.phone);
                 }}
                 disabled={processing}
                 className="col-span-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-500/30 transition-colors disabled:opacity-50 text-xs sm:text-sm"

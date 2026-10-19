@@ -11,8 +11,8 @@ export const SCORE_FACTORS = {
   scoreBudget: {
     stage: "Qualification",
     label: "Budget",
-    levels: ["None", "1L - 3L", "3L - 6L", "6L - 9L", "9L - 12L", "12L - 15L", "15L+"],
-    scores:  [0,      4.16,      8.33,      12.50,     16.66,      20.83,       25.00],
+    levels: ["None", "1L - 5L", "5L - 10L", "10L - 20L", "20L+"],
+    scores:  [0,       6.25,      12.50,      18.75,       25.00],
   },
   scoreTimeline: {
     stage: "Qualification",

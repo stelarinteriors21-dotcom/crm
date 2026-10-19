@@ -103,7 +103,7 @@ export default function WhatsAppLogForm({ leadId, phone }: { leadId: string, pho
             value={msg}
             onChange={(e) => setMsg(e.target.value)}
             placeholder="Type a WhatsApp message to send..." 
-            className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-green-500 min-h-[60px] resize-none" 
+            className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-green-500 min-h-[90px] resize-y leading-relaxed" 
             required 
           />
         </div>

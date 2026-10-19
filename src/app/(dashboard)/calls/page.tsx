@@ -3,9 +3,13 @@ import prisma from "@/lib/prisma";
 import CallsView from "@/components/CallsView";
 import { getCurrentUser } from "@/app/actions/authActions";
 import SearchBar from "@/components/SearchBar";
+import { redirect } from "next/navigation";
 
 export default async function CallsPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
   const user = await getCurrentUser();
+  if (user?.role === "SITE_VISITOR") {
+    redirect("/site-visits");
+  }
   const query = typeof searchParams.query === "string" ? searchParams.query : undefined;
   
   // Enforce RBAC for callers
@@ -42,27 +46,8 @@ export default async function CallsPage({ searchParams }: { searchParams: { [key
 
   return (
     <div className="h-full bg-white flex flex-col -m-3 md:-m-6 relative overflow-hidden">
-      
-      {/* Sub-header Toolbar */}
-      <div className="h-14 px-4 md:px-6 border-b border-gray-100 flex items-center shrink-0 justify-between gap-4">
-        <h1 className="text-[17px] font-bold text-gray-800 flex items-center whitespace-nowrap">
-          My Calls <RefreshCw className="w-4 h-4 ml-3 text-[#4f46e5] cursor-pointer" />
-        </h1>
-        
-        <div className="flex-1 max-w-md">
-           <SearchBar placeholder="Search callers by name or phone..." />
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <button className="flex items-center px-3 py-1.5 text-gray-600 bg-gray-50 border border-gray-200 rounded text-sm hover:bg-gray-100 transition-colors">
-            <Filter className="w-4 h-4 mr-1.5" /> Filters
-          </button>
-        </div>
-      </div>
-
-      {/* Main Split View */}
+      {/* Main Split View with Responsive Mobile Toolbar */}
       <CallsView leads={leads} />
-
     </div>
   );
 }

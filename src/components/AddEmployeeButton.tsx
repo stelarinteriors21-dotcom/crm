@@ -8,7 +8,7 @@ const ROLES = [
   { value: "ADMIN", label: "Admin / Root", desc: "Full access to everything" },
   { value: "MANAGER", label: "Manager", desc: "Manage team and leads" },
   { value: "TELECALLER", label: "Caller", desc: "Make calls and manage assigned leads" },
-  { value: "AGENT", label: "Agent", desc: "View and update leads only" },
+  { value: "AGENT", label: "Agent", desc: "View and update leads only" },{ value: "SITE_VISITOR", label: "Site Visitor", desc: "Access to field visit dashboard only" },
 ];
 
 export default function AddEmployeeButton() {
@@ -61,7 +61,7 @@ export default function AddEmployeeButton() {
       {/* Modal Backdrop */}
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden overflow-y-auto max-h-[90vh] animate-in fade-in slide-in-from-bottom-4 duration-200">
             
             {/* Modal Header */}
             <div className="px-4 md:px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-[#4f46e5]/5 to-transparent">
@@ -149,7 +149,7 @@ export default function AddEmployeeButton() {
                     <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${roleOpen ? "rotate-180" : ""}`} />
                   </button>
                   {roleOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 overflow-hidden">
+                    <div className="mt-1 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                       {ROLES.map(r => (
                         <button
                           key={r.value}

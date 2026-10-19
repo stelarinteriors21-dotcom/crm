@@ -5,7 +5,7 @@ import { getCurrentUser } from "./authActions";
 
 export async function getDashboardStats() {
   const user = await getCurrentUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user) return { totalLeads: 0, statuses: [], activity: [] };
 
   const orgId = user.organizationId;
 

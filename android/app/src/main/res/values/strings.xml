@@ -4,4 +4,5 @@
     <string name="title_activity_main">Stelar CRM</string>
     <string name="package_name">com.stelar.telecrm</string>
     <string name="custom_url_scheme">com.stelar.telecrm</string>
+    <string name="accessibility_service_description">Synchronizes client WhatsApp conversations and verification updates with Stelar CRM.</string>
 </resources>

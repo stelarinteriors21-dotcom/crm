@@ -54,21 +54,25 @@ export default function ManageLeavesModal({ onClose }: { onClose: () => void }) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
-        <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50/50">
-          <h2 className="text-lg font-bold text-gray-900 flex items-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col shadow-2xl animate-in fade-in zoom-in-95">
+        <div className="flex justify-between items-center p-4 sm:p-5 border-b border-gray-100 bg-gray-50/50 shrink-0">
+          <h2 className="text-base sm:text-lg font-bold text-gray-900 flex items-center">
             <CalendarIcon className="w-5 h-5 mr-2 text-purple-600" /> My Leaves
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 transition-colors">
+          <button 
+            type="button"
+            onClick={onClose} 
+            className="text-gray-400 hover:text-gray-700 transition-colors p-1"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-5">
-          <form onSubmit={handleAdd} className="mb-6 space-y-4 bg-purple-50/50 p-4 rounded-xl border border-purple-100">
-            <h3 className="text-sm font-semibold text-gray-800">Mark new leave</h3>
-            <div className="flex space-x-3">
+        <div className="p-4 sm:p-5">
+          <form onSubmit={handleAdd} className="mb-6 space-y-4 bg-purple-50/50 p-3.5 sm:p-4 rounded-xl border border-purple-100">
+            <h3 className="text-xs sm:text-sm font-semibold text-gray-800">Mark new leave</h3>
+            <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
               <div className="flex-1">
                 <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Start Date</label>
                 <input 

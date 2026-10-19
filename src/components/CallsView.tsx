@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, Filter, AtSign, ChevronRight, Star, PhoneCall, Phone, Mail, MapPin, User, Calendar } from "lucide-react";
+import { RefreshCw, Search, Filter, AtSign, ChevronRight, Star, PhoneCall, Phone, Mail, MapPin, User, Calendar } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import { triggerSmartCall } from "@/components/SmartCallManager";
+import SearchBar from "@/components/SearchBar";
+import { updateCallNote } from "@/app/actions/callActions";
 
 export default function CallsView({ leads }: { leads: any[] }) {
   const [isMounted, setIsMounted] = React.useState(false);
@@ -14,9 +17,35 @@ export default function CallsView({ leads }: { leads: any[] }) {
   const selectedLead = leads.find(l => l.id === selectedLeadId);
 
   return (
-    <div className="flex flex-col md:flex-row flex-1 overflow-hidden h-full">
-      {/* Left Panel: Calls List */}
-      <div className={`${showMobileDetail ? "hidden md:flex" : "flex"} w-full md:w-[380px] border-r border-gray-200 flex-col bg-white shrink-0 h-full overflow-y-auto`}>
+    <div className="flex flex-col flex-1 overflow-hidden h-full">
+      {/* Sub-header Toolbar: Responsive and hides on mobile when drilldown into lead */}
+      <div className={`${showMobileDetail ? "hidden md:flex" : "flex"} flex-col sm:flex-row h-auto sm:h-14 px-3 sm:px-4 md:px-6 py-2.5 sm:py-0 border-b border-gray-100 sm:items-center shrink-0 justify-between gap-2.5 sm:gap-3 bg-white`}>
+        <div className="flex items-center justify-between w-full sm:w-auto">
+          <h1 className="text-[16px] sm:text-[17px] font-bold text-gray-800 flex items-center whitespace-nowrap">
+            My Calls <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-2.5 text-[#4f46e5] cursor-pointer hover:rotate-180 transition-transform duration-500" onClick={() => window.location.reload()} />
+          </h1>
+          <div className="flex items-center space-x-2 sm:hidden">
+            <button className="flex items-center px-2.5 py-1 text-gray-600 bg-gray-50 border border-gray-200 rounded text-xs hover:bg-gray-100 transition-colors">
+              <Filter className="w-3.5 h-3.5 mr-1" /> Filters
+            </button>
+          </div>
+        </div>
+        
+        <div className="w-full sm:flex-1 sm:max-w-md">
+           <SearchBar placeholder="Search callers by name or phone..." />
+        </div>
+
+        <div className="hidden sm:flex items-center space-x-2">
+          <button className="flex items-center px-3 py-1.5 text-gray-600 bg-gray-50 border border-gray-200 rounded text-sm hover:bg-gray-100 transition-colors">
+            <Filter className="w-4 h-4 mr-1.5" /> Filters
+          </button>
+        </div>
+      </div>
+
+      {/* Main Split View */}
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden h-full">
+        {/* Left Panel: Calls List */}
+        <div className={`${showMobileDetail ? "hidden md:flex" : "flex"} w-full md:w-[380px] border-r border-gray-200 flex-col bg-white shrink-0 h-full overflow-y-auto`}>
         {leads.map((lead, i) => {
           const isSelected = selectedLeadId === lead.id;
           return (
@@ -31,13 +60,17 @@ export default function CallsView({ leads }: { leads: any[] }) {
                 </div>
                 <div className="flex items-center shrink-0 space-x-2">
                   {lead.phone && (
-                    <a 
-                      href={`tel:${lead.phone.replace(/\s/g, "")}`} 
-                      onClick={(e) => e.stopPropagation()}
+                    <button 
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        triggerSmartCall(lead.id, lead.name, lead.phone);
+                      }}
                       className="w-8 h-8 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-sm"
+                      title="Smart Call"
                     >
                       <Phone className="w-4 h-4" />
-                    </a>
+                    </button>
                   )}
                   <div className="flex items-center text-gray-400 text-[11px] font-medium shrink-0 ml-1">
                     <div className="w-6 h-6 rounded-full bg-[#E8E2F7] text-[#4f46e5] flex items-center justify-center text-[10px] font-bold mr-1">
@@ -106,12 +139,17 @@ export default function CallsView({ leads }: { leads: any[] }) {
                         </svg>
                         WhatsApp
                       </a>
-                      <a
-                        href={`tel:${selectedLead.phone?.replace(/\s/g, "")}`}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (selectedLead?.phone) {
+                            triggerSmartCall(selectedLead.id, selectedLead.name, selectedLead.phone);
+                          }
+                        }}
                         className="flex-1 sm:flex-none justify-center items-center flex px-4 py-2 bg-[#10b981] text-white text-sm font-bold rounded-lg shadow-sm hover:bg-emerald-600 transition-colors"
                       >
                         <Phone className="w-4 h-4 mr-2" /> Call Now
-                      </a>
+                      </button>
                     </>
                   )}
                 </div>
@@ -175,7 +213,8 @@ export default function CallsView({ leads }: { leads: any[] }) {
         )}
       </div>
     </div>
-  );
+  </div>
+);
 }
 
 function CallLogItem({ call }: { call: any }) {
@@ -187,8 +226,6 @@ function CallLogItem({ call }: { call: any }) {
 
   const handleSave = async () => {
     setSaving(true);
-    // Dynamic import to avoid circular dependencies if any, or just import at the top
-    const { updateCallNote } = await import("@/app/actions/callActions");
     await updateCallNote(call.id, noteText);
     setSaving(false);
     setIsEditing(false);
@@ -200,9 +237,16 @@ function CallLogItem({ call }: { call: any }) {
         <span className="font-bold text-gray-800 text-sm" suppressHydrationWarning>
           {isMounted ? format(new Date(call.createdAt), 'dd MMM yyyy, hh:mm aa') : ''}
         </span>
-        <span className="text-xs font-bold px-2 py-1 bg-green-100 text-green-800 rounded">
-          {call.duration} seconds
-        </span>
+        <div className="flex items-center space-x-2">
+          {call.recordingUrl && (
+            <span className="text-[11px] font-bold px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded flex items-center">
+              🎙️ Recording
+            </span>
+          )}
+          <span className="text-xs font-bold px-2 py-1 bg-green-100 text-green-800 rounded">
+            {call.duration} seconds
+          </span>
+        </div>
       </div>
       
       {(!isEditing && call.notes) && (

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { acceptLead, rejectLead } from '@/app/actions/leadActions';
+import { triggerSmartCall } from '@/components/SmartCallManager';
 
 export default function PendingLeadsBanner({ initialLeads }: { initialLeads: any[] }) {
   const [leads, setLeads] = useState(initialLeads);
@@ -41,7 +42,7 @@ export default function PendingLeadsBanner({ initialLeads }: { initialLeads: any
                 <button
                   onClick={() => {
                     handleAccept(lead.id);
-                    window.location.href = `tel:${lead.phone}`;
+                    triggerSmartCall(lead.id, lead.name, lead.phone);
                   }}
                   disabled={loadingId === lead.id}
                   className="flex items-center px-3 py-1.5 bg-green-600 text-white text-[11px] font-bold rounded hover:bg-green-700 disabled:opacity-50 transition-colors"

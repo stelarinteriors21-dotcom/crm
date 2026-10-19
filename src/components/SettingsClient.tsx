@@ -1,12 +1,14 @@
 "use client";
 import { useState } from "react";
-import { updateEscalationEmails, updateCustomFieldLabels, updateCustomTags } from "@/app/actions/settingsActions";
+import { updateEscalationEmails, updateCustomFieldLabels, updateCustomTags, updateRequireGps } from "@/app/actions/settingsActions";
 import { Loader2, Save, Mail, FileText, Plus, Trash2, Tag } from "lucide-react";
 
-export default function SettingsClient({ initialEmails, initialLabels, initialTags }: { initialEmails: string, initialLabels: Record<string, string>, initialTags?: any[] }) {
+export default function SettingsClient({ initialEmails, initialLabels, initialTags, initialRequireGps }: { initialEmails: string, initialLabels: Record<string, string>, initialTags?: any[], initialRequireGps?: boolean }) {
   const [emails, setEmails] = useState(initialEmails);
   const [labels, setLabels] = useState(initialLabels);
   const [tags, setTags] = useState<any[]>(initialTags || []);
+  const [requireGps, setRequireGps] = useState(initialRequireGps || false);
+  const [savingGps, setSavingGps] = useState(false);
   
   const [loadingEmails, setLoadingEmails] = useState(false);
   const [savedEmails, setSavedEmails] = useState(false);
@@ -39,6 +41,19 @@ export default function SettingsClient({ initialEmails, initialLabels, initialTa
     setLoadingLabels(false);
     setSavedLabels(true);
     setTimeout(() => setSavedLabels(false), 3000);
+  };
+
+
+  const handleToggleGps = async () => {
+    setSavingGps(true);
+    try {
+      await updateRequireGps(!requireGps);
+      setRequireGps(!requireGps);
+    } catch (err) {
+      alert("Failed to update GPS setting");
+    } finally {
+      setSavingGps(false);
+    }
   };
 
   const handleSaveTags = async () => {
@@ -77,6 +92,28 @@ export default function SettingsClient({ initialEmails, initialLabels, initialTa
 
   return (
     <div className="space-y-8">
+      
+      {/* GPS Settings */}
+      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <div className="flex items-center mb-4">
+          <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 mr-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          </div>
+          <div className="flex-1">
+            <h2 className="text-lg font-bold text-gray-900">Require GPS for Site Visits</h2>
+            <p className="text-sm text-gray-500">Site visitors must have their GPS location recorded when verifying OTPs.</p>
+          </div>
+          <button 
+            onClick={handleToggleGps}
+            disabled={savingGps}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${requireGps ? 'bg-indigo-600' : 'bg-gray-200'}`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${requireGps ? 'translate-x-6' : 'translate-x-1'}`} />
+          </button>
+        </div>
+      </div>
+
+
       {/* Escalation Emails Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center space-x-3 mb-4">

@@ -38,12 +38,15 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100 w-full max-w-md">
-        <div className="flex justify-center mb-6">
-          <div className="w-12 h-12 bg-[#4f46e5] rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-2xl leading-none">S</span>
+        <div className="flex flex-col items-center justify-center mb-6">
+          <div className="w-20 h-20 rounded-2xl overflow-hidden flex items-center justify-center bg-white shadow-sm border border-gray-100 p-1 mb-2">
+            <img src="/logo.png" alt="Stelar Interiors" className="w-full h-full object-contain" />
           </div>
+          <span className="font-extrabold text-[11px] text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full tracking-wider uppercase">
+            Official CRM
+          </span>
         </div>
-        <h1 className="text-2xl font-bold text-center text-gray-900 mb-6">Sign In to Stelar CRM</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-6">Sign In to Stelar CRM</h1>
         
         {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4">{error}</div>}
         

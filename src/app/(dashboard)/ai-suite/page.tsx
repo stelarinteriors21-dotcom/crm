@@ -68,7 +68,7 @@ export default function AISuitePage() {
             AI Suite
           </h1>
           <p className="text-sm text-gray-500 mt-1 pl-9">
-            Every telecrm AI feature in one place. Open any of them to set it up or change how it works.
+            Every Stelar CRM AI feature in one place. Open any of them to set it up or change how it works.
           </p>
         </div>
 
@@ -133,7 +133,7 @@ export default function AISuitePage() {
               <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-4 shadow-sm">
                 <div className="flex items-center px-4 py-3 border-b border-gray-100">
                   <span className="text-xs font-bold text-gray-400 w-16">TO</span>
-                  <span className="text-sm font-medium text-gray-800 flex-1">support@telecrm.in</span>
+                  <span className="text-sm font-medium text-gray-800 flex-1">support@stelar.in</span>
                   <button className="text-gray-400 hover:text-gray-600"><Copy className="w-4 h-4" /></button>
                 </div>
                 <div className="flex items-center px-4 py-3">

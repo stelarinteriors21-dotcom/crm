@@ -9,7 +9,7 @@ export async function getOrganizationSettings() {
   
   return prisma.organization.findUnique({
     where: { id: user.organizationId },
-    select: { escalationEmails: true, customFieldLabels: true, customTags: true }
+    select: { escalationEmails: true, customFieldLabels: true, customTags: true, requireGps: true }
   });
 }
 
@@ -78,4 +78,15 @@ export async function addCustomTag(tagName: string) {
   revalidatePath('/settings');
   revalidatePath('/leads');
   return { success: true, color: randomColor };
+}
+
+export async function updateRequireGps(requireGps: boolean) {
+  const user = await getCurrentUser();
+  if (!user || !user.organizationId) throw new Error("Unauthorized");
+  
+  await prisma.organization.update({
+    where: { id: user.organizationId },
+    data: { requireGps }
+  });
+  revalidatePath('/settings');
 }

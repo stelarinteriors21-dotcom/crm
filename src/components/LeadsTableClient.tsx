@@ -6,6 +6,7 @@ import Link from "next/link";
 import * as XLSX from "xlsx";
 import LeadActionsMenu from "@/components/LeadActionsMenu";
 import { calculateLeadScore, getScoreColor } from "@/lib/leadScore";
+import { triggerSmartCall } from "@/components/SmartCallManager";
 import { updateLeadTag } from "@/app/actions/leadActions";
 import { addCustomTag } from "@/app/actions/settingsActions";
 import { LEAD_STATUS_OPTIONS, LEAD_STATUS_COLORS } from "@/lib/constants";
@@ -23,7 +24,6 @@ const BASE_COLUMNS = [
   { id: "typeOfSpace", label: "Type of space", type: "🏢", defaultVisible: false },
   { id: "alternatePhone", label: "Alternate Phone", type: "📱", defaultVisible: false },
     { id: "capturedOn", label: "Captured On", type: "📅", defaultVisible: true },
-  { id: "createdOn", label: "Created On", type: "📅", defaultVisible: true },
   { id: "facebookAd", label: "Facebook Ad", type: "T", defaultVisible: true },
   { id: "facebookCampaign", label: "Facebook Campaign", type: "T", defaultVisible: false },
   { id: "leadSource", label: "Lead Source", type: "🌐", defaultVisible: true },
@@ -46,8 +46,8 @@ const CallHistoryModal = ({ phone, onClose }: { phone: string, onClose: () => vo
   }, [phone]);
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         <div className="p-4 border-b flex justify-between items-center bg-gray-50">
           <h3 className="font-bold text-gray-800 flex items-center">
             <History className="w-4 h-4 mr-2 text-[#4f46e5]" />
@@ -72,6 +72,14 @@ const CallHistoryModal = ({ phone, onClose }: { phone: string, onClose: () => vo
                     </span>
                  </div>
                  {log.notes && <p className="mt-2 text-gray-600 text-xs italic bg-gray-50 p-2 rounded">"{log.notes}"</p>}
+                 {log.recordingUrl && (
+                   <div className="mt-2">
+                     <audio controls className="w-full h-8">
+                       <source src={log.recordingUrl} type="audio/mpeg" />
+                       Your browser does not support audio element.
+                     </audio>
+                   </div>
+                 )}
                </div>
              ))}
            </div>
@@ -82,9 +90,64 @@ const CallHistoryModal = ({ phone, onClose }: { phone: string, onClose: () => vo
   )
 }
 
+const INTERNAL_SYSTEM_KEYS = new Set([
+  "sitevisit",
+  "sitevisithistory",
+  "site_visit",
+  "site_visit_history",
+  "site visit date",
+  "site_visit_date",
+  "quotation",
+  "quotationhistory",
+  "quotation_history",
+  "quotationsentat",
+  "quotationfollowupactive",
+  "quotationapproved",
+  "revisionalertactive",
+  "followupdate",
+  "followup_date",
+  "followupcount",
+  "statuschangedat",
+  "status_changed_at",
+  "converted",
+  "convertedhistory",
+  "junk",
+  "junkhistory",
+  "projectstage",
+  "project_stage",
+  "bulkimported",
+  "bulk_imported",
+  "importbatchid",
+  "import_batch_id",
+  "importedat",
+  "imported_at",
+  "inactivity48halert",
+  "inactivity48h_alert",
+]);
+
+function isInternalCustomField(key: string): boolean {
+  if (!key) return true;
+  const normalized = key.toLowerCase().replace(/[\s_\-]/g, "");
+  if (INTERNAL_SYSTEM_KEYS.has(normalized)) return true;
+  if (
+    normalized.includes("quotation") ||
+    normalized.includes("sitevisit") ||
+    normalized.includes("followup") ||
+    normalized.includes("statuschanged") ||
+    normalized.includes("converted") ||
+    normalized.includes("junk") ||
+    normalized.includes("batch") ||
+    normalized.includes("alert") ||
+    normalized.includes("history")
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export default function LeadsTableClient({ leads, totalLeads, customTags = [], isAdmin = false }: { leads: Lead[], totalLeads: number, customTags?: any[], isAdmin?: boolean }) {
   const [historyPhone, setHistoryPhone] = React.useState<string | null>(null);
-  // Extract custom fields from leads
+  // Extract custom fields from leads, excluding internal metadata keys
   const customFieldKeys = new Set<string>();
   let customLabels: Record<string, string> = {};
   
@@ -92,8 +155,12 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
     if (l.organization?.customFieldLabels) {
       customLabels = { ...customLabels, ...(l.organization.customFieldLabels as Record<string, string>) };
     }
-    if (l.customFields) {
-      Object.keys(l.customFields as object).forEach(k => customFieldKeys.add(k));
+    if (l.customFields && typeof l.customFields === "object") {
+      Object.entries(l.customFields as Record<string, any>).forEach(([k, val]) => {
+        if (isInternalCustomField(k)) return;
+        if (typeof val === "object" && val !== null) return;
+        customFieldKeys.add(k);
+      });
     }
   });
 
@@ -101,12 +168,12 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
     id: `custom_${k}`,
     label: customLabels[k] || k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
     type: "⚡",
-    defaultVisible: true
+    defaultVisible: false
   }));
 
   const allColumns = [...BASE_COLUMNS, ...dynamicColumns];
 
-  const [columnOrder, setColumnOrder] = useState<string[]>([]);
+  const [columnOrder, setColumnOrder] = useState<string[]>(() => BASE_COLUMNS.map(c => c.id));
   useEffect(() => {
     const saved = localStorage.getItem('leadsColumnOrder');
     let savedOrder: string[] = [];
@@ -114,11 +181,17 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
       try { savedOrder = JSON.parse(saved); } catch (e) {}
     }
     
+    // Purge any column IDs that no longer exist (e.g. removed 'createdOn', internal custom fields)
+    savedOrder = savedOrder.filter(id => allColumns.some(c => c.id === id));
+
     // Merge: keep saved order, append any new columns that aren't in saved order
     const newColumns = allColumns.map(c => c.id).filter(id => !savedOrder.includes(id));
     const finalOrder = savedOrder.length > 0 ? [...savedOrder, ...newColumns] : allColumns.map(c => c.id);
     
     setColumnOrder(finalOrder);
+    if (saved) {
+      localStorage.setItem('leadsColumnOrder', JSON.stringify(finalOrder));
+    }
   }, [leads.length]); // Re-run if leads length changes to capture new custom fields
 
   const [visibleCols, setVisibleCols] = useState<string[]>(
@@ -147,13 +220,14 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
     const rows = filteredLeads.map((l: any) => ({
       "Name": l.name || "",
       "Phone": l.phone || "",
+      "Alternate Phone": (l.customFields as any)?.alternatePhone || (l as any).alternatePhone || "",
       "Email": l.email || "",
       "Status": l.status || "",
       "Source": l.source || "",
       "City": l.city || "",
-      "Budget": l.approximateBudget || "",
+      "Budget": l.approximateBudget || l.budget || "",
       "Assignee": l.assignedTo?.name || "",
-      "Created On": l.createdAt ? new Date(l.createdAt).toLocaleDateString() : "",
+      "Captured On": (l.capturedOn || l.createdAt) ? new Date(l.capturedOn || l.createdAt).toLocaleDateString() : "",
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
@@ -169,16 +243,17 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
     doc.text("Leads Report", 14, 16);
     autoTable(doc, {
       startY: 22,
-      head: [["Name", "Phone", "Status", "Source", "City", "Budget", "Assignee", "Created On"]],
+      head: [["Name", "Phone", "Alt Phone", "Status", "Source", "City", "Budget", "Assignee", "Captured On"]],
       body: filteredLeads.map((l: any) => [
         l.name || "",
         l.phone || "",
+        (l.customFields as any)?.alternatePhone || (l as any).alternatePhone || "",
         l.status || "",
         l.source || "",
         l.city || "",
-        l.approximateBudget || "",
+        l.approximateBudget || l.budget || "",
         l.assignedTo?.name || "",
-        l.createdAt ? new Date(l.createdAt).toLocaleDateString() : "",
+        (l.capturedOn || l.createdAt) ? new Date(l.capturedOn || l.createdAt).toLocaleDateString() : "",
       ]),
       styles: { fontSize: 8 },
       headStyles: { fillColor: [97, 60, 188] },
@@ -263,21 +338,21 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 md:px-6 py-3 border-b border-gray-100 bg-white gap-3">
-        <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
-          <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between px-3 sm:px-4 md:px-6 py-2 sm:py-3 border-b border-gray-100 bg-white gap-2 flex-wrap sm:flex-nowrap">
+        <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <input 
               type="checkbox" 
               checked={filteredLeads.length > 0 && selectedLeads.length === filteredLeads.length}
               onChange={toggleSelectAll}
-              className="rounded border-gray-300 text-[#4f46e5] focus:ring-[#4f46e5]" 
+              className="rounded border-gray-300 text-[#4f46e5] focus:ring-[#4f46e5] w-3.5 h-3.5 sm:w-4 sm:h-4" 
             />
-            <span className="bg-gray-100 px-2 py-0.5 rounded text-xs flex items-center shrink-0">
-              {selectedLeads.length > 0 ? `${selectedLeads.length} selected` : `1-${filteredLeads.length} of ${totalLeads}`} <ChevronRight className="w-3 h-3 ml-1" />
+            <span className="bg-gray-100 px-2 py-0.5 rounded text-[11px] sm:text-xs font-semibold flex items-center shrink-0">
+              {selectedLeads.length > 0 ? `${selectedLeads.length} selected` : `1-${filteredLeads.length} of ${totalLeads}`}
             </span>
           </div>
 
-          <div className="relative" ref={colMenuRef}>
+          <div className="relative hidden md:block" ref={colMenuRef}>
             <button 
               onClick={() => setShowColMenu(!showColMenu)}
               className="flex items-center hover:text-gray-900 focus:outline-none"
@@ -346,7 +421,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                    <label className="block text-xs font-medium text-gray-500 mb-1">Update Status</label>
                    <select name="status" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#4f46e5]">
                      <option value="">Select new status...</option>
-                      {LEAD_STATUS_OPTIONS.map(opt => (
+                      {LEAD_STATUS_OPTIONS.filter(opt => !['Fresh', 'RNR', 'Contacted'].includes(opt)).map(opt => (
                         <option key={opt} value={opt} className="bg-white text-gray-900 font-medium">{opt}</option>
                       ))}
                    </select>
@@ -381,45 +456,89 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
         </div>
 
       {/* ── MOBILE CARD VIEW ── */}
-      <div className="flex-1 overflow-auto md:hidden divide-y divide-gray-100">
+      <div className="flex-1 overflow-auto md:hidden p-2 sm:p-3 space-y-2 bg-gray-50/50">
         {leads.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-12 text-gray-400">
             <div className="text-4xl mb-3">📭</div>
             <div className="font-semibold text-gray-600">No leads yet</div>
             <div className="text-sm mt-1">Add your first lead to get started</div>
           </div>
-        ) : filteredLeads.map((lead) => (
-          <div key={lead.id} className="px-4 py-3 bg-white flex items-center justify-between gap-3">
-            <Link href={`/leads/${lead.id}`} className="flex-1 min-w-0">
-              <div className="font-semibold text-gray-800 text-[15px] truncate">{lead.name}</div>
-              <div className="text-sm text-gray-500 truncate mt-0.5">{lead.phone || '--'}</div>
-              <div className="flex items-center gap-2 mt-1.5">
-                <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${LEAD_STATUS_COLORS[lead.status ?? ""] ?? "bg-gray-100 text-gray-700"}`}>
-                  {lead.status ?? "Fresh"}
-                </span>
-                  {lead.source && (
-                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded ${
-                      lead.source.toLowerCase().includes('whatsapp') ? 'bg-green-100 text-green-800' :
-                      lead.source.toLowerCase().includes('facebook') ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
-                      {lead.source}
+        ) : filteredLeads.map((lead) => {
+          const isSelected = selectedLeads.includes(lead.id);
+          return (
+            <div 
+              key={lead.id} 
+              className={`p-3 bg-white rounded-xl border transition-all shadow-2xs flex items-center justify-between gap-2.5 ${
+                isSelected ? 'border-[#4f46e5] ring-1 ring-[#4f46e5]/30 bg-purple-50/20' : 'border-gray-200/80 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                <input 
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    toggleSelectLead(lead.id);
+                  }}
+                  className="rounded border-gray-300 text-[#4f46e5] focus:ring-[#4f46e5] w-4 h-4 mt-0.5 shrink-0" 
+                />
+                <Link 
+                  href={`/leads/${lead.id}`}
+                  className="flex-1 min-w-0 cursor-pointer block"
+                >
+                  <div className="font-bold text-gray-900 text-[14px] truncate flex items-center justify-between">
+                    <span>{lead.name}</span>
+                    <span className="text-gray-400 text-xs font-normal">›</span>
+                  </div>
+                  <div className="text-xs text-gray-500 font-medium truncate mt-0.5">
+                    {lead.phone || '--'}
+                    {((lead.customFields as any)?.alternatePhone || (lead as any).alternatePhone) && (
+                      <span className="text-indigo-600 font-semibold ml-2">
+                        · Alt: {(lead.customFields as any)?.alternatePhone || (lead as any).alternatePhone}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${LEAD_STATUS_COLORS[lead.status ?? ""] ?? "bg-gray-100 text-gray-700"}`}>
+                      {lead.status ?? "Fresh"}
                     </span>
-                  )}
+                    {lead.source && (
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                        lead.source.toLowerCase().includes('whatsapp') ? 'bg-green-100 text-green-800' :
+                        lead.source.toLowerCase().includes('facebook') ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {lead.source}
+                      </span>
+                    )}
+                    {lead.city && (
+                      <span className="text-[10px] text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-full truncate max-w-[100px]">
+                        📍 {lead.city}
+                      </span>
+                    )}
+                  </div>
+                </Link>
               </div>
-            </Link>
-            {lead.phone && (
-              <a
-                href={`tel:${lead.phone}`}
-                className="shrink-0 w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-md transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 8V5z" />
-                </svg>
-              </a>
-            )}
-          </div>
-        ))}
+
+              {lead.phone && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    triggerSmartCall(lead.id, lead.name, lead.phone);
+                  }}
+                  className="shrink-0 w-10 h-10 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-full flex items-center justify-center shadow-sm transition-all active:scale-95"
+                  title="Smart Call"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 8V5z" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* ── DESKTOP TABLE VIEW ── */}
@@ -443,12 +562,12 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                     case 'capturedOn': return <React.Fragment key="capturedOn"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Captured On ⇕</th></React.Fragment>;
                     case 'city': return <React.Fragment key="city"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">City</th></React.Fragment>;
                                         case 'siteVisitDate': return <React.Fragment key="siteVisitDate"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Site Visit Date ⇕</th></React.Fragment>;
-                    case 'createdOn': return <React.Fragment key="createdOn"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Created On ▴</th></React.Fragment>;
                     case 'email': return <React.Fragment key="email"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Email</th></React.Fragment>;
                     case 'typeOfSpace': return <React.Fragment key="typeOfSpace"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Type of space</th></React.Fragment>;
                     case 'facebookAd': return <React.Fragment key="facebookAd"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Facebook Ad</th></React.Fragment>;
                     case 'facebookCampaign': return <React.Fragment key="facebookCampaign"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Facebook Campaign</th></React.Fragment>;
-                    case 'phone': return <React.Fragment key="phone"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Phone</th></React.Fragment>;
+                    case 'phone': return <React.Fragment key="phone"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Phone</th></React.Fragment>;
+                    case 'alternatePhone': return <React.Fragment key="alternatePhone"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Alternate Phone</th></React.Fragment>;
                     default: 
                       if (colId.startsWith('custom_')) {
                         const col = allColumns.find(c => c.id === colId);
@@ -473,9 +592,13 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                   {columnOrder.filter(id => isCol(id)).map(colId => {
                     switch(colId) {
                       case 'name': return <React.Fragment key="name"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
-                    <Link href={`/leads/${lead.id}`} className="text-[#4f46e5] font-medium hover:underline">
-                      {lead.name}
-                    </Link>
+                      <Link
+                        href={`/leads/${lead.id}`}
+                        className="text-[#4f46e5] font-semibold hover:underline text-left cursor-pointer"
+                        title="Open Full Details"
+                      >
+                        {lead.name}
+                      </Link>
                   </td></React.Fragment>;
                       case 'status': return <React.Fragment key="status"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
                     <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${LEAD_STATUS_COLORS[lead.status ?? ""] ?? "bg-gray-100 text-gray-700"}`}>
@@ -589,7 +712,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                     )}
                     </div>
                   </td></React.Fragment>;
-                      case 'capturedOn': return <React.Fragment key="capturedOn"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
+                      case 'capturedOn': return <React.Fragment key="capturedOn"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600" title={new Date(lead.capturedOn || lead.createdAt).toLocaleString()}>
                     {lead.capturedOn ? timeAgo(lead.capturedOn) : timeAgo(lead.createdAt)}
                   </td></React.Fragment>;
                       case 'city': return <React.Fragment key="city"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
@@ -597,9 +720,6 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                   </td></React.Fragment>;
                                             case 'siteVisitDate': return <React.Fragment key="siteVisitDate"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
                     {lead.customFields?.['Site Visit Date'] || lead.customFields?.['Site_Visit_Date'] || '--'}
-                  </td></React.Fragment>;
-                      case 'createdOn': return <React.Fragment key="createdOn"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
-                    {timeAgo(lead.createdAt)}
                   </td></React.Fragment>;
                       case 'email': return <React.Fragment key="email"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
                     {lead.email || '--'}
@@ -613,14 +733,14 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                       case 'facebookCampaign': return <React.Fragment key="facebookCampaign"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600">
                     --
                   </td></React.Fragment>;
-                      case 'phone': return <React.Fragment key="phone"><td className="px-4 py-2.5 whitespace-nowrap text-gray-900 font-medium">
+                      case 'phone': return <React.Fragment key="phone"><td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-900 font-medium">
   <div className="flex items-center justify-between">
   <span>{lead.phone}</span>
   <div className="flex space-x-2 ml-4">
     <button onClick={() => setHistoryPhone(lead.phone)} title="Call History" className="p-1 bg-purple-50 text-[#4f46e5] rounded hover:bg-purple-100 flex items-center justify-center">
       <History className="w-3.5 h-3.5" />
     </button>
-                      <a href={`tel:${lead.phone}`} title="Call Lead" className="p-1 bg-green-50 text-green-600 rounded hover:bg-green-100 flex items-center justify-center">📞</a>
+                      <button type="button" onClick={() => triggerSmartCall(lead.id, lead.name, lead.phone)} title="Smart Call" className="p-1 bg-green-50 text-green-600 rounded hover:bg-green-100 flex items-center justify-center">📞</button>
                       <a href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" title="WhatsApp" className="p-1 bg-green-50 text-emerald-500 rounded hover:bg-green-100 flex items-center justify-center">💬</a>
                       <div className="relative flex items-center justify-center">
                         <LeadActionsMenu leadId={lead.id} />
@@ -629,12 +749,35 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                   
 </div>
 </td></React.Fragment>;
+                      case 'alternatePhone': {
+                        const altPhone = (lead.customFields as any)?.alternatePhone || (lead as any).alternatePhone;
+                        return (
+                          <React.Fragment key="alternatePhone">
+                            <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-900 font-medium">
+                              {altPhone ? (
+                                <div className="flex items-center justify-between">
+                                  <span>{altPhone}</span>
+                                  <div className="flex space-x-2 ml-4">
+                                    <button onClick={() => setHistoryPhone(altPhone)} title="Call History" className="p-1 bg-purple-50 text-[#4f46e5] rounded hover:bg-purple-100 flex items-center justify-center">
+                                      <History className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button type="button" onClick={() => triggerSmartCall(lead.id, `${lead.name} (Alt)`, altPhone)} title="Smart Call" className="p-1 bg-green-50 text-green-600 rounded hover:bg-green-100 flex items-center justify-center">📞</button>
+                                    <a href={`https://wa.me/${String(altPhone).replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" title="WhatsApp" className="p-1 bg-green-50 text-emerald-500 rounded hover:bg-green-100 flex items-center justify-center">💬</a>
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-gray-400">--</span>
+                              )}
+                            </td>
+                          </React.Fragment>
+                        );
+                      }
                       default:
                         if (colId.startsWith('custom_')) {
                           const rawKey = colId.replace('custom_', '');
                           return (
                             <td key={colId} className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-700">
-                              {lead.customFields?.[rawKey] || "-"}
+                              {typeof lead.customFields?.[rawKey] === "object" && lead.customFields?.[rawKey] !== null ? JSON.stringify(lead.customFields?.[rawKey]) : String(lead.customFields?.[rawKey] || "-")}
                             </td>
                           );
                         }

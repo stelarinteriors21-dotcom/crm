@@ -26,17 +26,9 @@ export default function GettingStartedPage() {
           </button>
           
           <button className="w-full text-left px-3 py-2 text-[13px] font-medium text-gray-600 hover:bg-gray-50 rounded-lg flex items-center">
-            <span className="w-4 h-4 rounded-full border-2 border-gray-200 mr-2"></span> IVR / Cloud Telephony
+            <span className="w-4 h-4 rounded-full border-2 border-gray-200 mr-2"></span> IVR / Cloud Calling
           </button>
           
-          <button className="w-full text-left px-3 py-2 text-[13px] font-medium text-gray-600 hover:bg-gray-50 rounded-lg flex items-center">
-            <span className="w-4 h-4 rounded-full border-2 border-gray-200 mr-2"></span> Integrations & Lead Sources
-          </button>
-          
-          <button className="w-full text-left px-3 py-2 text-[13px] font-medium text-gray-600 hover:bg-gray-50 rounded-lg flex items-center">
-            <span className="w-4 h-4 rounded-full border-2 border-gray-200 mr-2"></span> Automation & Workflows
-          </button>
-
           <button className="w-full text-left px-3 py-2 text-[13px] font-medium text-gray-600 hover:bg-gray-50 rounded-lg flex items-center">
             <span className="w-4 h-4 rounded-full border-2 border-gray-200 mr-2"></span> Reports & Analytics
           </button>
@@ -83,14 +75,14 @@ export default function GettingStartedPage() {
             Hi Stelar, <span className="text-[#4f46e5] ml-2">Happy Thursday!</span>
           </h1>
           <p className="text-gray-500 text-sm mb-10 max-w-lg leading-relaxed">
-            Here's where you'll set up telecrm. Walk through it at your own pace — every step you finish gets ticked off.
+            Here's where you'll set up your CRM. Walk through it at your own pace — every step you finish gets ticked off.
           </p>
 
           <div className="flex items-center mb-6">
             <Rocket className="w-6 h-6 text-red-400 mr-2 transform -rotate-12" />
             <div>
               <h2 className="text-lg font-bold text-gray-800">All you need to get started</h2>
-              <p className="text-gray-500 text-xs">The essentials — set up your team, your leads, and customise telecrm to fit how you sell.</p>
+              <p className="text-gray-500 text-xs">The essentials — set up your team, your leads, and customise your CRM to fit how you sell.</p>
             </div>
           </div>
 
@@ -176,7 +168,7 @@ export default function GettingStartedPage() {
                 <div className="w-10 h-10 rounded-lg bg-red-100 mr-4"></div>
                 <div>
                   <h3 className="font-bold text-gray-800 text-[15px]">Customize for your business</h3>
-                  <p className="text-gray-500 text-xs mt-0.5">Make telecrm sound and behave like your team already does.</p>
+                  <p className="text-gray-500 text-xs mt-0.5">Make your CRM sound and behave like your team already does.</p>
                 </div>
               </div>
               <div className="text-xs text-gray-500 font-medium flex items-center">

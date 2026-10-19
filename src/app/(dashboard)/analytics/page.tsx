@@ -1,7 +1,14 @@
 import prisma from "@/lib/prisma";
 import { TrendingUp, Clock, PhoneCall, Calendar } from "lucide-react";
+import { getCurrentUser } from "@/app/actions/authActions";
+import { redirect } from "next/navigation";
 
 export default async function AnalyticsPage() {
+  const user = await getCurrentUser();
+  if (!user || (user.role !== "ADMIN" && user.role !== "ROOT")) {
+    redirect("/dashboard");
+  }
+
   const users = await prisma.user.findMany({
     include: {
       calls: true,
@@ -77,7 +84,7 @@ export default async function AnalyticsPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-white">
             <tr>
-              <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Telecaller</th>
+              <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Caller</th>
               <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Assigned Leads</th>
               <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Calls</th>
               <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Avg Duration</th>

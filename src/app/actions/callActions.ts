@@ -29,6 +29,25 @@ export async function logManualCall(leadId: string, durationMin: number, notes: 
     await prisma.callLog.create({
       data: { leadId, userId: user.id, duration: durationMin * 60, notes, recordingUrl: null }
     });
+
+    const lead = await prisma.lead.findUnique({
+      where: { id: leadId },
+      select: { customFields: true, escalationLevel: true }
+    });
+    if (lead) {
+      const cf = (lead.customFields as any) || {};
+      if (cf.inactivity48hAlert) {
+        delete cf.inactivity48hAlert;
+        await prisma.lead.update({
+          where: { id: leadId },
+          data: {
+            customFields: cf,
+            ...(lead.escalationLevel === 2 ? { escalationLevel: 0 } : {})
+          }
+        });
+      }
+    }
+
     revalidatePath('/leads');
     revalidatePath('/dashboard');
     return { success: true };

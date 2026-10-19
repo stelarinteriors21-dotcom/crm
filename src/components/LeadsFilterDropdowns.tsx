@@ -44,7 +44,7 @@ export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [
     "Fresh", "RNR", "Job enquiry", "Contacted", "interested",
     "just curious", "follow up", "Junk", "Whatsapp Chat", "Hot",
     "Hold", "Site visit Schedules", "Site visit Recheduled", "Site visit done",
-    "Quotation shared", "Estimated Quotation", "final Quotation",
+    "Estimate without site visit", "Quotation Requested", "Quotation shared", "Estimated Quotation", "Revised Quotation", "final Quotation",
     "Advance recieved", "Pay Pending", "Won", "Lost"
   ];
 
@@ -58,13 +58,36 @@ export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [
     fetchCallers();
   }, []);
 
+  // Sync state if searchParams change externally (e.g. back button navigation)
+  useEffect(() => {
+    const s = searchParams.get("status");
+    setSelectedStatus(s ? s.split(",") : []);
+
+    const c = searchParams.get("city");
+    setSelectedCity(c ? c.split(",") : []);
+
+    setStartDate(searchParams.get("startDate") || "");
+    setEndDate(searchParams.get("endDate") || "");
+    setSelectedAssignee(searchParams.get("assigned") || "");
+    setSelectedTag(searchParams.get("tag") || "All");
+  }, [searchParams]);
+
+  const toggleMenu = (menu: "assignee" | "tag" | "status" | "city" | "date") => {
+    setAssigneeOpen(menu === "assignee" ? !assigneeOpen : false);
+    setTagMenuOpen(menu === "tag" ? !tagMenuOpen : false);
+    setStatusMenuOpen(menu === "status" ? !statusMenuOpen : false);
+    setCityMenuOpen(menu === "city" ? !cityMenuOpen : false);
+    setDateMenuOpen(menu === "date" ? !dateMenuOpen : false);
+  };
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setAssigneeOpen(false); setCityMenuOpen(false);
-        setTagMenuOpen(false); setCityMenuOpen(false);
-        setStatusMenuOpen(false); setCityMenuOpen(false);
-        setDateMenuOpen(false); setCityMenuOpen(false);
+        setAssigneeOpen(false);
+        setTagMenuOpen(false);
+        setStatusMenuOpen(false);
+        setCityMenuOpen(false);
+        setDateMenuOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -146,25 +169,21 @@ export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [
   };
 
   return (
-    <div className="flex space-x-2" ref={dropdownRef}>
+    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0 relative z-50" ref={dropdownRef}>
       {/* Assignee Filter */}
-      <div className="relative">
+      <div className="relative shrink-0">
         <button 
-          onClick={() => {
-            setAssigneeOpen(!assigneeOpen);
-            setTagMenuOpen(false); setCityMenuOpen(false);
-            setStatusMenuOpen(false); setCityMenuOpen(false);
-            setDateMenuOpen(false); setCityMenuOpen(false);
-          }}
-          className={`flex items-center text-xs font-medium border rounded px-3 py-1.5 transition-colors ${
+          type="button"
+          onClick={() => toggleMenu("assignee")}
+          className={`flex items-center text-xs font-medium border rounded px-2.5 sm:px-3 py-1.5 transition-colors whitespace-nowrap shrink-0 ${
             selectedAssignee ? 'bg-purple-50 text-[#4f46e5] border-purple-200' : 'text-gray-600 border-gray-200 hover:bg-gray-50'
           }`}
         >
-          Assignee {selectedAssignee && selectedAssignee !== "all" && "(1)"} <ChevronDown className="w-3 h-3 ml-2" />
+          Assignee {selectedAssignee && selectedAssignee !== "all" && "(1)"} <ChevronDown className="w-3 h-3 ml-1.5" />
         </button>
         
         {assigneeOpen && (
-          <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col">
+          <div className="absolute top-full left-0 mt-1 w-64 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-lg shadow-2xl z-[100] overflow-hidden flex flex-col">
             <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <span className="text-sm font-semibold text-gray-700">Assignees</span>
               <span className="text-xs text-[#4f46e5] cursor-pointer" onClick={() => handleAssigneeChange("all")}>Clear All</span>
@@ -198,23 +217,19 @@ export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [
       </div>
 
       {/* Tag Filter */}
-      <div className="relative">
+      <div className="relative shrink-0">
         <button 
-          onClick={() => {
-            setTagMenuOpen(!tagMenuOpen);
-            setAssigneeOpen(false); setCityMenuOpen(false);
-            setStatusMenuOpen(false); setCityMenuOpen(false);
-            setDateMenuOpen(false); setCityMenuOpen(false);
-          }}
-          className={`flex items-center text-xs font-medium border rounded px-3 py-1.5 transition-colors ${
+          type="button"
+          onClick={() => toggleMenu("tag")}
+          className={`flex items-center text-xs font-medium border rounded px-2.5 sm:px-3 py-1.5 transition-colors whitespace-nowrap shrink-0 ${
             selectedTag && selectedTag !== "All" ? 'bg-purple-50 text-[#4f46e5] border-purple-200' : 'text-gray-600 border-gray-200 hover:bg-gray-50'
           }`}
         >
-          Tag {selectedTag && selectedTag !== "All" && "(1)"} <ChevronDown className="w-3 h-3 ml-2" />
+          Tag {selectedTag && selectedTag !== "All" && "(1)"} <ChevronDown className="w-3 h-3 ml-1.5" />
         </button>
         
         {tagMenuOpen && (
-          <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col">
+          <div className="absolute top-full left-0 mt-1 w-64 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-lg shadow-2xl z-[100] overflow-hidden flex flex-col">
             <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <span className="text-sm font-semibold text-gray-700">Tags</span>
               <span className="text-xs text-[#4f46e5] cursor-pointer" onClick={() => handleTagChange("All")}>Clear All</span>
@@ -243,24 +258,20 @@ export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [
       </div>
 
       {/* Status Filter */}
-      <div className="relative">
+      <div className="relative shrink-0">
         <button 
-          onClick={() => {
-            setStatusMenuOpen(!statusMenuOpen);
-            setAssigneeOpen(false); setCityMenuOpen(false);
-            setTagMenuOpen(false); setCityMenuOpen(false);
-            setDateMenuOpen(false); setCityMenuOpen(false);
-          }}
-          className={`flex items-center text-xs font-medium border rounded px-3 py-1.5 transition-colors ${
+          type="button"
+          onClick={() => toggleMenu("status")}
+          className={`flex items-center text-xs font-medium border rounded px-2.5 sm:px-3 py-1.5 transition-colors whitespace-nowrap shrink-0 ${
             selectedStatus.length > 0 
               ? 'bg-purple-50 text-[#4f46e5] border-purple-200' 
               : 'text-gray-600 border-gray-200 hover:bg-gray-50'
           }`}
         >
-          Status {selectedStatus.length > 0 && `(${selectedStatus.length})`} <ChevronDown className="w-3 h-3 ml-2" />
+          Status {selectedStatus.length > 0 && `(${selectedStatus.length})`} <ChevronDown className="w-3 h-3 ml-1.5" />
         </button>
         {statusMenuOpen && (
-          <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col">
+          <div className="absolute top-full right-0 sm:right-0 mt-1 w-64 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-lg shadow-2xl z-[100] overflow-hidden flex flex-col">
             <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <span className="text-sm font-semibold text-gray-700">Select Status</span>
               <span className="text-xs text-[#4f46e5] cursor-pointer" onClick={clearStatus}>Clear</span>
@@ -288,25 +299,20 @@ export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [
       </div>
 
       {/* City Filter */}
-      <div className="relative">
+      <div className="relative shrink-0">
         <button 
-          onClick={() => {
-            setCityMenuOpen(!cityMenuOpen);
-            setAssigneeOpen(false);
-            setTagMenuOpen(false);
-            setStatusMenuOpen(false);
-            setDateMenuOpen(false);
-          }}
-          className={`flex items-center text-xs font-medium border rounded px-3 py-1.5 transition-colors ${
+          type="button"
+          onClick={() => toggleMenu("city")}
+          className={`flex items-center text-xs font-medium border rounded px-2.5 sm:px-3 py-1.5 transition-colors whitespace-nowrap shrink-0 ${
             selectedCity.length > 0 
               ? 'bg-purple-50 text-[#4f46e5] border-purple-200' 
               : 'text-gray-600 border-gray-200 hover:bg-gray-50'
           }`}
         >
-          City {selectedCity.length > 0 && `(${selectedCity.length})`} <ChevronDown className="w-3 h-3 ml-2" />
+          City {selectedCity.length > 0 && `(${selectedCity.length})`} <ChevronDown className="w-3 h-3 ml-1.5" />
         </button>
         {cityMenuOpen && (
-          <div className="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col">
+          <div className="absolute top-full right-0 mt-1 w-64 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-lg shadow-2xl z-[100] overflow-hidden flex flex-col">
             <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <span className="text-sm font-semibold text-gray-700">Select City</span>
               <span className="text-xs text-[#4f46e5] cursor-pointer" onClick={clearCity}>Clear</span>
@@ -337,24 +343,20 @@ export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [
       </div>
 
       {/* Creation Date Filter */}
-      <div className="relative">
+      <div className="relative shrink-0">
         <button 
-          onClick={() => {
-            setDateMenuOpen(!dateMenuOpen);
-            setAssigneeOpen(false); setCityMenuOpen(false);
-            setTagMenuOpen(false); setCityMenuOpen(false);
-            setStatusMenuOpen(false); setCityMenuOpen(false);
-          }}
-          className={`flex items-center text-xs font-medium border rounded px-3 py-1.5 transition-colors ${
+          type="button"
+          onClick={() => toggleMenu("date")}
+          className={`flex items-center text-xs font-medium border rounded px-2.5 sm:px-3 py-1.5 transition-colors whitespace-nowrap shrink-0 ${
             (startDate || endDate)
               ? 'bg-purple-50 text-[#4f46e5] border-purple-200' 
               : 'text-gray-600 border-gray-200 hover:bg-gray-50'
           }`}
         >
-          Creation Date <ChevronDown className="w-3 h-3 ml-2" />
+          Captured Date <ChevronDown className="w-3 h-3 ml-1.5" />
         </button>
         {dateMenuOpen && (
-          <div className="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col">
+          <div className="absolute top-full right-0 mt-1 w-64 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-lg shadow-2xl z-[100] overflow-hidden flex flex-col">
             <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <span className="text-sm font-semibold text-gray-700">Date Range</span>
               <span className="text-xs text-[#4f46e5] cursor-pointer" onClick={clearDateRange}>Clear</span>
@@ -363,7 +365,7 @@ export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [
               <div>
                 <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Start Date</label>
                 <input 
-                  type="date"
+                  type="date" 
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-[#4f46e5] text-gray-700"
@@ -372,7 +374,7 @@ export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [
               <div>
                 <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">End Date</label>
                 <input 
-                  type="date"
+                  type="date" 
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-[#4f46e5] text-gray-700"

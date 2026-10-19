@@ -66,7 +66,7 @@ export default function AddTeamMemberClient() {
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Role</label>
                 <select name="role" required className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-[#4f46e5] bg-white">
-                  <option value="TELECALLER">Telecaller (View assigned leads only)</option>
+                  <option value="TELECALLER">Caller (View assigned leads only)</option>
                   <option value="MANAGER">Manager (View team performance)</option>
                   <option value="ADMIN">Admin (Full Access)</option>
                 </select>

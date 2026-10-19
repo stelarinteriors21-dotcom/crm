@@ -8,6 +8,7 @@ import { ChevronDown, Target, Save, CheckCircle } from "lucide-react";
 type Props = {
   leadId: string;
   initialScores: LeadScoreInput;
+  onSave?: (scores: any) => void;
 };
 
 const STAGE_COLORS: Record<string, string> = {
@@ -88,115 +89,95 @@ export default function LeadScoreWidget({ leadId, initialScores, onSave }: Props
       
       {/* Header */}
       <div
-        className="px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+        className="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center">
           <Target className="w-4 h-4 text-[#4f46e5] mr-2" />
-          <span className="text-[14px] font-bold text-gray-800">Lead Score</span>
+          <span className="text-[13px] sm:text-[14px] font-bold text-gray-800">Lead Score</span>
         </div>
         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
       </div>
 
-      {/* Arc Gauge */}
-      <div className="flex flex-col items-center pb-4 pt-2 bg-gradient-to-b from-blue-50/50 to-white">
-        <div className="relative w-36 h-20 flex items-end justify-center">
-          <svg
-            width="144" height="80"
-            viewBox="0 0 144 80"
-            className="absolute top-0 left-0"
-          >
-            {/* Background arc */}
-            <path
-              d="M 12 72 A 60 60 0 0 1 132 72"
-              fill="none"
-              stroke="#e2e8f0"
-              strokeWidth="10"
-              strokeLinecap="round"
-            />
-            {/* Foreground arc */}
-            <path
-              d="M 12 72 A 60 60 0 0 1 132 72"
-              fill="none"
-              stroke="url(#arcGrad)"
-              strokeWidth="10"
-              strokeLinecap="round"
-              strokeDasharray={`${arcFill * (188.4 / CIRCUMFERENCE)} 188.4`}
-              style={{ transition: 'stroke-dasharray 0.6s ease' }}
-            />
-            <defs>
-              <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#60a5fa" />
-                <stop offset="100%" stopColor={arcColor} />
-              </linearGradient>
-            </defs>
-          </svg>
-          {/* Score number */}
-          <div className="flex flex-col items-center mb-1 z-10">
-            <span className="text-4xl font-black text-gray-900 leading-none">{Math.round(total)}</span>
+      {/* Compact Horizontal Score Header */}
+      <div className="px-4 py-3 bg-gradient-to-r from-blue-50/40 via-purple-50/20 to-white border-b border-gray-100">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-black text-gray-900 leading-none">{Math.round(total)}</span>
+            <span className="text-xs font-bold text-gray-400">/ 100</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`text-[11px] font-extrabold px-2 py-0.5 rounded-md border ${
+              total >= 75 ? "text-blue-700 bg-blue-50 border-blue-200" :
+              total >= 50 ? "text-purple-700 bg-purple-50 border-purple-200" :
+              total >= 25 ? "text-amber-700 bg-amber-50 border-amber-200" :
+              "text-red-700 bg-red-50 border-red-200"
+            }`}>
+              {grade}
+            </span>
+            <span className="text-[10px] text-gray-400 font-medium flex items-center gap-0.5">
+              <span className="text-emerald-500">↑</span> Real-time
+            </span>
           </div>
         </div>
-        {/* Grade */}
-        <span className={`text-sm font-bold mt-1 ${gradeColorClass}`}>{grade}</span>
-        {/* Real-time badge */}
-        <div className="flex items-center gap-1 mt-1.5">
-          <span className="text-green-500 text-xs">↑</span>
-          <span className="text-xs text-gray-500 font-medium">Real-time</span>
-        </div>
-        {/* Mini stage breakdown bars */}
-        <div className="flex gap-1 mt-3 w-full px-5">
-          {Object.entries(stageBreakdown).map(([stage, pts]) => (
-            <div key={stage} className="flex-1 text-center">
-              <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden mb-0.5">
-                <div
-                  className={`h-full rounded-full ${STAGE_COLORS[stage] ?? "bg-gray-400"}`}
-                  style={{ width: `${Math.min((pts / 33.33) * 100, 100)}%` }}
-                />
-              </div>
-              <span className="text-[9px] text-gray-400">{stage.split(" — ")[1]}</span>
-            </div>
-          ))}
+        {/* Slim progress bar */}
+        <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+            style={{ width: `${Math.min(total, 100)}%` }}
+          />
         </div>
       </div>
 
       {expanded && (
         <>
           {/* Factors by Stage */}
-          <div className="border-t border-gray-100">
-            {Object.entries(stages).map(([stage, stageFactors]) => (
-              <div key={stage} className="border-b border-gray-100 last:border-0">
-                {/* Stage Header */}
-                <div className="flex items-center justify-between mt-6 mb-3 px-4">
-                  <span className="text-[10px] font-black tracking-wider uppercase px-2 py-1 rounded bg-gray-100 text-gray-500">
-                    {stage}
-                  </span>
-                  <span className="text-[11px] text-gray-400 font-medium">
-                    {stageFactors.reduce((s, f) => s + f.score, 0).toFixed(2)} / {stageFactors.reduce((s, f) => s + f.max, 0).toFixed(2)}
-                  </span>
-                </div>
+          <div className="divide-y divide-gray-100">
+            {Object.entries(stages).map(([stage, stageFactors]) => {
+              const stageDisplayName = stage.split(" — ")[1]?.toUpperCase() || stage.toUpperCase();
+              return (
+                <div key={stage} className="p-3.5 space-y-2.5">
+                  {/* Stage Header */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
+                      {stageDisplayName}
+                    </span>
+                    <span className="text-[11px] text-gray-400 font-bold">
+                      {stageFactors.reduce((s, f) => s + f.score, 0).toFixed(2)} / {stageFactors.reduce((s, f) => s + f.max, 0).toFixed(2)}
+                    </span>
+                  </div>
 
-                {/* Factors */}
-                {stageFactors.map(factor => {
-                  const def = SCORE_FACTORS[factor.key];
-                  const currentSelectedStr = scores[factor.key] || "None";
-                  const isMulti = "type" in def && def.type === "multi";
-                  const currentSelectedArr = isMulti ? currentSelectedStr.split(",").map(s => s.trim()) : [currentSelectedStr];
-                  
-                  return (
-                    <div key={factor.key} className="flex items-center justify-between bg-white px-4 py-3 border border-gray-100 rounded-lg hover:border-gray-300 transition-colors group mb-2 mx-4">
-                      <div className="flex-1 min-w-0 pr-4">
-                        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-2">{factor.label}</label>
+                  {/* Factors */}
+                  {stageFactors.map(factor => {
+                    const def = SCORE_FACTORS[factor.key];
+                    const currentSelectedStr = scores[factor.key] || "None";
+                    const isMulti = "type" in def && def.type === "multi";
+                    const currentSelectedArr = isMulti ? currentSelectedStr.split(",").map(s => s.trim()) : [currentSelectedStr];
+                    
+                    return (
+                      <div key={factor.key} className="bg-gray-50/70 p-2.5 border border-gray-200/80 rounded-lg">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">
+                            {factor.label}
+                          </label>
+                          <div className="text-[11px] font-black text-gray-800">
+                            {factor.score.toFixed(2)}
+                            <span className="text-[10px] font-normal text-gray-400"> / {factor.max.toFixed(2)}</span>
+                          </div>
+                        </div>
+
                         {/* Level pills */}
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-wrap gap-1">
                           {def.levels.map((level) => {
                             const isSelected = currentSelectedArr.includes(level);
                             return (
                               <button
                                 key={level}
+                                type="button"
                                 onClick={() => handleChange(factor.key, level)}
-                                className={`px-2 py-1 rounded text-[11px] font-semibold border transition-all ${
+                                className={`px-2 py-0.5 rounded text-[11px] font-semibold border transition-all cursor-pointer ${
                                   isSelected
-                                    ? "bg-[#4f46e5] text-white border-[#4f46e5] shadow-sm"
+                                    ? "bg-[#4f46e5] text-white border-[#4f46e5] shadow-2xs"
                                     : "bg-white text-gray-600 border-gray-200 hover:border-[#4f46e5] hover:text-[#4f46e5]"
                                 }`}
                               >
@@ -205,51 +186,47 @@ export default function LeadScoreWidget({ leadId, initialScores, onSave }: Props
                             );
                           })}
                         </div>
-                      </div>
-                      <div className="text-right ml-4 flex-shrink-0 w-24">
-                        <div className="text-[13px] font-black text-gray-800">
-                          {factor.score.toFixed(2)}
-                          <span className="text-[10px] font-medium text-gray-400"> / {factor.max.toFixed(2)}</span>
-                        </div>
-                        <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden mt-1">
+
+                        {/* Factor progress bar */}
+                        <div className="h-1 w-full bg-gray-200/70 rounded-full overflow-hidden mt-2">
                           <div
-                            className={`h-full rounded-full transition-all duration-300 ${STAGE_COLORS[factor.stage] || "bg-gray-400"}`}
+                            className={`h-full rounded-full transition-all duration-300 ${STAGE_COLORS[factor.stage] || "bg-[#4f46e5]"}`}
                             style={{ width: `${(factor.score / factor.max) * 100}%` }}
                           />
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
 
           {/* Total Row */}
-          <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-            <div className="text-[13px] font-black text-gray-800">TOTAL SCORE</div>
-            <div className={`text-[18px] font-black px-3 py-1 rounded-lg border ${scoreColor}`}>
+          <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-[11px] font-black text-gray-700">TOTAL SCORE</div>
+            <div className={`text-[12px] sm:text-[13px] font-black px-2 py-0.5 rounded-md border ${scoreColor}`}>
               {total.toFixed(1)} / 100 — {grade}
             </div>
           </div>
 
           {/* Save Button */}
-          <div className="px-5 py-3 border-t border-gray-100">
+          <div className="p-3 border-t border-gray-100">
             <button
               onClick={handleSave}
               disabled={saving}
-              className={`w-full flex items-center justify-center py-2.5 rounded-lg text-[13px] font-bold transition-all ${
+              className={`w-full flex items-center justify-center py-2 rounded-lg text-[12px] sm:text-[13px] font-bold transition-all cursor-pointer ${
                 saved
                   ? "bg-green-600 text-white"
                   : "bg-[#4f46e5] text-white hover:bg-purple-800"
               } disabled:opacity-60`}
             >
               {saved ? (
-                <><CheckCircle className="w-4 h-4 mr-2" /> Saved!</>
+                <><CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Saved!</>
               ) : saving ? (
                 "Saving..."
               ) : (
-                <><Save className="w-4 h-4 mr-2" /> Save Score</>
+                <><Save className="w-3.5 h-3.5 mr-1.5" /> Save Score</>
               )}
             </button>
           </div>
