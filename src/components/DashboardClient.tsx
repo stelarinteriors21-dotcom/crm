@@ -80,7 +80,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
     const nowTime = now.getTime();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).getTime();
     const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
-    const FIVE_HOURS_MS = 5 * 60 * 60 * 1000;
+    const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
     const todayTasks: any[] = [];
     const upcomingTasks: any[] = [];
@@ -105,11 +105,11 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
         statusTimestamp = Math.max(...possibleTimestamps);
       }
 
-      // Check if lead is in a converting stage (will be changed to follow-up automatically within 5 hours)
+      // Check if lead is in a converting stage (will be changed to follow-up automatically within 24 hours)
       const isConvertingStage = !isFollowUp && !isConvertedOrJunk;
       const timeInStatus = nowTime - statusTimestamp;
-      const timeRemainingUntilAutoFollowUp = FIVE_HOURS_MS - timeInStatus;
-      const isAutoFollowUpWithin5Hours = isConvertingStage && timeRemainingUntilAutoFollowUp > 0;
+      const timeRemainingUntilAutoFollowUp = TWENTY_FOUR_HOURS_MS - timeInStatus;
+      const isAutoFollowUpWithin24Hours = isConvertingStage && timeRemainingUntilAutoFollowUp > 0;
       const isAutoFollowUpExpired = isConvertingStage && timeRemainingUntilAutoFollowUp <= 0;
 
       // Scheduled follow-up / site visit
@@ -124,9 +124,9 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
         taskType = "Follow-up Call";
       }
 
-      if (isAutoFollowUpWithin5Hours) {
-        // Lead's status will be changed to follow up automatically within 5 hours -> UPCOMING!
-        const autoDueDate = statusTimestamp + FIVE_HOURS_MS;
+      if (isAutoFollowUpWithin24Hours) {
+        // Lead's status will be changed to follow up automatically within 24 hours -> UPCOMING!
+        const autoDueDate = statusTimestamp + TWENTY_FOUR_HOURS_MS;
         const minsLeft = Math.max(1, Math.round(timeRemainingUntilAutoFollowUp / 60000));
         const hrs = Math.floor(minsLeft / 60);
         const mins = minsLeft % 60;
@@ -157,7 +157,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
         });
       } else if (isFollowUp || isAutoFollowUpExpired || lead.assignedStatus === 'PENDING') {
         // Scheduled for today, past due, expired auto-followup, or fresh pending -> TODAY!
-        const dueTime = scheduledDueDate || (isAutoFollowUpExpired ? (statusTimestamp + FIVE_HOURS_MS) : nowTime);
+        const dueTime = scheduledDueDate || (isAutoFollowUpExpired ? (statusTimestamp + TWENTY_FOUR_HOURS_MS) : nowTime);
         todayTasks.push({
           ...lead,
           taskType,
@@ -286,7 +286,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
                 <p className="text-xs text-gray-400 mt-1 max-w-sm">
                   {callerTaskTab === "TODAY" 
                     ? "You have completed all scheduled tasks for today." 
-                    : "No leads due for automatic follow-up within 5 hours or scheduled upcoming."}
+                    : "No leads due for automatic follow-up within 24 hours or scheduled upcoming."}
                 </p>
               </div>
             ) : (

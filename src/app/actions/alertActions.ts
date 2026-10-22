@@ -46,7 +46,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
     });
 
     const now = Date.now();
-    const FIVE_HOURS_MS = 5 * 60 * 60 * 1000;
+    const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
     const processedLeads = [];
 
     for (const lead of activeLeads) {
@@ -73,23 +73,23 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
 
       const diffMs = now - statusTimestamp;
 
-      // Has remained in converting stage without moving to converted for >= 5 hours
-      if (diffMs >= FIVE_HOURS_MS) {
+      // Has remained in converting stage without moving to converted for >= 24 hours
+      if (diffMs >= TWENTY_FOUR_HOURS_MS) {
         const oldStatus = lead.status;
         
         // Policy: Fresh leads must NEVER be pushed to follow up. Only escalation for fresh leads!
         if (sLower === "fresh" || sLower === "new") {
-          if (lead.assignedTo?.fcmToken && !cf.freshLeadEscalated5h) {
+          if (lead.assignedTo?.fcmToken && !cf.freshLeadEscalated24h) {
             try {
               await sendPushNotification(
                 lead.assignedTo.fcmToken,
                 "🚨 Fresh Lead Pending Attention!",
-                `Fresh lead ${lead.name} has not been contacted for over 5 hours. Please contact this lead!`
+                `Fresh lead ${lead.name} has not been contacted for over 24 hours. Please contact this lead!`
               );
               await prisma.lead.update({
                 where: { id: lead.id },
                 data: {
-                  customFields: { ...cf, freshLeadEscalated5h: new Date().toISOString() }
+                  customFields: { ...cf, freshLeadEscalated24h: new Date().toISOString() }
                 }
               });
             } catch (e) {
@@ -115,7 +115,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
           stalePreviousStatus: oldStatus,
           staleConvertingAlert: true,
           staleConvertingTriggeredAt: new Date().toISOString(),
-          staleFollowUpReason: `Lead remained in '${oldStatus}' stage for >5 hours without moving to Converted.`
+          staleFollowUpReason: `Lead remained in '${oldStatus}' stage for >24 hours without moving to Converted.`
         };
 
         const updatedLead = await prisma.lead.update({
@@ -138,7 +138,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
           if (!existingTask) {
             await prisma.task.create({
               data: {
-                title: `Follow-up: ${lead.name} - Stale ${oldStatus} > 5h`,
+                title: `Follow-up: ${lead.name} - Stale ${oldStatus} > 24h`,
                 dueDate: new Date(Date.now() + 60 * 60 * 1000), // Due within 1 hour
                 leadId: lead.id,
                 userId: targetUserId,
@@ -151,7 +151,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
         // 3. Create system audit note in lead activity
         await prisma.note.create({
           data: {
-            content: `[SYSTEM: Automated 5h Follow-up Triggered]\nStatus automatically moved from "${oldStatus}" to "follow up" because the lead remained in the converting stage for more than 5 hours without moving to Converted.\nFollow-up task created.`,
+            content: `[SYSTEM: Automated 24h Follow-up Triggered]\nStatus automatically moved from "${oldStatus}" to "follow up" because the lead remained in the converting stage for more than 24 hours without moving to Converted.\nFollow-up task created.`,
             leadId: lead.id,
             userId: targetUserId || lead.organizationId
           }
@@ -163,7 +163,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
             await sendPushNotification(
               lead.assignedTo.fcmToken,
               "Follow-up Required ⚠️",
-              `Lead ${lead.name} remained in "${oldStatus}" for >5h without conversion. Moved to Follow-up!`
+              `Lead ${lead.name} remained in "${oldStatus}" for >24h without conversion. Moved to Follow-up!`
             );
           } catch (e) {
             console.error("Error sending push notification for stale lead:", e);
@@ -574,7 +574,7 @@ export async function getActionRequiredLeads() {
     }
   }
 
-  // 3. Stale Converting Stage Leads (>5h without converting, automatically moved to follow up)
+  // 3. Stale Converting Stage Leads (>24h without converting, automatically moved to follow up)
   const staleLeads = await prisma.lead.findMany({
     where: {
       organizationId: user.organizationId,
@@ -587,8 +587,8 @@ export async function getActionRequiredLeads() {
     const cf = (lead.customFields as any) || {};
     if (cf.staleConvertingAlert) {
       alerts.push({
-        type: "STALE_CONVERTING_5H",
-        message: `5h Timeout Alert: ${lead.name} remained in "${cf.stalePreviousStatus || 'converting stage'}" for >5 hours without moving to Converted! Moved to Follow-up; task created.`,
+        type: "STALE_CONVERTING_24H",
+        message: `24h Timeout Alert: ${lead.name} remained in "${cf.stalePreviousStatus || 'converting stage'}" for >24 hours without moving to Converted! Moved to Follow-up; task created.`,
         lead
       });
     }
