@@ -297,7 +297,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
 
             {/* Lead Pipeline & Junk Actions */}
             <div className="space-y-2 mb-4 pt-2 border-t border-gray-100">
-              <SiteVisitDropdown lead={lead} />
+              <SiteVisitDropdown lead={lead} isAdmin={isAdmin} />
               <QuotationDropdown lead={lead} />
               <ConvertedDropdown lead={lead} />
               <JunkDropdown lead={lead} />

@@ -6,7 +6,7 @@ import { updateSiteVisitDetails } from "@/app/actions/leadActions";
 import { Calendar, MapPin, Clock, MessageCircle, Save, CheckCircle2, History, RefreshCw, ChevronDown, ChevronUp, KeyRound, ClipboardCheck, Home, Ruler, Camera } from "lucide-react";
 import SiteVisitChecklistModal from "./SiteVisitChecklistModal";
 
-export default function SiteVisitDropdown({ lead }: { lead: any }) {
+export default function SiteVisitDropdown({ lead, isAdmin = false }: { lead: any; isAdmin?: boolean }) {
   const router = useRouter();
   const currentSiteVisit = (lead.customFields as any)?.siteVisit || {};
   const history = (lead.customFields as any)?.siteVisitHistory || [];
@@ -21,6 +21,30 @@ export default function SiteVisitDropdown({ lead }: { lead: any }) {
   const [showChecklistModal, setShowChecklistModal] = useState(false);
   const [verifyOtpInput, setVerifyOtpInput] = useState("");
   const [verifyingOtp, setVerifyingOtp] = useState(false);
+
+  const handleAdminCompleteOverride = async () => {
+    if (!confirm("Are you sure you want to mark this site visit as Completed directly without OTP?")) {
+      return;
+    }
+    setLoading(true);
+    try {
+      await updateSiteVisitDetails(lead.id, {
+        ...currentSiteVisit,
+        type: "Done",
+        adminOverride: true,
+        verifiedAt: new Date().toISOString()
+      });
+      setType("Done");
+      router.refresh();
+      alert("Site visit marked as Completed via Admin Override!");
+      setIsExpanded(false);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to complete site visit.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleVerifyOtp = async () => {
     const cleanInput = verifyOtpInput.trim();
@@ -48,7 +72,7 @@ export default function SiteVisitDropdown({ lead }: { lead: any }) {
     }
   };
 
-  const handleSave = async (customType?: string, forceNewOtp: boolean = false) => {
+  const handleSave = async (customType?: string, forceNewOtp: boolean = false, keepScheduledStatus: boolean = false) => {
     const finalType = customType || type;
     if ((finalType === "Scheduled" || finalType === "Rescheduled") && (!date || !time || !gmapLink)) {
       alert("Please fill in the Date, Time, and a mandatory Google Maps link.");
@@ -67,7 +91,7 @@ export default function SiteVisitDropdown({ lead }: { lead: any }) {
         }
       }
 
-      const dataToSave: any = { type: finalType, date, time, gmapLink, otp };
+      const dataToSave: any = { type: finalType, date, time, gmapLink, otp, keepScheduledStatus };
       await updateSiteVisitDetails(lead.id, dataToSave);
       router.refresh();
       
@@ -76,7 +100,7 @@ export default function SiteVisitDropdown({ lead }: { lead: any }) {
         const cleanPhone = lead.phone.replace(/[^0-9]/g, '');
         window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
       } else {
-        alert("Site visit details saved successfully!");
+        alert(keepScheduledStatus ? "Schedule updated without changing status!" : "Site visit details saved successfully!");
       }
       setIsExpanded(false);
     } catch (err: any) {
@@ -232,7 +256,7 @@ ${reqStr || "No specific requirements logged."}
               <option value="">Not Scheduled</option>
               <option value="Scheduled">Site Visit Scheduled</option>
               <option value="Rescheduled">Site Visit Rescheduled</option>
-              <option value="Done" disabled>Site Visit Done</option>
+              <option value="Done" disabled={!isAdmin}>Site Visit Done {isAdmin ? "(Admin Override)" : ""}</option>
             </select>
           </div>
 
@@ -304,6 +328,19 @@ ${reqStr || "No specific requirements logged."}
                 </button>
               </div>
 
+              {/* Admin Override: Update Date/Time without changing status to Rescheduled */}
+              {isAdmin && (currentSiteVisit.type === "Scheduled" || type === "Scheduled" || currentSiteVisit.type === "Rescheduled" || type === "Rescheduled") && (
+                <button 
+                  type="button"
+                  onClick={() => handleSave("Scheduled", false, true)} 
+                  disabled={loading} 
+                  className="w-full mt-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold py-1.5 px-3 rounded flex items-center justify-center transition-colors shadow-2xs cursor-pointer"
+                  title="Update schedule date/time without moving to Rescheduled"
+                >
+                  <Clock className="w-3.5 h-3.5 mr-1.5 text-indigo-600" /> Update Schedule (Keep as Scheduled)
+                </button>
+              )}
+
               {/* OTP Confirmation Section */}
               <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-lg space-y-2 mt-2">
                 <div className="flex items-center justify-between">
@@ -341,6 +378,20 @@ ${reqStr || "No specific requirements logged."}
                   <ClipboardCheck className="w-3.5 h-3.5 mr-1.5" /> Complete Visit Checklist with OTP
                 </button>
               </div>
+
+              {/* Admin Override: 1-Click Complete Visit (No OTP Required) */}
+              {isAdmin && type !== "Done" && (
+                <div className="pt-2 border-t border-gray-200 mt-2">
+                  <button
+                    type="button"
+                    onClick={handleAdminCompleteOverride}
+                    disabled={loading}
+                    className="w-full py-2 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center justify-center transition-all cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-4 h-4 mr-1.5" /> ⚡ Admin Override: Mark Visit as Completed
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

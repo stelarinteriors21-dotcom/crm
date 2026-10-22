@@ -1056,7 +1056,7 @@ export async function updateSiteVisitDetails(leadId: string, siteVisitData: any)
 
     let newStatus = lead.status;
     let scoreSiteVisit = lead.scoreSiteVisit;
-    if (siteVisitData.type === "Scheduled") {
+    if (siteVisitData.type === "Scheduled" || siteVisitData.keepScheduledStatus) {
       newStatus = "Site visit Schedules";
       scoreSiteVisit = "Scheduled";
     } else if (siteVisitData.type === "Rescheduled") {
@@ -1095,7 +1095,11 @@ export async function updateSiteVisitDetails(leadId: string, siteVisitData: any)
     
     await prisma.note.create({
       data: {
-        content: `Site visit updated: ${siteVisitData.type} on ${siteVisitData.date || 'N/A'}`,
+        content: siteVisitData.adminOverride
+          ? `[ADMIN OVERRIDE] Site visit marked as Completed directly by Admin.`
+          : siteVisitData.keepScheduledStatus
+          ? `[ADMIN OVERRIDE] Site visit schedule updated to ${siteVisitData.date || 'N/A'} ${siteVisitData.time || ''} (Kept as Scheduled without rescheduling).`
+          : `Site visit updated: ${siteVisitData.type} on ${siteVisitData.date || 'N/A'}`,
         leadId,
         userId: lead.assignedToId || (await prisma.user.findFirst())?.id || ""
       }
