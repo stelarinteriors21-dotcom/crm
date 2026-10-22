@@ -72,17 +72,51 @@ export async function login(formData: FormData) {
     return { error: "Incorrect password. Please try again." };
   }
   
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
   cookies().set({
     name: "mock_user_email",
     value: user.email,
     path: "/",
+    expires: expiresAt,
     maxAge: 60 * 60 * 24 * 30, // 30 days
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production"
   });
   
   // NOTE: logActivity requires the cookie to be set first to identify the user
   await logActivity("LOGIN", "User logged in to CRM");
   
   redirect("/dashboard");
+}
+
+export async function restoreSession(email: string) {
+  try {
+    if (!email) return { success: false, reason: "No email provided" };
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail }
+    });
+
+    if (!user || user.status === "INACTIVE") {
+      return { success: false, reason: "User not found or inactive" };
+    }
+
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    cookies().set({
+      name: "mock_user_email",
+      value: user.email,
+      path: "/",
+      expires: expiresAt,
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production"
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("restoreSession error:", error);
+    return { success: false, reason: "Internal error" };
+  }
 }
 
 export async function logout() {

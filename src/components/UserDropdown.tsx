@@ -11,6 +11,9 @@ export default function UserDropdown({ initials, name, email, isAdmin = false }:
   const [showLeavesModal, setShowLeavesModal] = useState(false);
 
   const handleLogout = async () => {
+    try {
+      localStorage.removeItem("stelar_active_session_email");
+    } catch (e) {}
     await logout();
     window.location.href = "/login";
   };

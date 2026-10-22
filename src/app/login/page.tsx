@@ -1,13 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import { login } from "@/app/actions/authActions";
+import { useState, useEffect } from "react";
+import { login, restoreSession } from "@/app/actions/authActions";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingSavedSession, setCheckingSavedSession] = useState(true);
+
+  // Auto-restore session from device storage if cookie was cleared from RAM by Android
+  useEffect(() => {
+    try {
+      const savedEmail = localStorage.getItem("stelar_active_session_email");
+      if (savedEmail) {
+        restoreSession(savedEmail).then((res) => {
+          if (res?.success) {
+            window.location.href = "/dashboard";
+          } else {
+            localStorage.removeItem("stelar_active_session_email");
+            setCheckingSavedSession(false);
+          }
+        }).catch(() => {
+          setCheckingSavedSession(false);
+        });
+      } else {
+        setCheckingSavedSession(false);
+      }
+    } catch (e) {
+      setCheckingSavedSession(false);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -15,11 +39,19 @@ export default function LoginPage() {
     setError("");
     
     try {
+      const cleanEmail = email.toLowerCase().trim();
+      try {
+        localStorage.setItem("stelar_active_session_email", cleanEmail);
+      } catch (e) {}
+
       const formData = new FormData();
-      formData.append("email", email);
+      formData.append("email", cleanEmail);
       formData.append("password", password);
       const res = await login(formData);
       if (res?.error) {
+        try {
+          localStorage.removeItem("stelar_active_session_email");
+        } catch (e) {}
         setError(res.error);
         setLoading(false);
       } else {
@@ -29,11 +61,27 @@ export default function LoginPage() {
       if (err.message === "NEXT_REDIRECT") {
         throw err;
       }
+      try {
+        localStorage.removeItem("stelar_active_session_email");
+      } catch (e) {}
       console.error("Login exception:", err);
       setError(err.message || "An unexpected error occurred connecting to the database. Please try again.");
       setLoading(false);
     }
   };
+
+  if (checkingSavedSession) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
+        <div className="flex flex-col items-center justify-center animate-pulse">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center bg-white shadow-sm border border-gray-100 p-2 mb-3">
+            <img src="/logo.png" alt="Stelar Interiors" className="w-full h-full object-contain" />
+          </div>
+          <span className="text-xs font-semibold text-gray-500">Restoring session...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">

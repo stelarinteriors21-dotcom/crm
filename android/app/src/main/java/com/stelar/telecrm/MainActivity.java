@@ -25,6 +25,10 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(CallLogPlugin.class);
         super.onCreate(savedInstanceState);
 
+        try {
+            android.webkit.CookieManager.getInstance().setAcceptCookie(true);
+        } catch (Exception ignored) {}
+
         // Ensure status bar does NOT overlap webview and displays legible dark icons on white background
         WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
         getWindow().setStatusBarColor(Color.WHITE);
@@ -61,5 +65,21 @@ public class MainActivity extends BridgeActivity {
                 PERMISSION_REQ_CODE
             );
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        try {
+            android.webkit.CookieManager.getInstance().flush();
+        } catch (Exception ignored) {}
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        try {
+            android.webkit.CookieManager.getInstance().flush();
+        } catch (Exception ignored) {}
     }
 }
