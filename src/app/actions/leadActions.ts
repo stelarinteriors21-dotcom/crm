@@ -21,6 +21,8 @@ export async function getLeads(query?: string, searchField?: string, status?: st
     where.assignedToId = user.id;
   } else if (assigned === "me") {
     where.assignedToId = user.id;
+  } else if (assigned === "unassigned") {
+    where.assignedToId = null;
   } else if (assigned && assigned !== "all") {
     where.assignedToId = assigned;
   }
@@ -106,6 +108,10 @@ export async function getLeads(query?: string, searchField?: string, status?: st
         include: {
           assignedTo: true,
           organization: true,
+          notes: {
+            orderBy: { createdAt: "desc" },
+            take: 3
+          }
         },
       });
       return leads;

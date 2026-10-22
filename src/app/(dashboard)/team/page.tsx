@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { Download, Search, User, Shield, CheckCircle2, ShoppingCart } from "lucide-react";
 import AddEmployeeButton from "@/components/AddEmployeeButton";
+import ManageLeavesButton from "@/components/ManageLeavesButton";
 import Link from "next/link";
 import DeleteEmployeeButton from "@/components/DeleteEmployeeButton";
 import EditPasswordModal from "@/components/EditPasswordModal";
@@ -43,6 +44,7 @@ export default async function UserManagementPage() {
             <button className="flex items-center px-4 py-1.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
               <Download className="w-4 h-4 mr-2" /> Export
             </button>
+            <ManageLeavesButton />
             {/* Live Add Employee Button */}
             <AddEmployeeButton />
           </div>

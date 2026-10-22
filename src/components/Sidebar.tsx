@@ -100,7 +100,7 @@ export default function Sidebar({ isAdmin = false, userRole = "", orgName = "Ste
       }`}>
         <div className="flex items-center space-x-3 overflow-hidden">
           <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shrink-0 bg-white border border-gray-100 shadow-xs">
-            <img src="/logo.png" alt="Stelar Interiors" className="w-full h-full object-contain p-0.5" />
+            <img src="/logo.png" alt="Stelar Interiors" width={32} height={32} style={{ width: 32, height: 32 }} className="w-full h-full object-contain p-0.5" />
           </div>
           {!isCollapsed && (
             <div className="min-w-0">

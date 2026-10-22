@@ -100,7 +100,7 @@ export default async function DashboardLayout({
           <div className="h-14 sm:h-16 flex items-center justify-between px-3 md:px-6">
             <div className="flex items-center space-x-2 sm:space-x-2.5 overflow-hidden min-w-0">
               <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shrink-0 bg-white border border-gray-100 shadow-2xs">
-                <img src="/logo.png" alt="Stelar Interiors" className="w-full h-full object-contain p-0.5" />
+                <img src="/logo.png" alt="Stelar Interiors" width={32} height={32} style={{ width: 32, height: 32 }} className="w-full h-full object-contain p-0.5" />
               </div>
               <span className="font-semibold text-sm md:text-[15px] truncate max-w-[120px] xs:max-w-[150px] sm:max-w-xs md:max-w-none text-gray-900 tracking-tight">
                 {user?.organization?.name || "Stelar CRM"}

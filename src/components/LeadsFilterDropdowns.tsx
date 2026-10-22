@@ -199,6 +199,19 @@ export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [
                 /> 
                 <span className="font-medium">Anyone</span>
               </label>
+              <label className="flex items-center text-[13px] text-gray-700 cursor-pointer hover:bg-gray-50 px-2 py-2 rounded mb-1 border-b border-gray-100 pb-2">
+                <input 
+                  type="radio" 
+                  name="assignee"
+                  checked={selectedAssignee === "unassigned"}
+                  onChange={() => handleAssigneeChange("unassigned")}
+                  className="w-3.5 h-3.5 mr-3 border-gray-300 rounded text-[#4f46e5] focus:ring-[#4f46e5]" 
+                /> 
+                <span className="font-medium text-amber-700 flex items-center">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 mr-2 shrink-0" />
+                  Unassigned
+                </span>
+              </label>
               {callers.map(caller => (
                 <label key={caller.id} className="flex items-center text-[13px] text-gray-700 cursor-pointer hover:bg-gray-50 px-2 py-2 rounded mb-1">
                   <input 

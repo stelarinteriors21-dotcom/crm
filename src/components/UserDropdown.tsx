@@ -37,12 +37,14 @@ export default function UserDropdown({ initials, name, email, isAdmin = false }:
                 <p className="text-xs text-gray-500 truncate">{email}</p>
               </div>
               <div className="p-1">
-                <button
-                  onClick={() => { setIsOpen(false); setShowLeavesModal(true); }}
-                  className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium mb-1"
-                >
-                  <Calendar className="w-4 h-4 mr-2 text-gray-500" /> My Leaves
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => { setIsOpen(false); setShowLeavesModal(true); }}
+                    className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium mb-1"
+                  >
+                    <Calendar className="w-4 h-4 mr-2 text-purple-600" /> Manage Team Leaves
+                  </button>
+                )}
                 {isAdmin && (
                   <Link
                     href="/settings"

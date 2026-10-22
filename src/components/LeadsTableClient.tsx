@@ -16,6 +16,7 @@ type Lead = any;
 const BASE_COLUMNS = [
   { id: "name", label: "Name", type: "T", defaultVisible: true },
   { id: "status", label: "Status", type: "🔴", defaultVisible: true },
+  { id: "followUpReason", label: "Follow-up Reason", type: "💬", defaultVisible: true },
   { id: "score", label: "Lead Score", type: "⭐", defaultVisible: true },
   { id: "approximateBudget", label: "Approximate Budget", type: "💰", defaultVisible: true },
   { id: "city", label: "City", type: "T", defaultVisible: true },
@@ -184,6 +185,14 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
     // Purge any column IDs that no longer exist (e.g. removed 'createdOn', internal custom fields)
     savedOrder = savedOrder.filter(id => allColumns.some(c => c.id === id));
 
+    // Ensure followUpReason is inserted right next to status if not already in saved order
+    if (savedOrder.length > 0 && !savedOrder.includes("followUpReason")) {
+      const statusIdx = savedOrder.indexOf("status");
+      if (statusIdx !== -1) {
+        savedOrder.splice(statusIdx + 1, 0, "followUpReason");
+      }
+    }
+
     // Merge: keep saved order, append any new columns that aren't in saved order
     const newColumns = allColumns.map(c => c.id).filter(id => !savedOrder.includes(id));
     const finalOrder = savedOrder.length > 0 ? [...savedOrder, ...newColumns] : allColumns.map(c => c.id);
@@ -217,18 +226,26 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
   const filteredLeads = leads; // Server-side filtering now handles this
 
   const downloadExcel = () => {
-    const rows = filteredLeads.map((l: any) => ({
-      "Name": l.name || "",
-      "Phone": l.phone || "",
-      "Alternate Phone": (l.customFields as any)?.alternatePhone || (l as any).alternatePhone || "",
-      "Email": l.email || "",
-      "Status": l.status || "",
-      "Source": l.source || "",
-      "City": l.city || "",
-      "Budget": l.approximateBudget || l.budget || "",
-      "Assignee": l.assignedTo?.name || "",
-      "Captured On": (l.capturedOn || l.createdAt) ? new Date(l.capturedOn || l.createdAt).toLocaleDateString() : "",
-    }));
+    const rows = filteredLeads.map((l: any) => {
+      const cf = (l.customFields as any) || {};
+      const reason = (l.status || "").toLowerCase().includes("follow") 
+        ? (cf.lastFollowUpNote || cf.staleFollowUpReason || cf.followUpReason || (Array.isArray(l.notes) ? l.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"))?.content : "") || "")
+        : "";
+
+      return {
+        "Name": l.name || "",
+        "Phone": l.phone || "",
+        "Alternate Phone": cf?.alternatePhone || (l as any).alternatePhone || "",
+        "Email": l.email || "",
+        "Status": l.status || "",
+        "Follow-up Reason": reason,
+        "Source": l.source || "",
+        "City": l.city || "",
+        "Budget": l.approximateBudget || l.budget || "",
+        "Assignee": l.assignedTo?.name || "",
+        "Captured On": (l.capturedOn || l.createdAt) ? new Date(l.capturedOn || l.createdAt).toLocaleDateString() : "",
+      };
+    });
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Leads");
@@ -243,18 +260,26 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
     doc.text("Leads Report", 14, 16);
     autoTable(doc, {
       startY: 22,
-      head: [["Name", "Phone", "Alt Phone", "Status", "Source", "City", "Budget", "Assignee", "Captured On"]],
-      body: filteredLeads.map((l: any) => [
-        l.name || "",
-        l.phone || "",
-        (l.customFields as any)?.alternatePhone || (l as any).alternatePhone || "",
-        l.status || "",
-        l.source || "",
-        l.city || "",
-        l.approximateBudget || l.budget || "",
-        l.assignedTo?.name || "",
-        (l.capturedOn || l.createdAt) ? new Date(l.capturedOn || l.createdAt).toLocaleDateString() : "",
-      ]),
+      head: [["Name", "Phone", "Alt Phone", "Status", "Follow-up Reason", "Source", "City", "Budget", "Assignee", "Captured On"]],
+      body: filteredLeads.map((l: any) => {
+        const cf = (l.customFields as any) || {};
+        const reason = (l.status || "").toLowerCase().includes("follow") 
+          ? (cf.lastFollowUpNote || cf.staleFollowUpReason || cf.followUpReason || (Array.isArray(l.notes) ? l.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"))?.content : "") || "")
+          : "";
+
+        return [
+          l.name || "",
+          l.phone || "",
+          cf?.alternatePhone || (l as any).alternatePhone || "",
+          l.status || "",
+          reason,
+          l.source || "",
+          l.city || "",
+          l.approximateBudget || l.budget || "",
+          l.assignedTo?.name || "",
+          (l.capturedOn || l.createdAt) ? new Date(l.capturedOn || l.createdAt).toLocaleDateString() : "",
+        ];
+      }),
       styles: { fontSize: 8 },
       headStyles: { fillColor: [97, 60, 188] },
     });
@@ -503,6 +528,14 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${LEAD_STATUS_COLORS[lead.status ?? ""] ?? "bg-gray-100 text-gray-700"}`}>
                       {lead.status ?? "Fresh"}
                     </span>
+                    {((lead.status || "").toLowerCase().includes("follow") && ((lead.customFields as any)?.lastFollowUpNote || (lead.customFields as any)?.staleFollowUpReason || (lead.customFields as any)?.followUpReason || (Array.isArray(lead.notes) && lead.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"))?.content))) && (
+                      <span 
+                        className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 truncate max-w-[200px]"
+                        title={(lead.customFields as any)?.lastFollowUpNote || (lead.customFields as any)?.staleFollowUpReason || (lead.customFields as any)?.followUpReason || lead.notes?.find((n: any) => !n.content?.startsWith("[SYSTEM:"))?.content}
+                      >
+                        💬 {(lead.customFields as any)?.lastFollowUpNote || (lead.customFields as any)?.staleFollowUpReason || (lead.customFields as any)?.followUpReason || lead.notes?.find((n: any) => !n.content?.startsWith("[SYSTEM:"))?.content}
+                      </span>
+                    )}
                     {lead.source && (
                       <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                         lead.source.toLowerCase().includes('whatsapp') ? 'bg-green-100 text-green-800' :
@@ -554,6 +587,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                   switch(colId) {
                     case 'name': return <React.Fragment key="name"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Name</th></React.Fragment>;
                     case 'status': return <React.Fragment key="status"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Status</th></React.Fragment>;
+                    case 'followUpReason': return <React.Fragment key="followUpReason"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Follow-up Reason</th></React.Fragment>;
                     case 'score': return <React.Fragment key="score"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Lead Score</th></React.Fragment>;
                     case 'tag': return <React.Fragment key="tag"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Tag</th></React.Fragment>;
                     case 'leadSource': return <React.Fragment key="leadSource"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Lead Source</th></React.Fragment>;
@@ -605,6 +639,30 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                       {lead.status ?? "Fresh"}
                     </span>
                   </td></React.Fragment>;
+                      case 'followUpReason': return <React.Fragment key="followUpReason">{(() => {
+                    const cf = (lead.customFields as any) || {};
+                    let reason = cf.lastFollowUpNote || cf.staleFollowUpReason || cf.followUpReason || "";
+                    if (!reason && Array.isArray(lead.notes) && lead.notes.length > 0) {
+                      const userNote = lead.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"));
+                      if (userNote?.content) reason = userNote.content;
+                    }
+                    const isFollowUp = (lead.status || "").toLowerCase().includes("follow");
+                    return (
+                      <td className="px-4 py-2.5 max-w-[240px] truncate border-r border-gray-100 text-xs">
+                        {isFollowUp && reason ? (
+                          <span 
+                            title={reason}
+                            className="inline-flex items-center text-gray-800 bg-amber-50 border border-amber-200/90 px-2.5 py-0.5 rounded-md text-xs font-medium truncate max-w-full cursor-help hover:bg-amber-100 transition-colors shadow-2xs"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 shrink-0" />
+                            <span className="truncate">{reason}</span>
+                          </span>
+                        ) : (
+                          <span className="text-gray-300 font-mono text-center block">—</span>
+                        )}
+                      </td>
+                    );
+                  })()}</React.Fragment>;
                       case 'score': return <React.Fragment key="score">{(() => {
                     const scoreInput = {
                       scoreLocation: lead.scoreLocation,
