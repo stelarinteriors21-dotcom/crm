@@ -415,7 +415,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
   };
 
   const handleRejectAll = async () => {
-    if (!confirm(`Reject all ${pending.length} pending leads? They will be reassigned to other team members.`)) return;
+    if (!confirm(`Reject all ${pending.length} pending leads? Escalation alerts will be sent to the admin.`)) return;
     setBulkLoading("reject");
     await rejectAllLeads(userId);
     setPending([]);

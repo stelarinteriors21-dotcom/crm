@@ -35,7 +35,7 @@ export default function PendingLeadsBanner({ initialLeads }: { initialLeads: any
               <div className="font-bold text-[14px] text-gray-800">{lead.name}</div>
               <div className="text-[12px] text-gray-500 mt-1">{lead.phone} • {lead.source}</div>
               <div className="text-[10px] text-red-500 mt-1 font-bold">
-                Accept within 10 minutes or it will be reassigned.
+                Accept within 10 minutes or it will be escalated to admin.
               </div>
             </div>
               <div className="flex space-x-2 shrink-0">

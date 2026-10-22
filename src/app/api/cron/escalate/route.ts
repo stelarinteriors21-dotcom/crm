@@ -186,16 +186,12 @@ export async function GET(request: Request) {
       await transporter.sendMail(mailOptions);
       emailedCount++;
 
-      // 2. Mark lead as escalated to level 2 and optionally unassign if it's a missed follow up
-      const updateData: any = { escalationLevel: 2 };
-      if (isFollowUp) {
-        updateData.assignedToId = null; // Strip from caller
-        updateData.assignedStatus = 'PENDING';
-      }
-
+      // 2. Mark lead as escalated to level 2 (Strict Policy: Never unassign or automatically reassign; leads remain with their caller, alert emails only)
       await prisma.lead.update({
         where: { id: lead.id },
-        data: updateData
+        data: {
+          escalationLevel: 2
+        }
       });
     }
 
