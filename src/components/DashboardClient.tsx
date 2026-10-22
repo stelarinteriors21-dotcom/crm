@@ -105,12 +105,12 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
         statusTimestamp = Math.max(...possibleTimestamps);
       }
 
-      // Check if lead is in a converting stage (will be changed to follow-up automatically within 24 hours)
-      const isConvertingStage = !isFollowUp && !isConvertedOrJunk;
+      // Check if lead is in Contacted status (will be changed to follow-up automatically after 24 hours)
+      const isContactedStage = sLower === 'contacted';
       const timeInStatus = nowTime - statusTimestamp;
       const timeRemainingUntilAutoFollowUp = TWENTY_FOUR_HOURS_MS - timeInStatus;
-      const isAutoFollowUpWithin24Hours = isConvertingStage && timeRemainingUntilAutoFollowUp > 0;
-      const isAutoFollowUpExpired = isConvertingStage && timeRemainingUntilAutoFollowUp <= 0;
+      const isAutoFollowUpWithin24Hours = isContactedStage && timeRemainingUntilAutoFollowUp > 0;
+      const isAutoFollowUpExpired = isContactedStage && timeRemainingUntilAutoFollowUp <= 0;
 
       // Scheduled follow-up / site visit
       let scheduledDueDate: number | null = null;

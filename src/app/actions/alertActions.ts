@@ -10,10 +10,9 @@ const CONVERTED_STATUSES = ["Won", "Advance recieved", "Pay Pending", "WON", "AD
 const JUNK_STATUSES = ["Junk", "Lost", "Job enquiry", "just curious", "Hold", "JUNK", "LOST", "HOLD", "JOB ENQUIRY", "JUST CURIOUS"];
 
 /**
- * Automates 24-hour timeout for Converting Stage:
- * For every lead whose status has not moved to the Converted stage from the Converting stage
- * for more than 24 hours (and its status remained the same), its status is moved to "follow up",
- * an upcoming follow-up task is created, and alerts are dispatched.
+ * Automates 24-hour timeout for Contacted Stage:
+ * Only moves a "Contacted" status lead to "follow up" after 24 hours.
+ * An upcoming follow-up task is created, and alerts are dispatched.
  */
 export async function checkAndProcessStaleConvertingLeads(organizationId?: string) {
   try {
@@ -21,7 +20,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
       where: {
         ...(organizationId ? { organizationId } : {}),
         status: {
-          notIn: [...CONVERTED_STATUSES, ...JUNK_STATUSES, "follow up", "FOLLOW UP"]
+          in: ["Contacted", "contacted", "CONTACTED"]
         }
       },
       include: {
@@ -51,7 +50,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
 
     for (const lead of activeLeads) {
       const sLower = (lead.status || "").trim().toLowerCase();
-      if (["won", "advance recieved", "pay pending", "junk", "lost", "job enquiry", "just curious", "hold", "follow up"].includes(sLower)) {
+      if (sLower !== "contacted") {
         continue;
       }
 
