@@ -77,6 +77,28 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
       if (diffMs >= FIVE_HOURS_MS) {
         const oldStatus = lead.status;
         
+        // Policy: Fresh leads must NEVER be pushed to follow up. Only escalation for fresh leads!
+        if (sLower === "fresh" || sLower === "new") {
+          if (lead.assignedTo?.fcmToken && !cf.freshLeadEscalated5h) {
+            try {
+              await sendPushNotification(
+                lead.assignedTo.fcmToken,
+                "🚨 Fresh Lead Pending Attention!",
+                `Fresh lead ${lead.name} has not been contacted for over 5 hours. Please contact this lead!`
+              );
+              await prisma.lead.update({
+                where: { id: lead.id },
+                data: {
+                  customFields: { ...cf, freshLeadEscalated5h: new Date().toISOString() }
+                }
+              });
+            } catch (e) {
+              console.error("Error sending push notification for fresh lead escalation:", e);
+            }
+          }
+          continue; // Strictly NEVER push fresh lead to follow up!
+        }
+
         // Policy: Never assign tasks or calls to system admin! Strictly target a caller (TELECALLER).
         let targetUserId: string | null = null;
         if (lead.assignedTo && lead.assignedTo.role === "TELECALLER") {
