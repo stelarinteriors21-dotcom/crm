@@ -201,7 +201,7 @@ export default function LeadsFilterDropdowns({
         title="Filter leads automatically moved to follow-up after 24h of inactivity"
       >
         <span className={`w-2 h-2 rounded-full mr-1.5 ${isAutoFollowUp ? 'bg-white' : 'bg-amber-500 animate-pulse'}`} />
-        Auto Follow-up {autoFollowUpCount > 0 && `(${autoFollowUpCount})`}
+        Auto Follow-up
       </button>
 
       {/* Assignee Filter */}
@@ -334,7 +334,7 @@ export default function LeadsFilterDropdowns({
                   }}
                   className="w-3.5 h-3.5 mr-2.5 border-amber-300 rounded text-amber-600 focus:ring-amber-500" 
                 /> 
-                ⚡ Filter Auto Follow-up {autoFollowUpCount > 0 ? `(${autoFollowUpCount})` : ''}
+                ⚡ Filter Auto Follow-up
               </label>
             </div>
             <div className="p-2 max-h-64 overflow-y-auto space-y-1">
