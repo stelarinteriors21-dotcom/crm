@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { getCurrentRnrSlot } from '@/app/actions/leadActions';
+import { handleConnectedCallAutomations } from '@/app/actions/callActions';
 
 export async function POST(request: Request) {
   const corsHeaders = {
@@ -237,14 +238,8 @@ export async function POST(request: Request) {
           }
         });
 
-        // Update lead status to Contacted if answered
-        const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { status: true } });
-        if (lead && (lead.status === 'Fresh' || lead.status === 'NEW' || lead.status === 'RNR')) {
-          await prisma.lead.update({
-            where: { id: leadId },
-            data: { status: 'Contacted' }
-          });
-        }
+        // Update lead status to Contacted if answered & complete any follow-up tasks
+        await handleConnectedCallAutomations(leadId, duration, finalUserId);
 
         console.log(`Upgraded 0s placeholder to connected call (${duration}s) for lead ${leadId}`);
         return NextResponse.json({ success: true, callLog: updated, upgraded: true }, { headers: corsHeaders });
@@ -279,29 +274,9 @@ export async function POST(request: Request) {
         delete cf.inactivity48hAlert;
       }
 
-      if (duration > 0 || recordingFile) {
-        // Automation 1: Call attended -> change from Fresh/NEW/RNR to Contacted
-        if (lead.status === 'Fresh' || lead.status === 'NEW' || lead.status === 'RNR') {
-          await prisma.lead.update({
-            where: { id: leadId },
-            data: { 
-              status: 'Contacted',
-              customFields: {
-                ...cf,
-                statusChangedAt: new Date().toISOString()
-              },
-              ...(lead.escalationLevel === 2 ? { escalationLevel: 0 } : {})
-            }
-          });
-        } else if (hadInactivityAlert) {
-          await prisma.lead.update({
-            where: { id: leadId },
-            data: { 
-              customFields: cf,
-              ...(lead.escalationLevel === 2 ? { escalationLevel: 0 } : {})
-            }
-          });
-        }
+      if (duration > 0 || recordingFile || callStatus === 'ANSWERED') {
+        // Automation 1: Call attended/connected -> change from Fresh/NEW/RNR/follow up to Contacted & complete follow-up
+        await handleConnectedCallAutomations(leadId, duration, finalUserId);
       } else if (duration === 0) {
         // Automation 2: Call not attended -> change to RNR
         const closedStatuses = ['Won', 'Advance recieved', 'Pay Pending', 'Junk', 'Lost', 'Job enquiry'];
