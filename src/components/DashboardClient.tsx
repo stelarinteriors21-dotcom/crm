@@ -90,27 +90,31 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
       const cf = lead.customFields || {};
       const isFollowUp = sLower === 'follow up' || sLower === 'followup';
       const isConvertedOrJunk = ['won', 'advance recieved', 'pay pending', 'junk', 'lost', 'job enquiry', 'just curious', 'hold'].includes(sLower);
+      const isSiteVisit = sLower === 'site visit schedules' || sLower === 'site visit recheduled';
+      const isFresh = sLower === 'fresh' || sLower === 'pending' || sLower === 'new';
 
       // Determine when this lead entered its current status
-      let statusTimestamp: number;
-      if (cf.statusChangedAt) {
-        statusTimestamp = new Date(cf.statusChangedAt).getTime();
-      } else {
-        const possibleTimestamps: number[] = [new Date(lead.createdAt).getTime()];
-        if (cf.quotation?.timestamp) possibleTimestamps.push(new Date(cf.quotation.timestamp).getTime());
-        if (cf.siteVisit?.timestamp) possibleTimestamps.push(new Date(cf.siteVisit.timestamp).getTime());
-        if (cf.siteVisit?.verifiedAt) possibleTimestamps.push(new Date(cf.siteVisit.verifiedAt).getTime());
-        if (lead.notes?.[0]?.createdAt) possibleTimestamps.push(new Date(lead.notes[0].createdAt).getTime());
-        if (lead.calls?.[0]?.createdAt) possibleTimestamps.push(new Date(lead.calls[0].createdAt).getTime());
-        statusTimestamp = Math.max(...possibleTimestamps);
-      }
+      const possibleTimestamps: number[] = [new Date(lead.createdAt).getTime()];
+      if (cf.statusChangedAt) possibleTimestamps.push(new Date(cf.statusChangedAt).getTime());
+      if (cf.quotation?.timestamp) possibleTimestamps.push(new Date(cf.quotation.timestamp).getTime());
+      if (cf.siteVisit?.timestamp) possibleTimestamps.push(new Date(cf.siteVisit.timestamp).getTime());
+      if (cf.siteVisit?.verifiedAt) possibleTimestamps.push(new Date(cf.siteVisit.verifiedAt).getTime());
+      if (lead.notes?.[0]?.createdAt) possibleTimestamps.push(new Date(lead.notes[0].createdAt).getTime());
+      if (lead.calls?.[0]?.createdAt) possibleTimestamps.push(new Date(lead.calls[0].createdAt).getTime());
+      const validTimestamps = possibleTimestamps.filter(t => !isNaN(t) && t > 0);
+      const statusTimestamp = validTimestamps.length > 0 ? Math.max(...validTimestamps) : new Date(lead.createdAt).getTime();
 
-      // Check if lead is in Contacted status (will be changed to follow-up automatically after 24 hours)
-      const isContactedStage = sLower === 'contacted';
+      // Check exemptions for auto follow-up
+      const hasFutureFollowUp = cf.followUpDate && new Date(cf.followUpDate).getTime() > nowTime;
+      const hasFutureSiteVisit = cf.siteVisit && (cf.siteVisit.type === "Scheduled" || cf.siteVisit.type === "Rescheduled") && cf.siteVisit.date;
+
+      // Active converting stage that automatically switches to follow-up after 24 hours if unchanged
+      const isAutoFollowUpStatus = !isConvertedOrJunk && !isFollowUp && !isFresh && !isSiteVisit && !hasFutureFollowUp && !hasFutureSiteVisit;
+
       const timeInStatus = nowTime - statusTimestamp;
       const timeRemainingUntilAutoFollowUp = TWENTY_FOUR_HOURS_MS - timeInStatus;
-      const isAutoFollowUpWithin24Hours = isContactedStage && timeRemainingUntilAutoFollowUp > 0;
-      const isAutoFollowUpExpired = isContactedStage && timeRemainingUntilAutoFollowUp <= 0;
+      const isAutoFollowUpWithin24Hours = isAutoFollowUpStatus && timeRemainingUntilAutoFollowUp > 0;
+      const isAutoFollowUpExpired = isAutoFollowUpStatus && timeRemainingUntilAutoFollowUp <= 0;
 
       // Scheduled follow-up / site visit
       let scheduledDueDate: number | null = null;
@@ -119,7 +123,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
       if (cf.siteVisit && (cf.siteVisit.type === "Scheduled" || cf.siteVisit.type === "Rescheduled") && cf.siteVisit.date) {
         scheduledDueDate = new Date(`${cf.siteVisit.date}T${cf.siteVisit.time || '12:00'}`).getTime();
         taskType = "Site Visit Follow-up";
-      } else if (isFollowUp && cf.followUpDate) {
+      } else if (cf.followUpDate) {
         scheduledDueDate = new Date(cf.followUpDate).getTime();
         taskType = "Follow-up Call";
       }

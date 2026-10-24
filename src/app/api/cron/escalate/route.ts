@@ -2,13 +2,16 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import nodemailer from 'nodemailer';
 import { sendPushNotification } from '@/lib/firebaseAdmin';
-import { checkAndEscalateInactiveLeads } from '@/app/actions/alertActions';
+import { checkAndEscalateInactiveLeads, checkAndProcessStaleConvertingLeads } from '@/app/actions/alertActions';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    // 0. Automated 48-Hour Inactivity Escalation (Alerts admin via email if lead stays in RNR, follow up, Fresh, etc. > 48h with 0 calls in 48h)
+    // 0. Automated 24-Hour Active Converting Status Timeout (Moves stale Contacted, RNR, interested, etc. to follow up after 24h)
+    await checkAndProcessStaleConvertingLeads();
+
+    // 0.1 Automated 48-Hour Inactivity Escalation (Alerts admin via email if lead stays in RNR, follow up, Fresh, etc. > 48h with 0 calls in 48h)
     const inactiveEscalated = await checkAndEscalateInactiveLeads();
 
     // 1. Wake up SNOOZED leads whose time is up

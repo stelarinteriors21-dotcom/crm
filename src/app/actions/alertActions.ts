@@ -9,10 +9,25 @@ import nodemailer from "nodemailer";
 const CONVERTED_STATUSES = ["Won", "Advance recieved", "Pay Pending", "WON", "ADVANCE RECIEVED", "PAY PENDING"];
 const JUNK_STATUSES = ["Junk", "Lost", "Job enquiry", "just curious", "Hold", "JUNK", "LOST", "HOLD", "JOB ENQUIRY", "JUST CURIOUS"];
 
+const EXCLUDED_FROM_AUTO_FOLLOW_UP = [
+  ...CONVERTED_STATUSES,
+  ...JUNK_STATUSES,
+  "follow up",
+  "followup",
+  "FOLLOW UP",
+  "Fresh",
+  "fresh",
+  "FRESH",
+  "PENDING",
+  "pending",
+  "new",
+  "NEW"
+];
+
 /**
- * Automates 24-hour timeout for Contacted Stage and Site Visits:
- * 1. Only moves a "Contacted" status lead to "follow up" after 24 hours of remaining in Contacted
- *    (provided no future follow-up or site visit is scheduled).
+ * Automates 24-hour timeout for Active Converting Stages (Contacted, RNR, interested, Quotation shared, etc.) and Site Visits:
+ * 1. Automatically moves any active converting lead to "follow up" after 24 hours of remaining in that status
+ *    without change, provided no future follow-up or site visit is scheduled.
  * 2. For scheduled site visits (Site visit Schedules / Recheduled), strictly preserves status while
  *    waiting for the visit, and only moves to "follow up" AFTER the site visit day has passed.
  */
@@ -22,7 +37,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
       where: {
         ...(organizationId ? { organizationId } : {}),
         status: {
-          in: ["Contacted", "contacted", "CONTACTED", "Site visit Schedules", "Site visit Recheduled"]
+          notIn: EXCLUDED_FROM_AUTO_FOLLOW_UP
         }
       },
       include: {
@@ -53,6 +68,17 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
     for (const lead of activeLeads) {
       const sLower = (lead.status || "").trim().toLowerCase();
       const cf = (lead.customFields as any) || {};
+
+      // Safeguard against excluded statuses (case-insensitive)
+      if (
+        [
+          "won", "advance recieved", "pay pending", 
+          "junk", "lost", "job enquiry", "just curious", "hold", 
+          "follow up", "followup", "fresh", "pending", "new"
+        ].includes(sLower)
+      ) {
+        continue;
+      }
 
       // Policy: Never assign tasks or calls to system admin! Strictly target a caller (TELECALLER).
       let targetUserId: string | null = null;
@@ -97,15 +123,24 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
         });
 
         if (targetUserId) {
-          await prisma.task.create({
-            data: {
-              title: `Follow-up: ${lead.name} - Site Visit (${svDateStr}) Passed`,
-              dueDate: new Date(Date.now() + 60 * 60 * 1000),
+          const existingTask = await prisma.task.findFirst({
+            where: {
               leadId: lead.id,
-              userId: targetUserId,
               isCompleted: false
             }
           });
+
+          if (!existingTask) {
+            await prisma.task.create({
+              data: {
+                title: `Follow-up: ${lead.name} - Site Visit (${svDateStr}) Passed`,
+                dueDate: new Date(Date.now() + 60 * 60 * 1000),
+                leadId: lead.id,
+                userId: targetUserId,
+                isCompleted: false
+              }
+            });
+          }
         }
 
         await prisma.note.create({
@@ -120,102 +155,100 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
         continue;
       }
 
-      // --- CASE 2: CONTACTED STATUS ---
-      if (sLower === "contacted") {
-        // Exemption A: If a future follow-up date is set, skip
-        if (cf.followUpDate && new Date(cf.followUpDate).getTime() > now) {
+      // --- CASE 2: ALL ACTIVE CONVERTING STATUSES (Contacted, RNR, interested, Quotation shared, Whatsapp Chat, etc.) ---
+      // Exemption A: If a future follow-up date is set by the user, skip
+      if (cf.followUpDate && new Date(cf.followUpDate).getTime() > now) {
+        continue;
+      }
+
+      // Exemption B: If a future site visit is scheduled, skip
+      if (cf.siteVisit && (cf.siteVisit.type === "Scheduled" || cf.siteVisit.type === "Rescheduled") && cf.siteVisit.date) {
+        const svDayEnd = new Date(`${cf.siteVisit.date}T23:59:59.999`).getTime();
+        if (now <= svDayEnd) {
           continue;
         }
+      }
 
-        // Exemption B: If a future site visit is scheduled, skip
-        if (cf.siteVisit && (cf.siteVisit.type === "Scheduled" || cf.siteVisit.type === "Rescheduled") && cf.siteVisit.date) {
-          continue;
-        }
+      // Determine when the active status was last touched or changed
+      const possibleTimestamps: number[] = [new Date(lead.createdAt).getTime()];
+      if (cf.statusChangedAt) possibleTimestamps.push(new Date(cf.statusChangedAt).getTime());
+      if (cf.quotation?.timestamp) possibleTimestamps.push(new Date(cf.quotation.timestamp).getTime());
+      if (cf.siteVisit?.timestamp) possibleTimestamps.push(new Date(cf.siteVisit.timestamp).getTime());
+      if (cf.siteVisit?.verifiedAt) possibleTimestamps.push(new Date(cf.siteVisit.verifiedAt).getTime());
+      if (lead.notes?.[0]?.createdAt) possibleTimestamps.push(new Date(lead.notes[0].createdAt).getTime());
+      if (lead.calls?.[0]?.createdAt) possibleTimestamps.push(new Date(lead.calls[0].createdAt).getTime());
+      const validTimestamps = possibleTimestamps.filter(t => !isNaN(t) && t > 0);
+      const statusTimestamp = validTimestamps.length > 0 ? Math.max(...validTimestamps) : new Date(lead.createdAt).getTime();
 
-        // Determine when the Contacted status became active
-        let statusTimestamp: number;
-        if (cf.statusChangedAt) {
-          statusTimestamp = new Date(cf.statusChangedAt).getTime();
-        } else {
-          const possibleTimestamps: number[] = [new Date(lead.createdAt).getTime()];
-          if (cf.quotation?.timestamp) possibleTimestamps.push(new Date(cf.quotation.timestamp).getTime());
-          if (cf.siteVisit?.timestamp) possibleTimestamps.push(new Date(cf.siteVisit.timestamp).getTime());
-          if (cf.siteVisit?.verifiedAt) possibleTimestamps.push(new Date(cf.siteVisit.verifiedAt).getTime());
-          if (lead.notes?.[0]?.createdAt) possibleTimestamps.push(new Date(lead.notes[0].createdAt).getTime());
-          if (lead.calls?.[0]?.createdAt) possibleTimestamps.push(new Date(lead.calls[0].createdAt).getTime());
-          statusTimestamp = Math.max(...possibleTimestamps);
-        }
+      const diffMs = now - statusTimestamp;
 
-        const diffMs = now - statusTimestamp;
+      // Switch to follow up only after 24 hours of remaining in this status
+      if (diffMs >= TWENTY_FOUR_HOURS_MS) {
+        const oldStatus = lead.status;
 
-        // Switch to follow up only after 24 hours of remaining in Contacted
-        if (diffMs >= TWENTY_FOUR_HOURS_MS) {
-          const oldStatus = lead.status;
+        const updatedCustomFields = {
+          ...cf,
+          statusChangedAt: new Date().toISOString(),
+          followUpDate: new Date().toISOString(),
+          stalePreviousStatus: oldStatus,
+          staleConvertingAlert: true,
+          staleConvertingTriggeredAt: new Date().toISOString(),
+          staleFollowUpReason: `Lead remained in '${oldStatus}' for >24 hours.`
+        };
 
-          const updatedCustomFields = {
-            ...cf,
-            statusChangedAt: new Date().toISOString(),
-            followUpDate: new Date().toISOString(),
-            stalePreviousStatus: oldStatus,
-            staleConvertingAlert: true,
-            staleConvertingTriggeredAt: new Date().toISOString(),
-            staleFollowUpReason: `Lead remained in '${oldStatus}' for >24 hours.`
-          };
+        const updatedLead = await prisma.lead.update({
+          where: { id: lead.id },
+          data: {
+            status: "follow up",
+            customFields: updatedCustomFields
+          }
+        });
 
-          const updatedLead = await prisma.lead.update({
-            where: { id: lead.id },
-            data: {
-              status: "follow up",
-              customFields: updatedCustomFields
+        if (targetUserId) {
+          const existingTask = await prisma.task.findFirst({
+            where: {
+              leadId: lead.id,
+              isCompleted: false
             }
           });
 
-          if (targetUserId) {
-            const existingTask = await prisma.task.findFirst({
-              where: {
+          if (!existingTask) {
+            await prisma.task.create({
+              data: {
+                title: `Follow-up: ${lead.name} - ${oldStatus} > 24h`,
+                dueDate: new Date(Date.now() + 60 * 60 * 1000),
                 leadId: lead.id,
+                userId: targetUserId,
                 isCompleted: false
               }
             });
-
-            if (!existingTask) {
-              await prisma.task.create({
-                data: {
-                  title: `Follow-up: ${lead.name} - ${oldStatus} > 24h`,
-                  dueDate: new Date(Date.now() + 60 * 60 * 1000),
-                  leadId: lead.id,
-                  userId: targetUserId,
-                  isCompleted: false
-                }
-              });
-            }
           }
-
-          await prisma.note.create({
-            data: {
-              content: `[SYSTEM: Automated 24h Follow-up Triggered]\nStatus automatically moved from "${oldStatus}" to "follow up" because the lead remained in "${oldStatus}" for >24 hours.\nFollow-up task created.`,
-              leadId: lead.id,
-              userId: targetUserId || lead.organizationId
-            }
-          });
-
-          if (lead.assignedTo?.fcmToken) {
-            try {
-              await sendPushNotification(
-                lead.assignedTo.fcmToken,
-                "Follow-up Required ⚠️",
-                `Lead ${lead.name} remained in "${oldStatus}" for >24h. Moved to Follow-up!`
-              );
-            } catch (e) {
-              console.error("Error sending push notification for stale lead:", e);
-            }
-          }
-
-          processedLeads.push({
-            ...updatedLead,
-            stalePreviousStatus: oldStatus
-          });
         }
+
+        await prisma.note.create({
+          data: {
+            content: `[SYSTEM: Automated 24h Follow-up Triggered]\nStatus automatically moved from "${oldStatus}" to "follow up" because the lead remained in "${oldStatus}" for >24 hours.\nFollow-up task created.`,
+            leadId: lead.id,
+            userId: targetUserId || lead.organizationId
+          }
+        });
+
+        if (lead.assignedTo?.fcmToken) {
+          try {
+            await sendPushNotification(
+              lead.assignedTo.fcmToken,
+              "Follow-up Required ⚠️",
+              `Lead ${lead.name} remained in "${oldStatus}" for >24h. Moved to Follow-up!`
+            );
+          } catch (e) {
+            console.error("Error sending push notification for stale lead:", e);
+          }
+        }
+
+        processedLeads.push({
+          ...updatedLead,
+          stalePreviousStatus: oldStatus
+        });
       }
     }
 
