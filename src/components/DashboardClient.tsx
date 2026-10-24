@@ -99,7 +99,8 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
       if (cf.quotation?.timestamp) possibleTimestamps.push(new Date(cf.quotation.timestamp).getTime());
       if (cf.siteVisit?.timestamp) possibleTimestamps.push(new Date(cf.siteVisit.timestamp).getTime());
       if (cf.siteVisit?.verifiedAt) possibleTimestamps.push(new Date(cf.siteVisit.verifiedAt).getTime());
-      if (lead.notes?.[0]?.createdAt) possibleTimestamps.push(new Date(lead.notes[0].createdAt).getTime());
+      const latestHumanNote = Array.isArray(lead.notes) ? lead.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:")) : null;
+      if (latestHumanNote?.createdAt) possibleTimestamps.push(new Date(latestHumanNote.createdAt).getTime());
       if (lead.calls?.[0]?.createdAt) possibleTimestamps.push(new Date(lead.calls[0].createdAt).getTime());
       const validTimestamps = possibleTimestamps.filter(t => !isNaN(t) && t > 0);
       const statusTimestamp = validTimestamps.length > 0 ? Math.max(...validTimestamps) : new Date(lead.createdAt).getTime();

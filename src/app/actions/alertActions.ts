@@ -51,6 +51,9 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
           }
         },
         notes: {
+          where: {
+            content: { not: { startsWith: "[SYSTEM:" } }
+          },
           orderBy: { createdAt: "desc" },
           take: 1
         },
