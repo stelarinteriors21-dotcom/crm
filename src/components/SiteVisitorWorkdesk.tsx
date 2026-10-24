@@ -655,7 +655,7 @@ export default function SiteVisitorWorkdesk({
                         className="px-4 py-2 rounded-xl bg-[#4f46e5] hover:bg-indigo-700 active:scale-95 text-white text-xs font-bold transition-all shadow-md shadow-indigo-500/20 flex items-center cursor-pointer"
                       >
                         <ClipboardCheck className="w-3.5 h-3.5 mr-1.5" />
-                        Verify OTP & Complete Checklist
+                        Complete Checklist & Finish Visit
                       </button>
                     )}
                   </div>

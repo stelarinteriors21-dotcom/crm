@@ -746,6 +746,8 @@ export async function updateLeadTag(leadId: string, tag: string | null) {
   });
 
   revalidatePath('/leads');
+  revalidatePath(`/leads/${leadId}`);
+  return { success: true };
 }
 
 export async function acceptAndScheduleCall(leadId: string, minutes: number = 15) {

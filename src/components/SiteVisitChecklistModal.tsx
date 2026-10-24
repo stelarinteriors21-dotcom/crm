@@ -83,19 +83,6 @@ export default function SiteVisitChecklistModal({
     e.preventDefault();
     setErrorMsg("");
 
-    const cleanInput = inputOtp.trim();
-    const targetOtp = String(currentOtp || sv.otp || "").trim();
-
-    if (!cleanInput) {
-      setErrorMsg("Please enter the 6-digit OTP provided by the client.");
-      return;
-    }
-
-    if (cleanInput !== targetOtp) {
-      setErrorMsg("Invalid OTP! Please verify the 6-digit OTP sent to the client's WhatsApp.");
-      return;
-    }
-
     const finalRooms = customRooms.trim() || roomsToRenovate;
 
     setLoading(true);
@@ -103,7 +90,6 @@ export default function SiteVisitChecklistModal({
       await updateSiteVisitDetails(lead.id, {
         ...sv,
         type: "Done",
-        verifiedOtp: cleanInput,
         verifiedAt: new Date().toISOString(),
         roomsToRenovate: finalRooms,
         measurements: measurements.trim(),
@@ -170,45 +156,11 @@ export default function SiteVisitChecklistModal({
           {success && (
             <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center space-x-2 text-xs text-emerald-800 font-bold">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              <span>Site Visit Verified & Checklist Saved Successfully!</span>
+              <span>Site Visit Completed & Checklist Saved Successfully!</span>
             </div>
           )}
 
-          {/* 1. Client OTP Verification (Mandatory) */}
-          <div className="p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-100">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
-                <KeyRound className="w-3.5 h-3.5 text-[#4f46e5]" />
-                Client OTP (Provided by Lead) <span className="text-red-500">*</span>
-              </label>
-              {currentOtp && (
-                <button
-                  type="button"
-                  onClick={handleResendOtp}
-                  disabled={loading}
-                  className="text-[11px] font-semibold text-[#4f46e5] hover:underline flex items-center"
-                >
-                  <RefreshCw className="w-3 h-3 mr-1" /> Resend OTP
-                </button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                maxLength={6}
-                value={inputOtp}
-                onChange={(e) => setInputOtp(e.target.value.replace(/[^0-9]/g, ""))}
-                placeholder="Enter 6-digit OTP"
-                required
-                className="flex-1 text-center font-mono font-bold tracking-widest text-lg py-2 border border-indigo-200 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
-              />
-            </div>
-            <p className="text-[10px] text-gray-500 mt-1">
-              Ask the client at the site for the OTP sent to their WhatsApp.
-            </p>
-          </div>
-
-          {/* 2. Number of Rooms to Renovate */}
+          {/* 1. Number of Rooms to Renovate */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
               <Home className="w-3.5 h-3.5 text-gray-500" />
@@ -360,15 +312,15 @@ export default function SiteVisitChecklistModal({
             </button>
             <button
               type="submit"
-              disabled={loading || !inputOtp.trim()}
-              className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white transition-all shadow-md shadow-emerald-600/20 disabled:opacity-50 flex items-center"
+              disabled={loading}
+              className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white transition-all shadow-md shadow-emerald-600/20 disabled:opacity-50 flex items-center cursor-pointer"
             >
               {loading ? (
-                "Verifying..."
+                "Saving..."
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                  Verify OTP & Complete Visit
+                  Complete Site Visit & Save Checklist
                 </>
               )}
             </button>

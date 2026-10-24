@@ -5,7 +5,6 @@ import { getCallHistoryByPhone } from "@/app/actions/leadActions";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 import LeadActionsMenu from "@/components/LeadActionsMenu";
-import { calculateLeadScore, getScoreColor } from "@/lib/leadScore";
 import { triggerSmartCall } from "@/components/SmartCallManager";
 import { updateLeadTag } from "@/app/actions/leadActions";
 import { addCustomTag } from "@/app/actions/settingsActions";
@@ -17,7 +16,6 @@ const BASE_COLUMNS = [
   { id: "name", label: "Name", type: "T", defaultVisible: true },
   { id: "status", label: "Status", type: "🔴", defaultVisible: true },
   { id: "followUpReason", label: "Follow-up Reason", type: "💬", defaultVisible: true },
-  { id: "score", label: "Lead Score", type: "⭐", defaultVisible: true },
   { id: "approximateBudget", label: "Approximate Budget", type: "💰", defaultVisible: true },
   { id: "city", label: "City", type: "T", defaultVisible: true },
     { id: "siteVisitDate", label: "Site Visit Date", type: "📅", defaultVisible: true },
@@ -588,7 +586,6 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                     case 'name': return <React.Fragment key="name"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Name</th></React.Fragment>;
                     case 'status': return <React.Fragment key="status"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Status</th></React.Fragment>;
                     case 'followUpReason': return <React.Fragment key="followUpReason"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Follow-up Reason</th></React.Fragment>;
-                    case 'score': return <React.Fragment key="score"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Lead Score</th></React.Fragment>;
                     case 'tag': return <React.Fragment key="tag"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Tag</th></React.Fragment>;
                     case 'leadSource': return <React.Fragment key="leadSource"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Lead Source</th></React.Fragment>;
                     case 'approximateBudget': return <React.Fragment key="approximateBudget"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Approximate Budget</th></React.Fragment>;
@@ -660,45 +657,6 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                         ) : (
                           <span className="text-gray-300 font-mono text-center block">—</span>
                         )}
-                      </td>
-                    );
-                  })()}</React.Fragment>;
-                      case 'score': return <React.Fragment key="score">{(() => {
-                    const scoreInput = {
-                      scoreLocation: lead.scoreLocation,
-                      scoreBudget: lead.scoreBudget,
-                      scoreTimeline: lead.scoreTimeline,
-                      scoreSiteVisit: lead.scoreSiteVisit,
-                      scoreQuotation: lead.scoreQuotation,
-                    };
-                    const { total, grade } = calculateLeadScore(scoreInput);
-                    const scoreColor = getScoreColor(total);
-                    return (
-                      <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
-                        <div className="flex items-center space-x-2" title={`${total.toFixed(1)}/100 - ${grade}`}>
-                          <div className="relative w-8 h-8">
-                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                              <circle cx="18" cy="18" r="16" fill="none" className="stroke-gray-100" strokeWidth="4" />
-                              <circle
-                                cx="18"
-                                cy="18"
-                                r="16"
-                                fill="none"
-                                className={
-                                  total >= 80 ? "stroke-yellow-500" :
-                                  total >= 60 ? "stroke-orange-500" :
-                                  total >= 40 ? "stroke-blue-500" :
-                                  "stroke-red-500"
-                                }
-                                strokeWidth="4"
-                                strokeDasharray={`${(total / 100) * 100}, 100`}
-                              />
-                            </svg>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-[10px] font-bold text-gray-700">{total.toFixed(0)}</span>
-                            </div>
-                          </div>
-                        </div>
                       </td>
                     );
                   })()}</React.Fragment>;

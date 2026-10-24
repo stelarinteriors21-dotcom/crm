@@ -26,6 +26,7 @@ import { formatDeterministicDate, formatDeterministicDateTime, formatDeterminist
 import SmartCallButton from "@/components/SmartCallButton";
 import WhatsAppConversationThread from "@/components/WhatsAppConversationThread";
 import BackToLeadsButton from "@/components/BackToLeadsButton";
+import LeadTagSelector from "@/components/LeadTagSelector";
 
 export default async function LeadDetailsPage({ params }: { params: { id: string } }) {
   let lead: any = null;
@@ -59,6 +60,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
   if (!user) return redirect("/login");
   const isAdmin = user?.role === "ADMIN" || user?.role === "ROOT";
   const callers = isAdmin ? await getCallers() : [];
+  const customTags = (lead.organization?.customTags as any[]) || [];
 
   const initials = lead.name.split(" ").map((p: string) => p[0]).join("").slice(0, 2).toUpperCase();
   const formattedDate = formatDeterministicDate(lead.createdAt);
@@ -164,36 +166,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
           <span className="text-[14px] font-bold text-gray-800 truncate">{lead.name}</span>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Score badge in top bar */}
-          <div className="flex items-center space-x-2 mr-2" title={`Score: ${total.toFixed(1)}/100 · ${grade}`}>
-            <div className="relative w-8 h-8">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                <circle cx="18" cy="18" r="16" fill="none" className="stroke-gray-100" strokeWidth="4" />
-                <circle
-                  cx="18"
-                  cy="18"
-                  r="16"
-                  fill="none"
-                  className={
-                    total >= 80 ? "stroke-yellow-500" :
-                    total >= 60 ? "stroke-orange-500" :
-                    total >= 40 ? "stroke-purple-500" :
-                    total > 0   ? "stroke-blue-400" :
-                    "stroke-gray-300"
-                  }
-                  strokeWidth="4"
-                  strokeDasharray="100 100"
-                  strokeDashoffset={100 - total}
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-[9px] font-black text-gray-700">{Math.round(total)}</span>
-              </div>
-            </div>
-            {total >= 80 && <span className="text-[10px] font-bold text-yellow-600">Hot 🔥</span>}
-          </div>
-          
+          <LeadTagSelector leadId={lead.id} initialTag={lead.tag} customTags={customTags} isAdmin={isAdmin} />
           {isAdmin && (
             <ReassignButton leadId={lead.id} currentAssigneeId={lead.assignedToId} callers={callers} />
           )}
@@ -232,7 +205,10 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
               </div>
               <div className="flex-1 min-w-0">
                 <h1 className="text-[15px] sm:text-[16px] font-bold text-gray-900 truncate">{lead.name}</h1>
-                <LeadStatusDropdown leadId={lead.id} initialStatus={lead.status ?? "NEW"} isAdmin={isAdmin} />
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <LeadStatusDropdown leadId={lead.id} initialStatus={lead.status ?? "NEW"} isAdmin={isAdmin} />
+                  <LeadTagSelector leadId={lead.id} initialTag={lead.tag} customTags={customTags} isAdmin={isAdmin} />
+                </div>
               </div>
             </div>
 
@@ -512,9 +488,6 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
               </div>
             )}
           </div>
-
-          {/* Stelar Lead Score Widget (Left Column) */}
-          <LeadScoreWidget leadId={lead.id} initialScores={leadScoreInput} />
         </div>
 
         {/* Right Column */}

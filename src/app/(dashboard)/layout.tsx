@@ -84,7 +84,6 @@ export default async function DashboardLayout({
       {user?.role === 'TELECALLER' && <PendingLeadWatcher userId={user?.id} />}
       {user?.role === 'TELECALLER' && <FollowUpWatcher />}
       {user?.role === 'TELECALLER' && <ActionRequiredWatcher />}
-      <LeadScorePromptWatcher />
       <DailySiteVisitsModal tasks={upcomingTasks} />
       <SmartCallManager currentUserId={user?.id} />
       <AutoCallLogWatcher userId={user?.id} />

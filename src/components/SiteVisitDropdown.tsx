@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateSiteVisitDetails } from "@/app/actions/leadActions";
-import { Calendar, MapPin, Clock, MessageCircle, Save, CheckCircle2, History, RefreshCw, ChevronDown, ChevronUp, KeyRound, ClipboardCheck, Home, Ruler, Camera } from "lucide-react";
+import { Calendar, MapPin, Clock, MessageCircle, Save, CheckCircle2, History, ChevronDown, ChevronUp, ClipboardCheck, Home, Ruler, Camera } from "lucide-react";
 import SiteVisitChecklistModal from "./SiteVisitChecklistModal";
 
 export default function SiteVisitDropdown({ lead, isAdmin = false }: { lead: any; isAdmin?: boolean }) {
@@ -19,11 +19,9 @@ export default function SiteVisitDropdown({ lead, isAdmin = false }: { lead: any
   const [showHistory, setShowHistory] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showChecklistModal, setShowChecklistModal] = useState(false);
-  const [verifyOtpInput, setVerifyOtpInput] = useState("");
-  const [verifyingOtp, setVerifyingOtp] = useState(false);
 
-  const handleAdminCompleteOverride = async () => {
-    if (!confirm("Are you sure you want to mark this site visit as Completed directly without OTP?")) {
+  const handleMarkVisitCompleted = async () => {
+    if (!confirm("Are you sure you want to mark this site visit as Completed?")) {
       return;
     }
     setLoading(true);
@@ -31,44 +29,17 @@ export default function SiteVisitDropdown({ lead, isAdmin = false }: { lead: any
       await updateSiteVisitDetails(lead.id, {
         ...currentSiteVisit,
         type: "Done",
-        adminOverride: true,
         verifiedAt: new Date().toISOString()
       });
       setType("Done");
       router.refresh();
-      alert("Site visit marked as Completed via Admin Override!");
+      alert("Site visit marked as Completed!");
       setIsExpanded(false);
     } catch (e) {
       console.error(e);
       alert("Failed to complete site visit.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    const cleanInput = verifyOtpInput.trim();
-    const targetOtp = String(currentSiteVisit.otp || "").trim();
-    if (cleanInput && targetOtp && cleanInput === targetOtp) {
-      setVerifyingOtp(true);
-      try {
-        await updateSiteVisitDetails(lead.id, {
-          ...currentSiteVisit,
-          type: "Done",
-          verifiedOtp: cleanInput,
-          verifiedAt: new Date().toISOString()
-        });
-        setType("Done");
-        router.refresh();
-        alert("Site visit confirmed & verified successfully!");
-      } catch (e) {
-        console.error(e);
-        alert("Failed to verify OTP.");
-      } finally {
-        setVerifyingOtp(false);
-      }
-    } else {
-      alert("Invalid OTP! Please check the OTP sent to client's WhatsApp.");
     }
   };
 
@@ -80,23 +51,20 @@ export default function SiteVisitDropdown({ lead, isAdmin = false }: { lead: any
     }
     setLoading(true);
     try {
-      let otp = currentSiteVisit.otp;
       let shouldOpenWhatsApp = false;
 
       if (finalType === "Scheduled" || finalType === "Rescheduled") {
-        if (!otp || forceNewOtp || currentSiteVisit.type !== finalType || date !== currentSiteVisit.date || time !== currentSiteVisit.time) {
-          // Generate new OTP if scheduling fresh, changing details, or explicitly regenerating
-          otp = Math.floor(100000 + Math.random() * 900000).toString();
+        if (currentSiteVisit.type !== finalType || date !== currentSiteVisit.date || time !== currentSiteVisit.time) {
           shouldOpenWhatsApp = true;
         }
       }
 
-      const dataToSave: any = { type: finalType, date, time, gmapLink, otp, keepScheduledStatus };
+      const dataToSave: any = { type: finalType, date, time, gmapLink, keepScheduledStatus };
       await updateSiteVisitDetails(lead.id, dataToSave);
       router.refresh();
       
-      if (shouldOpenWhatsApp && otp) {
-        const msg = `Hi ${lead.name},\nYour Site Visit is scheduled for ${date} at ${time}.\nLocation: ${gmapLink}\n\nYour OTP to verify the visit is: *${otp}*.\nPlease share this with our executive at the site.`;
+      if (shouldOpenWhatsApp) {
+        const msg = `Hi ${lead.name},\nYour Site Visit is scheduled for ${date} at ${time}.\nLocation: ${gmapLink}\n\nOur executive will visit your property at the scheduled time. Thank you!`;
         const cleanPhone = lead.phone.replace(/[^0-9]/g, '');
         window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
       } else {
@@ -308,17 +276,6 @@ ${reqStr || "No specific requirements logged."}
                 >
                   <Save className="w-3 h-3 mr-1" /> Save
                 </button>
-                {currentSiteVisit.type === type && (type === "Scheduled" || type === "Rescheduled") && (
-                  <button 
-                    type="button"
-                    onClick={() => handleSave(undefined, true)} 
-                    disabled={loading} 
-                    className="flex-1 bg-orange-100 hover:bg-orange-200 text-orange-700 text-xs font-bold py-1.5 rounded flex items-center justify-center transition-colors disabled:opacity-50 cursor-pointer" 
-                    title="Regenerate & Resend OTP"
-                  >
-                    <RefreshCw className="w-3 h-3 mr-1" /> OTP
-                  </button>
-                )}
                 <button 
                   type="button"
                   onClick={handleWhatsAppGroup} 
@@ -328,7 +285,7 @@ ${reqStr || "No specific requirements logged."}
                 </button>
               </div>
 
-              {/* Admin Override: Update Date/Time without changing status to Rescheduled */}
+              {/* Update Date/Time without changing status to Rescheduled */}
               {isAdmin && (currentSiteVisit.type === "Scheduled" || type === "Scheduled" || currentSiteVisit.type === "Rescheduled" || type === "Rescheduled") && (
                 <button 
                   type="button"
@@ -341,57 +298,24 @@ ${reqStr || "No specific requirements logged."}
                 </button>
               )}
 
-              {/* OTP Confirmation Section */}
-              <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-lg space-y-2 mt-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-indigo-950 flex items-center">
-                    <KeyRound className="w-3.5 h-3.5 mr-1 text-indigo-600" /> Confirm Visit with Client OTP
-                  </span>
-                  {currentSiteVisit.otp && (
-                    <span className="text-[10px] bg-indigo-100 text-indigo-800 font-mono font-bold px-2 py-0.5 rounded">
-                      OTP: {currentSiteVisit.otp}
-                    </span>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={verifyOtpInput}
-                    onChange={(e) => setVerifyOtpInput(e.target.value)}
-                    placeholder="Enter 6-digit OTP"
-                    className="flex-1 text-center font-bold tracking-widest border border-gray-300 rounded px-2 py-1.5 outline-none focus:border-[#4f46e5] text-xs bg-white"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleVerifyOtp}
-                    disabled={verifyingOtp || !verifyOtpInput.trim()}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded transition-colors disabled:opacity-50 flex items-center cursor-pointer shadow-xs"
-                  >
-                    {verifyingOtp ? "..." : <><CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Confirm</>}
-                  </button>
-                </div>
+              {/* Site Visit Completion Section (Direct & Checklist - No OTP required) */}
+              <div className="space-y-2 mt-3 pt-3 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={handleMarkVisitCompleted}
+                  disabled={loading}
+                  className="w-full py-2.5 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center justify-center transition-all cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-1.5" /> Mark Site Visit as Completed
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowChecklistModal(true)}
-                  className="w-full mt-1.5 py-1.5 px-3 bg-[#4f46e5] hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer shadow-2xs"
+                  className="w-full py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer shadow-2xs"
                 >
-                  <ClipboardCheck className="w-3.5 h-3.5 mr-1.5" /> Complete Visit Checklist with OTP
+                  <ClipboardCheck className="w-3.5 h-3.5 mr-1.5 text-indigo-600" /> Complete Visit Checklist & Notes
                 </button>
               </div>
-
-              {/* Admin Override: 1-Click Complete Visit (No OTP Required) */}
-              {isAdmin && type !== "Done" && (
-                <div className="pt-2 border-t border-gray-200 mt-2">
-                  <button
-                    type="button"
-                    onClick={handleAdminCompleteOverride}
-                    disabled={loading}
-                    className="w-full py-2 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center justify-center transition-all cursor-pointer"
-                  >
-                    <CheckCircle2 className="w-4 h-4 mr-1.5" /> ⚡ Admin Override: Mark Visit as Completed
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
@@ -399,13 +323,8 @@ ${reqStr || "No specific requirements logged."}
             <div className="p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-950 text-xs space-y-2">
               <div className="flex items-center justify-between font-bold text-emerald-800 border-b border-emerald-200/60 pb-1.5">
                 <span className="flex items-center">
-                  <CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-600" /> Site Visit Confirmed & Verified
+                  <CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-600" /> Site Visit Confirmed & Completed
                 </span>
-                {currentSiteVisit.verifiedOtp && (
-                  <span className="bg-emerald-200/80 text-emerald-900 text-[10px] font-mono font-bold px-1.5 py-0.2 rounded">
-                    OTP: {currentSiteVisit.verifiedOtp}
-                  </span>
-                )}
               </div>
 
               <div className="space-y-1 text-[11px] text-emerald-800">

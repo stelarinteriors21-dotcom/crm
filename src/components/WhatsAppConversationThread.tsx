@@ -356,15 +356,13 @@ export default function WhatsAppConversationThread({
       {/* Quick Template Chips */}
       <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 flex items-center gap-2 flex-wrap">
         <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Quick Templates:</span>
-        {siteVisitOtp && (
-          <button
-            type="button"
-            onClick={handleUseOtpTemplate}
-            className="text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-lg hover:bg-amber-100 transition-colors"
-          >
-            🔑 Site Visit OTP ({siteVisitOtp})
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setDraft(`Hello ${leadName},\n\nYour site visit has been scheduled with Stelar Interiors. Our executive will visit your property at the scheduled time.\n\nPlease feel free to let us know if you need to reschedule. Thank you!`)}
+          className="text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-lg hover:bg-amber-100 transition-colors"
+        >
+          📍 Site Visit Scheduled
+        </button>
         <button
           type="button"
           onClick={() => setDraft(`Hello ${leadName},\n\nFollowing up regarding your inquiry with Stelar Interiors. When would be a good time to speak?`)}

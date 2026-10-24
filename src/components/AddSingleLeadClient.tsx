@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, ExternalLink, Type, Phone, Mail, ChevronDown, UserPlus, Calendar, Tag, CheckCircle, UploadCloud } from "lucide-react";
+import { Search, ExternalLink, Type, Phone, Mail, ChevronDown, UserPlus, Calendar, Tag, CheckCircle, UploadCloud, Globe, Plus } from "lucide-react";
 import { createLead } from "@/app/actions/leadActions";
+import { getCustomLeadSources, addCustomLeadSource } from "@/app/actions/sourceActions";
 
 interface AddSingleLeadClientProps {
   isAdmin?: boolean;
@@ -24,8 +25,46 @@ export default function AddSingleLeadClient({ isAdmin = false }: AddSingleLeadCl
     city: "",
     budget: "",
     status: "Fresh",
-    source: "MANUAL"
+    source: "Manual"
   });
+
+  const [sources, setSources] = useState<string[]>([
+    "Manual", "Google Ads", "Meta Ads", "Website", "Referral", "WhatsApp", "Instagram", "Walk-in"
+  ]);
+  const [isAddingCustomSource, setIsAddingCustomSource] = useState(false);
+  const [customSourceInput, setCustomSourceInput] = useState("");
+  const [savingSource, setSavingSource] = useState(false);
+
+  useEffect(() => {
+    if (isAdmin) {
+      getCustomLeadSources().then((res) => {
+        if (res && res.length > 0) {
+          setSources(res);
+        }
+      });
+    }
+  }, [isAdmin]);
+
+  const handleSaveCustomSource = async () => {
+    const trimmed = customSourceInput.trim();
+    if (!trimmed) return;
+    setSavingSource(true);
+    try {
+      const res = await addCustomLeadSource(trimmed);
+      if (res.success) {
+        setSources(res.sources);
+        setFormData(prev => ({ ...prev, source: trimmed }));
+        setIsAddingCustomSource(false);
+        setCustomSourceInput("");
+      } else {
+        alert(res.error || "Failed to add custom source");
+      }
+    } catch (e: any) {
+      alert(e.message || "Failed to add source");
+    } finally {
+      setSavingSource(false);
+    }
+  };
 
   const handleChange = (e: any) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -199,6 +238,82 @@ export default function AddSingleLeadClient({ isAdmin = false }: AddSingleLeadCl
               <input type="text" name="city" value={formData.city} onChange={handleChange} placeholder="Text field value" className="flex-1 px-3 py-2 text-sm text-gray-700 focus:outline-none" />
             </div>
           </div>
+
+          {/* LEAD SOURCE (ADMIN ONLY) */}
+          {isAdmin && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-indigo-600" />
+                  Lead Source <span className="text-[9px] bg-indigo-50 text-indigo-700 font-bold px-1.5 py-0.5 rounded">Admin Only</span>
+                </label>
+                {!isAddingCustomSource && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingCustomSource(true)}
+                    className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center cursor-pointer"
+                  >
+                    <Plus className="w-3 h-3 mr-1" /> Add Custom Source
+                  </button>
+                )}
+              </div>
+
+              {isAddingCustomSource ? (
+                <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-2 animate-in fade-in duration-150">
+                  <div className="text-[11px] font-semibold text-gray-700">Enter New Lead Source Name:</div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customSourceInput}
+                      onChange={(e) => setCustomSourceInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSaveCustomSource(); } }}
+                      placeholder="e.g. Google Ads, Exhibition, YouTube"
+                      className="flex-1 px-3 py-2 text-sm border border-indigo-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveCustomSource}
+                      disabled={savingSource || !customSourceInput.trim()}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
+                    >
+                      {savingSource ? "Adding..." : "Add Source"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setIsAddingCustomSource(false); setCustomSourceInput(""); }}
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center border border-gray-200 rounded overflow-hidden bg-white">
+                  <div className="px-3 border-r border-gray-100 text-gray-400">
+                    <Globe className="w-4 h-4" />
+                  </div>
+                  <select
+                    name="source"
+                    value={formData.source}
+                    onChange={(e) => {
+                      if (e.target.value === "__ADD_CUSTOM__") {
+                        setIsAddingCustomSource(true);
+                      } else {
+                        handleChange(e);
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 text-sm text-gray-700 focus:outline-none bg-white cursor-pointer"
+                  >
+                    {sources.map((src) => (
+                      <option key={src} value={src}>{src}</option>
+                    ))}
+                    <option value="__ADD_CUSTOM__">➕ Add Custom Source...</option>
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
           
         </div>
       </div>

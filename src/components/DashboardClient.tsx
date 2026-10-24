@@ -605,12 +605,9 @@ function HotLeadsWidget({ hotLeads }: { hotLeads: (Lead & { computedScore?: numb
                 <div className="text-[11px] text-gray-500 truncate">{lead.phone ?? "--"} &bull; {lead.status ?? "Fresh"}</div>
               </div>
               <div className="flex items-center space-x-2 shrink-0">
-                <div className="flex flex-col items-end">
-                  <span className="text-[14px] font-black text-orange-600 leading-none">
-                    {lead.computedScore?.toFixed(1) ?? "0.0"}
-                  </span>
-                  <span className="text-[9px] font-bold text-orange-400 uppercase tracking-wider">Score</span>
-                </div>
+                <span className="text-[11px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">
+                  🔥 Active
+                </span>
               </div>
             </div>
           ))
