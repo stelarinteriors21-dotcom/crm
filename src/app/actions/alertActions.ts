@@ -320,6 +320,47 @@ export async function checkAndEscalateInactiveLeads(organizationId?: string) {
 
       const cf = (lead.customFields as any) || {};
 
+      // EXEMPTION: If a future follow-up date is set, DO NOT escalate for 48h inactivity!
+      // The caller and client have explicitly scheduled a future callback.
+      // Only check for 48h inactivity after the scheduled follow-up period has elapsed.
+      if (cf.followUpDate) {
+        const followUpTime = new Date(cf.followUpDate).getTime();
+        if (now < followUpTime) {
+          // Scheduled follow-up is in the future. Clear any old inactivity alert and skip escalation.
+          if (cf.inactivity48hAlert) {
+            const updatedCustomFields = { ...cf };
+            delete updatedCustomFields.inactivity48hAlert;
+            await prisma.lead.update({
+              where: { id: lead.id },
+              data: { customFields: updatedCustomFields }
+            });
+          }
+          continue;
+        }
+
+        // If the follow-up date has passed, only escalate if 48 hours have elapsed since the follow-up became due
+        const timeSinceFollowUpDue = now - followUpTime;
+        if (timeSinceFollowUpDue < FORTY_EIGHT_HOURS_MS) {
+          continue;
+        }
+      }
+
+      // EXEMPTION: If a future Site Visit is scheduled, do not escalate for inactivity while waiting for visit
+      if (cf.siteVisit && (cf.siteVisit.type === "Scheduled" || cf.siteVisit.type === "Rescheduled") && cf.siteVisit.date) {
+        const svTime = new Date(`${cf.siteVisit.date}T${cf.siteVisit.time || '14:00'}`).getTime();
+        if (now < svTime) {
+          if (cf.inactivity48hAlert) {
+            const updatedCustomFields = { ...cf };
+            delete updatedCustomFields.inactivity48hAlert;
+            await prisma.lead.update({
+              where: { id: lead.id },
+              data: { customFields: updatedCustomFields }
+            });
+          }
+          continue;
+        }
+      }
+
       // 1. Determine how long the lead has been in this status
       let statusTimestamp: number;
       if (cf.statusChangedAt) {

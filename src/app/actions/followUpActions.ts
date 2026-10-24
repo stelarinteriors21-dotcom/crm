@@ -19,6 +19,9 @@ export async function scheduleFollowUpDate(leadId: string, dateIsoString: string
   if (note) customFields.lastFollowUpNote = note.trim();
   customFields.statusChangedAt = new Date().toISOString();
   delete customFields.staleConvertingAlert;
+  delete customFields.inactivity48hAlert;
+  delete customFields.inactivity48hTriggeredAt;
+  delete customFields.last48hInactivityEmailedAt;
 
   // Complete existing pending tasks
   await prisma.task.updateMany({

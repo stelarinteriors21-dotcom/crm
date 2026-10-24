@@ -1047,6 +1047,9 @@ export async function updateSiteVisitDetails(leadId: string, siteVisitData: any)
       delete (updatedCustomFields as any).followUpDate;
       delete (updatedCustomFields as any).isManualFollowUp;
       delete (updatedCustomFields as any).staleConvertingAlert;
+  delete (updatedCustomFields as any).inactivity48hAlert;
+  delete (updatedCustomFields as any).inactivity48hTriggeredAt;
+  delete (updatedCustomFields as any).last48hInactivityEmailedAt;
     } else if (!siteVisitData.type) {
       if (lead.status === "Site visit Schedules" || lead.status === "Site visit Recheduled") {
         newStatus = "follow up";
@@ -1159,8 +1162,11 @@ export async function createQuickFollowUp(leadId: string, minutes: number) {
     statusChangedAt: new Date().toISOString()
   };
 
-  // Clear stale converting alert so ActionRequiredWatcher stops alerting
+  // Clear stale alerts so ActionRequiredWatcher and inactivity alerts stop
   delete (updatedCustomFields as any).staleConvertingAlert;
+  delete (updatedCustomFields as any).inactivity48hAlert;
+  delete (updatedCustomFields as any).inactivity48hTriggeredAt;
+  delete (updatedCustomFields as any).last48hInactivityEmailedAt;
 
   await prisma.lead.update({
     where: { id: leadId },
@@ -1262,6 +1268,9 @@ export async function scheduleCustomFollowUp(leadId: string, dateIsoString: stri
   };
 
   delete (updatedCustomFields as any).staleConvertingAlert;
+  delete (updatedCustomFields as any).inactivity48hAlert;
+  delete (updatedCustomFields as any).inactivity48hTriggeredAt;
+  delete (updatedCustomFields as any).last48hInactivityEmailedAt;
 
   await prisma.lead.update({
     where: { id: leadId },
@@ -1372,6 +1381,9 @@ export async function updateQuotationDetails(leadId: string, quotationData: any)
     if (isSent) {
       // 1. Close current alerts (e.g. stale converting, revision, site visit)
       delete (updatedCustomFields as any).staleConvertingAlert;
+  delete (updatedCustomFields as any).inactivity48hAlert;
+  delete (updatedCustomFields as any).inactivity48hTriggeredAt;
+  delete (updatedCustomFields as any).last48hInactivityEmailedAt;
       delete (updatedCustomFields as any).siteVisitAlert;
       (updatedCustomFields as any).revisionAlertActive = false;
       delete (updatedCustomFields as any).revisionAlertDismissedUntil;
@@ -1541,6 +1553,9 @@ export async function updateConvertedDetails(leadId: string, convertedData: any)
       (updatedCustomFields as any).revisionAlertActive = false;
       (updatedCustomFields as any).quotationApproved = true;
       delete (updatedCustomFields as any).staleConvertingAlert;
+  delete (updatedCustomFields as any).inactivity48hAlert;
+  delete (updatedCustomFields as any).inactivity48hTriggeredAt;
+  delete (updatedCustomFields as any).last48hInactivityEmailedAt;
 
       await prisma.task.updateMany({
         where: {
@@ -1618,6 +1633,9 @@ export async function updateJunkDetails(leadId: string, junkData: any) {
       (updatedCustomFields as any).quotationAlertOpen = false;
       (updatedCustomFields as any).revisionAlertActive = false;
       delete (updatedCustomFields as any).staleConvertingAlert;
+  delete (updatedCustomFields as any).inactivity48hAlert;
+  delete (updatedCustomFields as any).inactivity48hTriggeredAt;
+  delete (updatedCustomFields as any).last48hInactivityEmailedAt;
 
       await prisma.task.updateMany({
         where: {
