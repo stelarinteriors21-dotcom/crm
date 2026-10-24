@@ -31,11 +31,7 @@ export default function WhatsAppCompanionClient({ recentLeads = [] }: { recentLe
       setPhone(lead.phone.replace(/[^0-9]/g, ""));
     }
 
-    if (lead.siteVisitOtp) {
-      setMessage(`Hello ${lead.name},\n\nYour 6-digit site visit verification OTP for Stelar Interiors is: *${lead.siteVisitOtp}*.\n\nPlease share this OTP with our visiting executive upon arrival.\n\nThank you!`);
-    } else {
-      setMessage(`Hello ${lead.name},\n\nThank you for connecting with Stelar Interiors. We are following up regarding your interior design inquiry.\n\nPlease let us know a convenient time to speak.\n\nBest regards,\nStelar Interiors Team`);
-    }
+    setMessage(`Hello ${lead.name},\n\nThank you for connecting with Stelar Interiors. We are following up regarding your interior design inquiry.\n\nPlease let us know a convenient time to speak.\n\nBest regards,\nStelar Interiors Team`);
   };
 
   const handleLaunchWhatsAppWeb = () => {
@@ -136,11 +132,11 @@ export default function WhatsAppCompanionClient({ recentLeads = [] }: { recentLe
 
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs space-y-1.5">
           <div className="flex items-center text-amber-700 font-bold">
-            <KeyRound className="w-4 h-4 mr-1.5 text-amber-600" />
-            Instant OTP & Quote Dispatch
+            <Calendar className="w-4 h-4 mr-1.5 text-amber-600" />
+            Instant Schedule & Quote Dispatch
           </div>
           <p className="text-gray-500 leading-relaxed text-[11px]">
-            Select any lead below to automatically pre-fill the customer’s phone number and verification OTP into WhatsApp Web.
+            Select any lead below to automatically pre-fill the customer’s phone number and message into WhatsApp Web.
           </p>
         </div>
       </div>
@@ -149,7 +145,7 @@ export default function WhatsAppCompanionClient({ recentLeads = [] }: { recentLe
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
         <div className="flex items-center justify-between border-b border-gray-100 pb-3">
           <div>
-            <h2 className="text-sm font-bold text-gray-900">Forward Message or Site Visit OTP</h2>
+            <h2 className="text-sm font-bold text-gray-900">Forward Message or Site Visit Details</h2>
             <p className="text-xs text-gray-400">Pre-fill the client’s number and click send to open in your companion window.</p>
           </div>
           <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
@@ -169,10 +165,10 @@ export default function WhatsAppCompanionClient({ recentLeads = [] }: { recentLe
               onChange={(e) => handleLeadSelect(e.target.value)}
               className="w-full text-xs font-medium border border-gray-200 rounded-xl px-3 py-2.5 bg-gray-50/50 outline-none focus:border-[#4f46e5] focus:bg-white"
             >
-              <option value="">-- Choose a lead to auto-fill phone & OTP --</option>
+              <option value="">-- Choose a lead to auto-fill phone --</option>
               {recentLeads.map((l) => (
                 <option key={l.id} value={l.id}>
-                  {l.name} ({l.phone || "No phone"}{l.siteVisitOtp ? ` • OTP: ${l.siteVisitOtp}` : ""})
+                  {l.name} ({l.phone || "No phone"})
                 </option>
               ))}
             </select>
@@ -197,10 +193,10 @@ export default function WhatsAppCompanionClient({ recentLeads = [] }: { recentLe
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setMessage("Hello, your 6-digit site visit verification OTP for Stelar Interiors is: *123456*. Please share this with our visiting executive upon arrival. Thank you!")}
+              onClick={() => setMessage("Hello, your site visit has been scheduled with Stelar Interiors. Our executive will visit your property at the scheduled time. Thank you!")}
               className="text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/60 px-3 py-1.5 rounded-lg transition-colors"
             >
-              🔑 Site Visit OTP Template
+              📍 Site Visit Scheduled Template
             </button>
             <button
               type="button"

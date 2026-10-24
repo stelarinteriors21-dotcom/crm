@@ -90,3 +90,49 @@ export async function updateRequireGps(requireGps: boolean) {
   });
   revalidatePath('/settings');
 }
+
+export async function getGlobalSoundMuted(): Promise<boolean> {
+  const user = await getCurrentUser();
+  if (!user || !user.organizationId) return false;
+
+  const org = await prisma.organization.findUnique({
+    where: { id: user.organizationId },
+    select: { customFieldLabels: true }
+  });
+
+  const cf = (org?.customFieldLabels as any) || {};
+  return Boolean(cf.globalSoundMuted);
+}
+
+export async function toggleGlobalSoundMuted(): Promise<{ success: boolean; muted: boolean }> {
+  const user = await getCurrentUser();
+  if (!user || !user.organizationId) throw new Error("Unauthorized");
+  if (user.role !== "ADMIN" && user.role !== "ROOT") {
+    throw new Error("Only admins can override CRM sounds");
+  }
+
+  const org = await prisma.organization.findUnique({
+    where: { id: user.organizationId },
+    select: { customFieldLabels: true }
+  });
+
+  const cf = (org?.customFieldLabels as any) || {};
+  const newMuted = !cf.globalSoundMuted;
+
+  await prisma.organization.update({
+    where: { id: user.organizationId },
+    data: {
+      customFieldLabels: {
+        ...cf,
+        globalSoundMuted: newMuted,
+        soundMutedBy: user.name || user.email,
+        soundMutedAt: new Date().toISOString()
+      }
+    }
+  });
+
+  revalidatePath('/settings');
+  revalidatePath('/dashboard');
+  revalidatePath('/leads');
+  return { success: true, muted: newMuted };
+}

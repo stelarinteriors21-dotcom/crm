@@ -10,6 +10,8 @@ import {
 import { getCurrentUser } from "@/app/actions/authActions";
 import UserDropdown from "@/components/UserDropdown";
 import NotificationBell from "@/components/NotificationBell";
+import AdminSoundToggle from "@/components/AdminSoundToggle";
+import GlobalSoundWatcher from "@/components/GlobalSoundWatcher";
 import Sidebar from "@/components/Sidebar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import AddLeadButton from "@/components/AddLeadButton";
@@ -23,7 +25,6 @@ const PushNotificationInitializer = nextDynamic(() => import("@/components/PushN
 const PendingLeadWatcher = nextDynamic(() => import("@/components/PendingLeadWatcher"), { ssr: false });
 const FollowUpWatcher = nextDynamic(() => import("@/components/FollowUpWatcher"), { ssr: false });
 const ActionRequiredWatcher = nextDynamic(() => import("@/components/ActionRequiredWatcher"), { ssr: false });
-const LeadScorePromptWatcher = nextDynamic(() => import("@/components/LeadScorePromptWatcher"), { ssr: false });
 const DailySiteVisitsModal = nextDynamic(() => import("@/components/DailySiteVisitsModal"), { ssr: false });
 const SmartCallManager = nextDynamic(() => import("@/components/SmartCallManager"), { ssr: false });
 const AutoCallLogWatcher = nextDynamic(() => import("@/components/AutoCallLogWatcher"), { ssr: false });
@@ -43,7 +44,18 @@ export default async function DashboardLayout({
   
   // Fetch pending tasks for the user
   let upcomingTasks: any[] = [];
+  let globalSoundMuted = false;
   if (user) {
+    try {
+      const org = user?.organizationId ? await prisma.organization.findUnique({
+        where: { id: user.organizationId },
+        select: { customFieldLabels: true }
+      }) : null;
+      globalSoundMuted = Boolean((org?.customFieldLabels as any)?.globalSoundMuted);
+    } catch (e) {
+      // default false
+    }
+
     try {
       await checkAndProcessStaleConvertingLeads(user.organizationId);
       await checkAndEscalateInactiveLeads(user.organizationId);
@@ -88,6 +100,7 @@ export default async function DashboardLayout({
       <SmartCallManager currentUserId={user?.id} />
       <AutoCallLogWatcher userId={user?.id} />
       <GlobalCommandPalette isAdmin={isAdmin} userRole={user?.role} />
+      <GlobalSoundWatcher initialMuted={globalSoundMuted} />
       <div className="flex h-screen bg-[#f8fafc] text-[#333333] font-sans flex-col md:flex-row overflow-hidden">
 
       {/* Modern Collapsible Desktop Sidebar */}
@@ -107,6 +120,7 @@ export default async function DashboardLayout({
             </div>
             
             <div className="flex items-center space-x-1.5 sm:space-x-3 md:space-x-4 shrink-0">
+              <AdminSoundToggle isAdmin={isAdmin} initialMuted={globalSoundMuted} />
               <NotificationBell tasks={upcomingTasks} />
               <AddLeadButton isAdmin={isAdmin} />
               <UserDropdown 

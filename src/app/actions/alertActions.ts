@@ -83,6 +83,11 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
         continue;
       }
 
+      // If already flagged for auto follow-up and pending action, skip to prevent duplicate tasks
+      if (cf.staleConvertingAlert === true || cf.isAutoFollowUp === true) {
+        continue;
+      }
+
       // Policy: Never assign tasks or calls to system admin! Strictly target a caller (TELECALLER).
       let targetUserId: string | null = null;
       if (lead.assignedTo && lead.assignedTo.role === "TELECALLER") {
@@ -109,7 +114,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
         const oldStatus = lead.status;
         const updatedCustomFields = {
           ...cf,
-          statusChangedAt: new Date().toISOString(),
+          isAutoFollowUp: true,
           followUpDate: new Date().toISOString(),
           stalePreviousStatus: oldStatus,
           staleConvertingAlert: true,
@@ -120,7 +125,6 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
         const updatedLead = await prisma.lead.update({
           where: { id: lead.id },
           data: {
-            status: "follow up",
             customFields: updatedCustomFields
           }
         });
@@ -148,7 +152,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
 
         await prisma.note.create({
           data: {
-            content: `[SYSTEM: Automated Follow-up Triggered]\nStatus automatically moved from "${oldStatus}" to "follow up" because the site visit scheduled for ${svDateStr} has passed.\nFollow-up task created.`,
+            content: `[SYSTEM: Automated Follow-up Triggered]\nSite visit scheduled for ${svDateStr} has passed without being marked completed. Flagged for follow-up and follow-up task created.`,
             leadId: lead.id,
             userId: targetUserId || lead.organizationId
           }
@@ -191,7 +195,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
 
         const updatedCustomFields = {
           ...cf,
-          statusChangedAt: new Date().toISOString(),
+          isAutoFollowUp: true,
           followUpDate: new Date().toISOString(),
           stalePreviousStatus: oldStatus,
           staleConvertingAlert: true,
@@ -202,7 +206,6 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
         const updatedLead = await prisma.lead.update({
           where: { id: lead.id },
           data: {
-            status: "follow up",
             customFields: updatedCustomFields
           }
         });
@@ -230,7 +233,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
 
         await prisma.note.create({
           data: {
-            content: `[SYSTEM: Automated 24h Follow-up Triggered]\nStatus automatically moved from "${oldStatus}" to "follow up" because the lead remained in "${oldStatus}" for >24 hours.\nFollow-up task created.`,
+            content: `[SYSTEM: Automated 24h Follow-up Triggered]\nLead remained in "${oldStatus}" for >24 hours without action. Flagged for follow-up and follow-up task created.`,
             leadId: lead.id,
             userId: targetUserId || lead.organizationId
           }
@@ -241,7 +244,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
             await sendPushNotification(
               lead.assignedTo.fcmToken,
               "Follow-up Required ⚠️",
-              `Lead ${lead.name} remained in "${oldStatus}" for >24h. Moved to Follow-up!`
+              `Lead ${lead.name} remained in "${oldStatus}" for >24h. Follow-up required!`
             );
           } catch (e) {
             console.error("Error sending push notification for stale lead:", e);
@@ -698,19 +701,20 @@ export async function getActionRequiredLeads() {
     where: {
       organizationId: user.organizationId,
       assignedToId: user.id,
-      status: "follow up"
+      OR: [
+        { customFields: { path: ['staleConvertingAlert'], equals: true } },
+        { customFields: { path: ['isAutoFollowUp'], equals: true } }
+      ]
     }
   });
 
   for (const lead of staleLeads) {
     const cf = (lead.customFields as any) || {};
-    if (cf.staleConvertingAlert) {
-      alerts.push({
-        type: "STALE_CONVERTING_24H",
-        message: `24h Timeout Alert: ${lead.name} remained in "${cf.stalePreviousStatus || 'Contacted'}" for >24 hours! Moved to Follow-up; task created.`,
-        lead
-      });
-    }
+    alerts.push({
+      type: "STALE_CONVERTING_24H",
+      message: `24h Timeout Alert: ${lead.name} remained in "${lead.status || cf.stalePreviousStatus || 'Contacted'}" for >24 hours! Auto follow-up flagged; task created.`,
+      lead
+    });
   }
 
   // 4. Quotation Follow-up (1-day frequency) and Revision Alerts

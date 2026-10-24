@@ -5,7 +5,7 @@ import { getCurrentUser } from "./authActions";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "./activityActions";
 
-export async function getLeads(query?: string, searchField?: string, status?: string | string[], source?: string, assigned?: string, active?: boolean, startDate?: string, endDate?: string, tag?: string, city?: string | string[], stage?: string) {
+export async function getLeads(query?: string, searchField?: string, status?: string | string[], source?: string, assigned?: string, active?: boolean, startDate?: string, endDate?: string, tag?: string, city?: string | string[], stage?: string, autoFollowUp?: boolean | string) {
   const user = await getCurrentUser();
   if (!user) return [];
 
@@ -86,8 +86,22 @@ export async function getLeads(query?: string, searchField?: string, status?: st
     } else {
       where.status = status;
     }
-  } else if (!stage) {
+  } else if (!stage && !autoFollowUp) {
     where.status = { notIn: ['Junk'] };
+  }
+
+  if (autoFollowUp === true || autoFollowUp === "true" || autoFollowUp === "1") {
+    const autoCondition = {
+      OR: [
+        { customFields: { path: ['staleConvertingAlert'], equals: true } },
+        { customFields: { path: ['isAutoFollowUp'], equals: true } }
+      ]
+    };
+    if (!where.AND) {
+      where.AND = [autoCondition];
+    } else {
+      where.AND.push(autoCondition);
+    }
   }
 
   if (city) {
@@ -969,6 +983,27 @@ export async function getUniqueCities() {
     distinct: ['city']
   });
   return leads.map(l => l.city).filter(Boolean);
+}
+
+export async function getAutoFollowUpCount(): Promise<number> {
+  const user = await getCurrentUser();
+  if (!user) return 0;
+  const where: any = {
+    organizationId: user.organizationId,
+    OR: [
+      { customFields: { path: ['staleConvertingAlert'], equals: true } },
+      { customFields: { path: ['isAutoFollowUp'], equals: true } }
+    ]
+  };
+  if (user.role !== "ADMIN" && user.role !== "ROOT" && user.role !== "SITE_VISITOR") {
+    where.assignedToId = user.id;
+  }
+  try {
+    return await prisma.lead.count({ where });
+  } catch (e) {
+    console.error("Error getting auto follow-up count:", e);
+    return 0;
+  }
 }
 
 export async function getLeadContextForAI(leadId: string) {

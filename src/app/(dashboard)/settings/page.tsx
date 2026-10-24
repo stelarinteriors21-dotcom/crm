@@ -20,6 +20,7 @@ export default async function SettingsPage() {
         initialLabels={(settings?.customFieldLabels as Record<string, string>) || {}}
         initialRequireGps={settings?.requireGps || false}
         initialTags={(settings?.customTags as any[]) || [{name: "Potential lead", color: "#3b82f6"}, {name: "Future potential lead", color: "#8b5cf6"}]}
+        initialSoundMuted={Boolean((settings?.customFieldLabels as any)?.globalSoundMuted)}
       />
     </div>
   );

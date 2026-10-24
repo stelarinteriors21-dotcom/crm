@@ -2,8 +2,6 @@ import prisma from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Phone, FileText, MapPin, Mail, User, Calendar, Tag, PhoneCall, ArrowLeft, Edit3, MessageSquare, MessageCircle, Trash2, Home, Ruler, Camera, CheckCircle2, History } from "lucide-react";
-import LeadScoreWidget from "@/components/LeadScoreWidget";
-import { calculateLeadScore, getScoreColor } from "@/lib/leadScore";
 import LeadStatusDropdown from "@/components/LeadStatusDropdown";
 import SiteVisitDropdown from "@/components/SiteVisitDropdown";
 import QuotationDropdown from "@/components/QuotationDropdown";
@@ -86,16 +84,6 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
     { label: "Budget", value: lead.budget, icon: FileText },
     { label: "Created", value: formattedDate, icon: Calendar },
   ];
-
-  const leadScoreInput = {
-    scoreLocation:   lead.scoreLocation,
-    scoreBudget:     lead.scoreBudget,
-    scoreTimeline:   lead.scoreTimeline,
-    scoreSiteVisit:  lead.scoreSiteVisit,
-    scoreQuotation:  lead.scoreQuotation,
-  };
-  const { total, grade } = calculateLeadScore(leadScoreInput);
-  const scoreColor = getScoreColor(total);
 
   // Conversion Funnel Progress Calculation
   const cf = (lead.customFields as any) || {};

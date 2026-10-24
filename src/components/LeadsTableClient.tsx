@@ -226,9 +226,12 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
   const downloadExcel = () => {
     const rows = filteredLeads.map((l: any) => {
       const cf = (l.customFields as any) || {};
-      const reason = (l.status || "").toLowerCase().includes("follow") 
-        ? (cf.lastFollowUpNote || cf.staleFollowUpReason || cf.followUpReason || (Array.isArray(l.notes) ? l.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"))?.content : "") || "")
-        : "";
+      const isStatusFollowUp = (l.status || "").toLowerCase().includes("follow");
+      const isAutoFollowUp = Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
+      let reason = "";
+      if (isStatusFollowUp || isAutoFollowUp) {
+        reason = cf.lastFollowUpNote || cf.staleFollowUpReason || cf.followUpReason || (Array.isArray(l.notes) ? l.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"))?.content : "") || "";
+      }
 
       return {
         "Name": l.name || "",
@@ -261,9 +264,12 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
       head: [["Name", "Phone", "Alt Phone", "Status", "Follow-up Reason", "Source", "City", "Budget", "Assignee", "Captured On"]],
       body: filteredLeads.map((l: any) => {
         const cf = (l.customFields as any) || {};
-        const reason = (l.status || "").toLowerCase().includes("follow") 
-          ? (cf.lastFollowUpNote || cf.staleFollowUpReason || cf.followUpReason || (Array.isArray(l.notes) ? l.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"))?.content : "") || "")
-          : "";
+        const isStatusFollowUp = (l.status || "").toLowerCase().includes("follow");
+        const isAutoFollowUp = Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
+        let reason = "";
+        if (isStatusFollowUp || isAutoFollowUp) {
+          reason = cf.lastFollowUpNote || cf.staleFollowUpReason || cf.followUpReason || (Array.isArray(l.notes) ? l.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"))?.content : "") || "";
+        }
 
         return [
           l.name || "",
@@ -526,14 +532,26 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${LEAD_STATUS_COLORS[lead.status ?? ""] ?? "bg-gray-100 text-gray-700"}`}>
                       {lead.status ?? "Fresh"}
                     </span>
-                    {((lead.status || "").toLowerCase().includes("follow") && ((lead.customFields as any)?.lastFollowUpNote || (lead.customFields as any)?.staleFollowUpReason || (lead.customFields as any)?.followUpReason || (Array.isArray(lead.notes) && lead.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"))?.content))) && (
-                      <span 
-                        className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 truncate max-w-[200px]"
-                        title={(lead.customFields as any)?.lastFollowUpNote || (lead.customFields as any)?.staleFollowUpReason || (lead.customFields as any)?.followUpReason || lead.notes?.find((n: any) => !n.content?.startsWith("[SYSTEM:"))?.content}
-                      >
-                        💬 {(lead.customFields as any)?.lastFollowUpNote || (lead.customFields as any)?.staleFollowUpReason || (lead.customFields as any)?.followUpReason || lead.notes?.find((n: any) => !n.content?.startsWith("[SYSTEM:"))?.content}
-                      </span>
-                    )}
+                    {(() => {
+                      const cf = (lead.customFields as any) || {};
+                      const isStatusFollowUp = (lead.status || "").toLowerCase().includes("follow");
+                      const isAutoFollowUp = Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
+                      if (!isStatusFollowUp && !isAutoFollowUp) return null;
+                      let reason = cf.lastFollowUpNote || cf.staleFollowUpReason || cf.followUpReason || "";
+                      if (!reason && Array.isArray(lead.notes) && lead.notes.length > 0) {
+                        const userNote = lead.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"));
+                        if (userNote?.content) reason = userNote.content;
+                      }
+                      if (!reason) return null;
+                      return (
+                        <span 
+                          className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 truncate max-w-[200px]"
+                          title={reason}
+                        >
+                          💬 {reason}
+                        </span>
+                      );
+                    })()}
                     {lead.source && (
                       <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                         lead.source.toLowerCase().includes('whatsapp') ? 'bg-green-100 text-green-800' :
@@ -643,10 +661,13 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                       const userNote = lead.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"));
                       if (userNote?.content) reason = userNote.content;
                     }
-                    const isFollowUp = (lead.status || "").toLowerCase().includes("follow");
+                    const isStatusFollowUp = (lead.status || "").toLowerCase().includes("follow");
+                    const isAutoFollowUp = Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
+                    const shouldShowReason = (isStatusFollowUp || isAutoFollowUp) && Boolean(reason);
+
                     return (
-                      <td className="px-4 py-2.5 max-w-[240px] truncate border-r border-gray-100 text-xs">
-                        {isFollowUp && reason ? (
+                      <td className="px-4 py-2.5 max-w-[260px] truncate border-r border-gray-100 text-xs">
+                        {shouldShowReason ? (
                           <span 
                             title={reason}
                             className="inline-flex items-center text-gray-800 bg-amber-50 border border-amber-200/90 px-2.5 py-0.5 rounded-md text-xs font-medium truncate max-w-full cursor-help hover:bg-amber-100 transition-colors shadow-2xs"

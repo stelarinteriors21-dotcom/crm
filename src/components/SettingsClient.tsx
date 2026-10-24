@@ -1,14 +1,30 @@
 "use client";
 import { useState } from "react";
-import { updateEscalationEmails, updateCustomFieldLabels, updateCustomTags, updateRequireGps } from "@/app/actions/settingsActions";
-import { Loader2, Save, Mail, FileText, Plus, Trash2, Tag } from "lucide-react";
+import { updateEscalationEmails, updateCustomFieldLabels, updateCustomTags, updateRequireGps, toggleGlobalSoundMuted } from "@/app/actions/settingsActions";
+import { Loader2, Save, Mail, FileText, Plus, Trash2, Tag, Volume2, VolumeX } from "lucide-react";
+import { AlertNotificationManager } from "@/lib/alertNotifier";
 
-export default function SettingsClient({ initialEmails, initialLabels, initialTags, initialRequireGps }: { initialEmails: string, initialLabels: Record<string, string>, initialTags?: any[], initialRequireGps?: boolean }) {
+export default function SettingsClient({ 
+  initialEmails, 
+  initialLabels, 
+  initialTags, 
+  initialRequireGps,
+  initialSoundMuted = false 
+}: { 
+  initialEmails: string; 
+  initialLabels: Record<string, string>; 
+  initialTags?: any[]; 
+  initialRequireGps?: boolean;
+  initialSoundMuted?: boolean;
+}) {
   const [emails, setEmails] = useState(initialEmails);
   const [labels, setLabels] = useState(initialLabels);
   const [tags, setTags] = useState<any[]>(initialTags || []);
   const [requireGps, setRequireGps] = useState(initialRequireGps || false);
   const [savingGps, setSavingGps] = useState(false);
+
+  const [soundMuted, setSoundMuted] = useState(initialSoundMuted);
+  const [savingSound, setSavingSound] = useState(false);
   
   const [loadingEmails, setLoadingEmails] = useState(false);
   const [savedEmails, setSavedEmails] = useState(false);
@@ -43,6 +59,28 @@ export default function SettingsClient({ initialEmails, initialLabels, initialTa
     setTimeout(() => setSavedLabels(false), 3000);
   };
 
+
+  const handleToggleSound = async () => {
+    setSavingSound(true);
+    const nextState = !soundMuted;
+    setSoundMuted(nextState);
+    AlertNotificationManager.setGlobalMuted(nextState);
+
+    try {
+      const res = await toggleGlobalSoundMuted();
+      setSoundMuted(res.muted);
+      AlertNotificationManager.setGlobalMuted(res.muted);
+      window.dispatchEvent(
+        new CustomEvent("crm_global_sound_changed", { detail: { muted: res.muted } })
+      );
+    } catch (err: any) {
+      setSoundMuted(!nextState);
+      AlertNotificationManager.setGlobalMuted(!nextState);
+      alert(err.message || "Failed to update sound setting");
+    } finally {
+      setSavingSound(false);
+    }
+  };
 
   const handleToggleGps = async () => {
     setSavingGps(true);
@@ -92,6 +130,39 @@ export default function SettingsClient({ initialEmails, initialLabels, initialTa
 
   return (
     <div className="space-y-8">
+
+      {/* Global Audio Override */}
+      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <div className="flex items-center">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 shrink-0 ${soundMuted ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+            {soundMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+          </div>
+          <div className="flex-1 pr-4">
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              Global CRM Sound Override
+              {soundMuted && (
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 uppercase tracking-wide">
+                  Muted All Users
+                </span>
+              )}
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {soundMuted
+                ? "All alert chimes, ringers, and notification sounds are MUTED for every user across the CRM."
+                : "CRM alert sounds, incoming lead chimes, and reminders are active for all users."}
+            </p>
+          </div>
+          <button 
+            type="button"
+            onClick={handleToggleSound}
+            disabled={savingSound}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer shrink-0 ${soundMuted ? 'bg-rose-600' : 'bg-gray-200'}`}
+            title={soundMuted ? "Click to unmute CRM sounds for all users" : "Click to mute CRM sounds globally for all users"}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${soundMuted ? 'translate-x-6' : 'translate-x-1'}`} />
+          </button>
+        </div>
+      </div>
       
       {/* GPS Settings */}
       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">

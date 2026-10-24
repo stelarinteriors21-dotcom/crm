@@ -5,7 +5,15 @@ import { ChevronDown, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getCallers } from "@/app/actions/leadActions";
 
-export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [] }: { customTags?: any[], uniqueCities?: string[] }) {
+export default function LeadsFilterDropdowns({ 
+  customTags = [], 
+  uniqueCities = [],
+  autoFollowUpCount = 0
+}: { 
+  customTags?: any[]; 
+  uniqueCities?: string[];
+  autoFollowUpCount?: number;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -37,6 +45,17 @@ export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [
 
   const initialTag = searchParams.get("tag") || "All";
   const [selectedTag, setSelectedTag] = useState<string>(initialTag);
+  const isAutoFollowUp = searchParams.get("autoFollowUp") === "true" || searchParams.get("autoFollowUp") === "1";
+
+  const toggleAutoFollowUp = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (isAutoFollowUp) {
+      params.delete("autoFollowUp");
+    } else {
+      params.set("autoFollowUp", "true");
+    }
+    router.push(`?` + params.toString());
+  };
   
   const [callers, setCallers] = useState<any[]>([]);
 
@@ -170,6 +189,21 @@ export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [
 
   return (
     <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0 relative z-50" ref={dropdownRef}>
+      {/* Auto Follow-up Quick Filter */}
+      <button 
+        type="button"
+        onClick={toggleAutoFollowUp}
+        className={`flex items-center text-xs font-bold border rounded px-2.5 sm:px-3 py-1.5 transition-all whitespace-nowrap shrink-0 cursor-pointer shadow-2xs ${
+          isAutoFollowUp 
+            ? 'bg-amber-500 text-white border-amber-600 shadow-amber-500/20 ring-2 ring-amber-300' 
+            : 'text-amber-800 bg-amber-50 hover:bg-amber-100/80 border-amber-200'
+        }`}
+        title="Filter leads automatically moved to follow-up after 24h of inactivity"
+      >
+        <span className={`w-2 h-2 rounded-full mr-1.5 ${isAutoFollowUp ? 'bg-white' : 'bg-amber-500 animate-pulse'}`} />
+        Auto Follow-up {autoFollowUpCount > 0 && `(${autoFollowUpCount})`}
+      </button>
+
       {/* Assignee Filter */}
       <div className="relative shrink-0">
         <button 
@@ -288,6 +322,20 @@ export default function LeadsFilterDropdowns({ customTags = [], uniqueCities = [
             <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <span className="text-sm font-semibold text-gray-700">Select Status</span>
               <span className="text-xs text-[#4f46e5] cursor-pointer" onClick={clearStatus}>Clear</span>
+            </div>
+            <div className="p-2 border-b border-amber-100 bg-amber-50/70">
+              <label className="flex items-center text-[12px] font-bold text-amber-900 cursor-pointer hover:bg-amber-100/70 px-2 py-1.5 rounded transition-colors">
+                <input 
+                  type="checkbox" 
+                  checked={isAutoFollowUp}
+                  onChange={() => {
+                    toggleAutoFollowUp();
+                    setStatusMenuOpen(false);
+                  }}
+                  className="w-3.5 h-3.5 mr-2.5 border-amber-300 rounded text-amber-600 focus:ring-amber-500" 
+                /> 
+                ⚡ Filter Auto Follow-up {autoFollowUpCount > 0 ? `(${autoFollowUpCount})` : ''}
+              </label>
             </div>
             <div className="p-2 max-h-64 overflow-y-auto space-y-1">
               {STATUS_OPTIONS.map(s => (

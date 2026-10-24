@@ -25,10 +25,26 @@ export class AlertNotificationManager {
     return hash;
   }
 
+  private static isGlobalMuted: boolean = false;
+
+  public static setGlobalMuted(muted: boolean) {
+    this.isGlobalMuted = Boolean(muted);
+    if (this.isGlobalMuted) {
+      this.stopAudio();
+    }
+  }
+
+  public static getGlobalMuted(): boolean {
+    return this.isGlobalMuted;
+  }
+
   /**
    * Plays the alert sound chime
    */
   public static playAudio() {
+    if (this.isGlobalMuted) {
+      return; // Admin sound override active: All CRM sounds muted
+    }
     try {
       if (typeof window === "undefined") return;
       if (!this.audio) {
@@ -51,6 +67,9 @@ export class AlertNotificationManager {
    * Generates a pleasant two-tone synthesized chime using Web Audio API
    */
   private static playSynthesizedChime() {
+    if (this.isGlobalMuted) {
+      return; // Admin sound override active: All CRM sounds muted
+    }
     try {
       if (typeof window === "undefined") return;
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -103,7 +122,7 @@ export class AlertNotificationManager {
     if (typeof window === "undefined") return;
 
     // 1. Mobile haptic vibration
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
+    if (!this.isGlobalMuted && typeof navigator !== "undefined" && navigator.vibrate) {
       try {
         navigator.vibrate([250, 100, 250]);
       } catch {}
@@ -124,7 +143,7 @@ export class AlertNotificationManager {
               title,
               body,
               channelId: "default",
-              sound: "default",
+              sound: this.isGlobalMuted ? undefined : "default",
               extra: { tag }
             }
           ]

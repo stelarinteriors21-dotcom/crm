@@ -1,5 +1,5 @@
 import { Search, ChevronDown } from "lucide-react";
-import { getLeads, getUniqueCities } from "@/app/actions/leadActions";
+import { getLeads, getUniqueCities, getAutoFollowUpCount } from "@/app/actions/leadActions";
 import { getOrganizationSettings } from "@/app/actions/settingsActions";
 import LeadsHeaderActions from "@/components/LeadsHeaderActions";
 import LeadsFilterDropdowns from "@/components/LeadsFilterDropdowns";
@@ -32,10 +32,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
   const endDate = typeof searchParams.endDate === "string" ? searchParams.endDate : undefined;
   const tag = typeof searchParams.tag === "string" ? searchParams.tag : undefined;
   const stage = typeof searchParams.stage === "string" ? searchParams.stage : undefined;
+  const autoFollowUp = searchParams.autoFollowUp === "true" || searchParams.autoFollowUp === "1";
 
-  const dbLeads = await getLeads(query, searchField, status, source, assigned, active, startDate, endDate, tag, city, stage);
+  const dbLeads = await getLeads(query, searchField, status, source, assigned, active, startDate, endDate, tag, city, stage, autoFollowUp);
   const settings = await getOrganizationSettings();
   const uniqueCities = await getUniqueCities();
+  const autoFollowUpCount = await getAutoFollowUpCount();
   const customTags = (settings?.customTags as any[]) || [{name: "Potential lead", color: "#3b82f6"}, {name: "Future potential lead", color: "#8b5cf6"}];
 
   return (
@@ -59,7 +61,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
           <SearchBar />
         </div>
         <div className="flex items-center w-full lg:w-auto shrink-0 relative z-50">
-          <LeadsFilterDropdowns customTags={customTags} uniqueCities={uniqueCities} />
+          <LeadsFilterDropdowns customTags={customTags} uniqueCities={uniqueCities} autoFollowUpCount={autoFollowUpCount} />
         </div>
       </div>
 
