@@ -15,19 +15,25 @@ import {
   ExternalLink,
   ChevronRight,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  FileSpreadsheet,
+  ChevronDown,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { getTeamTasksData } from "@/app/actions/reportActions";
+import { downloadDetailedExcelReport, downloadDetailedCsvReport } from "@/lib/exportDetailedReport";
 
 type ViewTab = "tasks" | "calls";
-type DateFilter = "today" | "yesterday" | "week" | "all";
+type DateFilter = "today" | "yesterday" | "week" | "month" | "all";
 
 export default function DailyReportModal({ onClose }: { onClose: () => void }) {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<ViewTab>("tasks");
   const [dateFilter, setDateFilter] = useState<DateFilter>("today");
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [downloadingReport, setDownloadingReport] = useState<string | null>(null);
 
   useEffect(() => {
     getTeamTasksData()
@@ -40,6 +46,23 @@ export default function DailyReportModal({ onClose }: { onClose: () => void }) {
         setLoading(false);
       });
   }, []);
+
+  const handleDetailedDownload = async (timeframe: "weekly" | "monthly" | "daily", format: "xlsx" | "csv") => {
+    setDownloadingReport(`${timeframe}-${format}`);
+    try {
+      if (format === "xlsx") {
+        await downloadDetailedExcelReport(timeframe);
+      } else {
+        await downloadDetailedCsvReport(timeframe);
+      }
+    } catch (err) {
+      console.error("Failed to download detailed report:", err);
+      alert("Failed to download report. Please try again.");
+    } finally {
+      setDownloadingReport(null);
+      setShowExportMenu(false);
+    }
+  };
 
   // Filter helper for call date ranges
   const filterCalls = (calls: any[], filter: DateFilter) => {
@@ -71,6 +94,10 @@ export default function DailyReportModal({ onClose }: { onClose: () => void }) {
       if (filter === "week") {
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         return callDate >= weekAgo;
+      }
+      if (filter === "month") {
+        const startOfMonth = new Date(todayYear, todayMonth, 1);
+        return callDate >= startOfMonth;
       }
       return true;
     });
@@ -177,20 +204,118 @@ export default function DailyReportModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 shrink-0">
+          <div className="flex items-center space-x-2 shrink-0 relative">
+            {/* Quick Detailed Weekly Download Button */}
             <button 
               type="button"
-              onClick={downloadCSV}
-              disabled={loading || data.length === 0}
-              className="flex items-center px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 transition-colors disabled:opacity-50"
+              onClick={() => handleDetailedDownload("weekly", "xlsx")}
+              disabled={downloadingReport !== null}
+              className="flex items-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+              title="Download Detailed Weekly Report (.xlsx with all calls, pipeline, and team metrics)"
             >
-              <Download className="w-3.5 h-3.5 mr-1.5" /> 
-              Export CSV
+              {downloadingReport === "weekly-xlsx" ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="w-3.5 h-3.5 mr-1.5 text-indigo-200" />
+              )}
+              Weekly Report
             </button>
+
+            {/* Quick Detailed Monthly Download Button */}
+            <button 
+              type="button"
+              onClick={() => handleDetailedDownload("monthly", "xlsx")}
+              disabled={downloadingReport !== null}
+              className="flex items-center px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+              title="Download Detailed Monthly Report (.xlsx with all calls, pipeline, and team metrics)"
+            >
+              {downloadingReport === "monthly-xlsx" ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="w-3.5 h-3.5 mr-1.5 text-purple-200" />
+              )}
+              Monthly Report
+            </button>
+
+            {/* Export Dropdown Menu */}
+            <div className="relative">
+              <button 
+                type="button"
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                className="flex items-center px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg border border-gray-200 transition-colors cursor-pointer"
+                title="More Export Options"
+              >
+                <Download className="w-3.5 h-3.5 mr-1 text-gray-500" />
+                Export
+                <ChevronDown className="w-3 h-3 ml-1 text-gray-500" />
+              </button>
+
+              {showExportMenu && (
+                <div className="absolute right-0 top-full mt-1.5 w-60 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-1 text-xs animate-in fade-in zoom-in-95 duration-100">
+                  <div className="px-2.5 py-1.5 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                    Detailed Excel Reports (.xlsx)
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDetailedDownload("weekly", "xlsx")}
+                    className="w-full text-left px-2.5 py-1.5 hover:bg-indigo-50 hover:text-indigo-700 rounded-md font-bold text-gray-700 flex items-center justify-between cursor-pointer"
+                  >
+                    <span>📊 Weekly Detailed (Excel)</span>
+                    <span className="text-[10px] text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded font-bold">.xlsx</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDetailedDownload("monthly", "xlsx")}
+                    className="w-full text-left px-2.5 py-1.5 hover:bg-purple-50 hover:text-purple-700 rounded-md font-bold text-gray-700 flex items-center justify-between cursor-pointer"
+                  >
+                    <span>📊 Monthly Detailed (Excel)</span>
+                    <span className="text-[10px] text-purple-600 bg-purple-50 px-1 py-0.5 rounded font-bold">.xlsx</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDetailedDownload("daily", "xlsx")}
+                    className="w-full text-left px-2.5 py-1.5 hover:bg-blue-50 hover:text-blue-700 rounded-md font-bold text-gray-700 flex items-center justify-between cursor-pointer"
+                  >
+                    <span>📊 Today&apos;s Detailed (Excel)</span>
+                    <span className="text-[10px] text-blue-600 bg-blue-50 px-1 py-0.5 rounded font-bold">.xlsx</span>
+                  </button>
+
+                  <div className="border-t border-gray-100 my-1" />
+                  <div className="px-2.5 py-1 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                    CSV Format (.csv)
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDetailedDownload("weekly", "csv")}
+                    className="w-full text-left px-2.5 py-1.5 hover:bg-gray-100 rounded-md text-gray-700 flex items-center justify-between text-[11px] cursor-pointer"
+                  >
+                    <span>📄 Weekly Detailed CSV</span>
+                    <span className="text-[10px] text-gray-400 font-mono">.csv</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDetailedDownload("monthly", "csv")}
+                    className="w-full text-left px-2.5 py-1.5 hover:bg-gray-100 rounded-md text-gray-700 flex items-center justify-between text-[11px] cursor-pointer"
+                  >
+                    <span>📄 Monthly Detailed CSV</span>
+                    <span className="text-[10px] text-gray-400 font-mono">.csv</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { downloadCSV(); setShowExportMenu(false); }}
+                    className="w-full text-left px-2.5 py-1.5 hover:bg-gray-100 rounded-md text-gray-700 flex items-center justify-between text-[11px] border-t border-gray-100 mt-1 cursor-pointer"
+                  >
+                    <span>📋 Export Current View</span>
+                    <span className="text-[10px] text-gray-400 font-mono">.csv</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
             <button 
               type="button"
               onClick={onClose} 
-              className="p-1.5 hover:bg-gray-100 text-gray-400 hover:text-gray-700 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-gray-100 text-gray-400 hover:text-gray-700 rounded-lg transition-colors cursor-pointer ml-1"
             >
               <X className="w-5 h-5" />
             </button>
@@ -244,7 +369,7 @@ export default function DailyReportModal({ onClose }: { onClose: () => void }) {
               <span className="text-[11px] text-gray-400 font-bold px-2 flex items-center">
                 <Calendar className="w-3 h-3 mr-1 text-gray-400" /> Date:
               </span>
-              {(["today", "yesterday", "week", "all"] as DateFilter[]).map(filter => (
+              {(["today", "yesterday", "week", "month", "all"] as DateFilter[]).map(filter => (
                 <button
                   key={filter}
                   type="button"
@@ -255,7 +380,7 @@ export default function DailyReportModal({ onClose }: { onClose: () => void }) {
                       : "text-gray-600 hover:bg-gray-100"
                   }`}
                 >
-                  {filter === "week" ? "Last 7 Days" : filter === "all" ? "All Time" : filter}
+                  {filter === "week" ? "This Week" : filter === "month" ? "This Month" : filter === "all" ? "All Time" : filter}
                 </button>
               ))}
             </div>

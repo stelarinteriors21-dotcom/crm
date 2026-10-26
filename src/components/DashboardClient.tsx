@@ -5,10 +5,11 @@ import SiteVisitorWorkdesk from "./SiteVisitorWorkdesk";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Settings, RefreshCw, ChevronDown, CheckCircle, XCircle, TrendingUp, Users, User, PhoneCall, Calendar, X, Download, Clock, MapPin, FileText, BarChart3, Sparkles, MessageSquare, AlertTriangle, ArrowRight, CheckCircle2, ChevronRight, PhoneForwarded } from "lucide-react";
+import { Settings, RefreshCw, ChevronDown, CheckCircle, XCircle, TrendingUp, Users, User, PhoneCall, Calendar, X, Download, Clock, MapPin, FileText, BarChart3, Sparkles, MessageSquare, AlertTriangle, ArrowRight, CheckCircle2, ChevronRight, PhoneForwarded, FileSpreadsheet, Loader2 } from "lucide-react";
 import { acceptLead, rejectLead, acceptAllLeads, rejectAllLeads } from "@/app/actions/leadActions";
 import { getUserActivityLogs } from "@/app/actions/activityActions";
 import { triggerSmartCall } from "@/components/SmartCallManager";
+import { downloadDetailedExcelReport, downloadDetailedCsvReport } from "@/lib/exportDetailedReport";
 
 type Lead = {
   id: string;
@@ -48,6 +49,8 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
   const [pending, setPending] = useState(pendingLeads);
   const [selectedUserReport, setSelectedUserReport] = useState<string | null>(null);
   const [showDailyReport, setShowDailyReport] = useState(false);
+  const [showReportDropdown, setShowReportDropdown] = useState(false);
+  const [downloadingReport, setDownloadingReport] = useState<string | null>(null);
   const [callerTaskTab, setCallerTaskTab] = useState<"TODAY" | "UPCOMING">("TODAY");
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [bulkLoading, setBulkLoading] = useState<"accept" | "reject" | null>(null);
@@ -446,9 +449,114 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
           <Link href="/audit" className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center transition-colors shadow-sm border border-slate-700">
             <BarChart3 className="w-4 h-4 mr-2 text-indigo-400" /> Executive Audit & Reports
           </Link>
-          <button onClick={() => setShowDailyReport(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center transition-colors shadow-sm">
+          <button onClick={() => setShowDailyReport(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center transition-colors shadow-sm cursor-pointer">
             <FileText className="w-4 h-4 mr-2" /> Daily Report
           </button>
+
+          {/* Quick Reports Download Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowReportDropdown(!showReportDropdown)}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-3.5 py-2 rounded-lg text-sm font-bold flex items-center transition-colors shadow-sm cursor-pointer"
+              title="Download Detailed Weekly & Monthly Reports"
+            >
+              <Download className="w-4 h-4 mr-1.5" /> 
+              Download Reports 
+              <ChevronDown className="w-3.5 h-3.5 ml-1" />
+            </button>
+
+            {showReportDropdown && (
+              <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-2 text-xs animate-in fade-in zoom-in-95 duration-100">
+                <div className="px-2.5 py-1.5 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                  Detailed CRM Reports (Excel)
+                </div>
+                <button
+                  onClick={async () => {
+                    setDownloadingReport("weekly-xlsx");
+                    try {
+                      await downloadDetailedExcelReport("weekly");
+                    } finally {
+                      setDownloadingReport(null);
+                      setShowReportDropdown(false);
+                    }
+                  }}
+                  disabled={downloadingReport !== null}
+                  className="w-full text-left px-3 py-2.5 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg flex items-center justify-between font-bold text-gray-800 transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
+                    {downloadingReport === "weekly-xlsx" ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                    ) : (
+                      <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                    )}
+                    Weekly Report (Detailed)
+                  </span>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-black">.xlsx</span>
+                </button>
+
+                <button
+                  onClick={async () => {
+                    setDownloadingReport("monthly-xlsx");
+                    try {
+                      await downloadDetailedExcelReport("monthly");
+                    } finally {
+                      setDownloadingReport(null);
+                      setShowReportDropdown(false);
+                    }
+                  }}
+                  disabled={downloadingReport !== null}
+                  className="w-full text-left px-3 py-2.5 hover:bg-purple-50 hover:text-purple-700 rounded-lg flex items-center justify-between font-bold text-gray-800 transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
+                    {downloadingReport === "monthly-xlsx" ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+                    ) : (
+                      <FileSpreadsheet className="w-4 h-4 text-purple-600" />
+                    )}
+                    Monthly Report (Detailed)
+                  </span>
+                  <span className="text-[10px] bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded font-black">.xlsx</span>
+                </button>
+
+                <div className="border-t border-gray-100 my-1.5" />
+                <div className="px-2.5 py-1 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                  CSV Formats
+                </div>
+                <button
+                  onClick={async () => {
+                    setDownloadingReport("weekly-csv");
+                    try {
+                      await downloadDetailedCsvReport("weekly");
+                    } finally {
+                      setDownloadingReport(null);
+                      setShowReportDropdown(false);
+                    }
+                  }}
+                  disabled={downloadingReport !== null}
+                  className="w-full text-left px-3 py-1.5 hover:bg-gray-50 rounded-lg flex items-center justify-between font-medium text-gray-600 text-[11px] cursor-pointer"
+                >
+                  <span>Weekly Report (Detailed CSV)</span>
+                  <span className="text-[10px] text-gray-400 font-mono">.csv</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    setDownloadingReport("monthly-csv");
+                    try {
+                      await downloadDetailedCsvReport("monthly");
+                    } finally {
+                      setDownloadingReport(null);
+                      setShowReportDropdown(false);
+                    }
+                  }}
+                  disabled={downloadingReport !== null}
+                  className="w-full text-left px-3 py-1.5 hover:bg-gray-50 rounded-lg flex items-center justify-between font-medium text-gray-600 text-[11px] cursor-pointer"
+                >
+                  <span>Monthly Report (Detailed CSV)</span>
+                  <span className="text-[10px] text-gray-400 font-mono">.csv</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       <div className="p-3 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">

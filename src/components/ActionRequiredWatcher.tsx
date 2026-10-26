@@ -131,9 +131,24 @@ export default function ActionRequiredWatcher() {
         </div>
 
         <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-1 sm:mb-2">ACTION REQUIRED!</h2>
-        <p className="text-red-600 font-bold mb-4 sm:mb-6 text-xs sm:text-sm">
+        <p className="text-red-600 font-bold mb-3 sm:mb-4 text-xs sm:text-sm">
           You have {alerts.length} urgent workflow violation(s) that must be resolved immediately.
         </p>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              sessionStorage.setItem(ACTION_SNOOZE_KEY, (Date.now() + 15 * 60 * 1000).toString());
+            }
+            AlertNotificationManager.dismissEqualAlert();
+            window.location.href = "/leads?violations=true";
+          }}
+          className="w-full flex items-center justify-center gap-2 py-2 px-4 mb-3 sm:mb-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs sm:text-sm shadow-sm transition-all active:scale-[0.99] cursor-pointer"
+        >
+          <span>📋 View Violations in Leads Table</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </button>
 
         <div className="w-full space-y-2.5 sm:space-y-3 mb-4 sm:mb-6 max-h-[48vh] overflow-y-auto pr-0.5">
           {alerts.map((alert, idx) => (

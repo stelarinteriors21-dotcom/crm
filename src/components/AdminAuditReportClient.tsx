@@ -5,9 +5,11 @@ import Link from "next/link";
 import { 
   BarChart3, Users, PhoneCall, FileText, MapPin, Trophy, AlertTriangle, 
   Clock, ShieldAlert, ChevronDown, ChevronRight, Filter, Download, 
-  Calendar, RefreshCw, CheckCircle2, Search, ArrowUpRight, Sparkles, User, AlertCircle
+  Calendar, RefreshCw, CheckCircle2, Search, ArrowUpRight, Sparkles, User, AlertCircle,
+  FileSpreadsheet, Loader2
 } from "lucide-react";
 import { getAdminComprehensiveReport, PeriodFilter, LeadCohortFilter } from "@/app/actions/adminReportActions";
+import { downloadDetailedExcelReport, downloadDetailedCsvReport } from "@/lib/exportDetailedReport";
 
 export default function AdminAuditReportClient() {
   const [activeTab, setActiveTab] = useState<"METRICS" | "LOGS" | "ESCALATIONS">("METRICS");
@@ -15,6 +17,8 @@ export default function AdminAuditReportClient() {
   const [leadCohort, setLeadCohort] = useState<LeadCohortFilter>("ALL");
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState<any>(null);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [exportingDetailed, setExportingDetailed] = useState<string | null>(null);
   
   // Filter & Search states
   const [logSearch, setLogSearch] = useState("");
@@ -135,15 +139,123 @@ export default function AdminAuditReportClient() {
             </select>
           </div>
 
-          <button
-            onClick={downloadCSV}
-            disabled={loading}
-            className="px-3.5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all"
-            title="Export CSV"
-          >
-            <Download className="w-4 h-4 text-gray-500" />
-            Export
-          </button>
+          {/* Export Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              disabled={loading}
+              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              title="Export Detailed Report"
+            >
+              <Download className="w-4 h-4 text-indigo-200" />
+              Download Report
+              <ChevronDown className="w-3.5 h-3.5 ml-0.5 text-indigo-200" />
+            </button>
+
+            {showExportMenu && (
+              <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-2 text-xs animate-in fade-in zoom-in-95 duration-100">
+                <div className="px-2.5 py-1 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                  Detailed Excel Reports (.xlsx)
+                </div>
+                <button
+                  onClick={async () => {
+                    setExportingDetailed("weekly-xlsx");
+                    try {
+                      await downloadDetailedExcelReport("weekly");
+                    } finally {
+                      setExportingDetailed(null);
+                      setShowExportMenu(false);
+                    }
+                  }}
+                  disabled={exportingDetailed !== null}
+                  className="w-full text-left px-3 py-2 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg flex items-center justify-between font-bold text-gray-800 cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
+                    {exportingDetailed === "weekly-xlsx" ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
+                    ) : (
+                      <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                    )}
+                    Weekly Report (Detailed)
+                  </span>
+                  <span className="text-[10px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded font-black">.xlsx</span>
+                </button>
+
+                <button
+                  onClick={async () => {
+                    setExportingDetailed("monthly-xlsx");
+                    try {
+                      await downloadDetailedExcelReport("monthly");
+                    } finally {
+                      setExportingDetailed(null);
+                      setShowExportMenu(false);
+                    }
+                  }}
+                  disabled={exportingDetailed !== null}
+                  className="w-full text-left px-3 py-2 hover:bg-purple-50 hover:text-purple-700 rounded-lg flex items-center justify-between font-bold text-gray-800 cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
+                    {exportingDetailed === "monthly-xlsx" ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-600" />
+                    ) : (
+                      <FileSpreadsheet className="w-3.5 h-3.5 text-purple-600" />
+                    )}
+                    Monthly Report (Detailed)
+                  </span>
+                  <span className="text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded font-black">.xlsx</span>
+                </button>
+
+                <div className="border-t border-gray-100 my-1.5" />
+                <div className="px-2.5 py-1 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                  CSV Formats (.csv)
+                </div>
+                <button
+                  onClick={async () => {
+                    setExportingDetailed("weekly-csv");
+                    try {
+                      await downloadDetailedCsvReport("weekly");
+                    } finally {
+                      setExportingDetailed(null);
+                      setShowExportMenu(false);
+                    }
+                  }}
+                  disabled={exportingDetailed !== null}
+                  className="w-full text-left px-3 py-1.5 hover:bg-gray-50 rounded-lg flex items-center justify-between font-medium text-gray-700 text-[11px] cursor-pointer"
+                >
+                  <span>Weekly Report (Detailed CSV)</span>
+                  <span className="text-[10px] text-gray-400 font-mono">.csv</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    setExportingDetailed("monthly-csv");
+                    try {
+                      await downloadDetailedCsvReport("monthly");
+                    } finally {
+                      setExportingDetailed(null);
+                      setShowExportMenu(false);
+                    }
+                  }}
+                  disabled={exportingDetailed !== null}
+                  className="w-full text-left px-3 py-1.5 hover:bg-gray-50 rounded-lg flex items-center justify-between font-medium text-gray-700 text-[11px] cursor-pointer"
+                >
+                  <span>Monthly Report (Detailed CSV)</span>
+                  <span className="text-[10px] text-gray-400 font-mono">.csv</span>
+                </button>
+
+                <div className="border-t border-gray-100 my-1.5" />
+                <button
+                  onClick={() => {
+                    downloadCSV();
+                    setShowExportMenu(false);
+                  }}
+                  className="w-full text-left px-3 py-1.5 hover:bg-gray-50 rounded-lg flex items-center justify-between font-medium text-gray-600 text-[11px] cursor-pointer"
+                >
+                  <span>Audit Quotas Summary Only</span>
+                  <span className="text-[10px] text-gray-400 font-mono">.csv</span>
+                </button>
+              </div>
+            )}
+          </div>
 
           <button
             onClick={fetchReport}

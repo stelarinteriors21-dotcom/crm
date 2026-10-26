@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getTeamActivities } from "@/app/actions/activityActions";
 import { getCurrentUser } from "@/app/actions/authActions";
 import { notFound } from "next/navigation";
+import ReportHeaderDownloads from "@/components/ReportHeaderDownloads";
 
 export default async function ReportsPage({ searchParams }: { searchParams: { tab?: string } }) {
   const user = await getCurrentUser();
@@ -30,17 +31,20 @@ export default async function ReportsPage({ searchParams }: { searchParams: { ta
     <div className="h-full bg-white flex flex-col -m-3 md:-m-6 relative overflow-hidden">
       
       {/* Top Header */}
-      <div className="h-16 border-b border-gray-100 flex items-center px-4 md:px-6 shrink-0 justify-between">
+      <div className="h-16 border-b border-gray-100 flex items-center px-4 md:px-6 shrink-0 justify-between gap-4">
         <h1 className="text-[17px] font-bold text-gray-800 flex items-center">
           Reports <span className="ml-2 bg-purple-100 text-[#4f46e5] text-xs px-2 py-0.5 rounded-full font-bold">ZUSH+1</span>
         </h1>
-        <div className="flex bg-gray-100 rounded-lg p-1">
-          <Link href="/reports?tab=overview" className={`px-4 py-1.5 text-sm font-bold rounded-md transition-colors ${tab === "overview" ? "bg-white shadow text-[#4f46e5]" : "text-gray-500 hover:text-gray-900"}`}>
-            Overview
-          </Link>
-          <Link href="/reports?tab=activity" className={`px-4 py-1.5 text-sm font-bold rounded-md transition-colors ${tab === "activity" ? "bg-white shadow text-[#4f46e5]" : "text-gray-500 hover:text-gray-900"}`}>
-            User Activity Logs
-          </Link>
+        <div className="flex items-center gap-3">
+          <ReportHeaderDownloads />
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <Link href="/reports?tab=overview" className={`px-4 py-1.5 text-sm font-bold rounded-md transition-colors ${tab === "overview" ? "bg-white shadow text-[#4f46e5]" : "text-gray-500 hover:text-gray-900"}`}>
+              Overview
+            </Link>
+            <Link href="/reports?tab=activity" className={`px-4 py-1.5 text-sm font-bold rounded-md transition-colors ${tab === "activity" ? "bg-white shadow text-[#4f46e5]" : "text-gray-500 hover:text-gray-900"}`}>
+              User Activity Logs
+            </Link>
+          </div>
         </div>
       </div>
 

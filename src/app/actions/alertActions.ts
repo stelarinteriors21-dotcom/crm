@@ -623,6 +623,155 @@ export async function dismissInactivity48hAlert(leadId: string) {
   }
 }
 
+/**
+ * Returns distinct Lead IDs that have active workflow violations:
+ * 1. Ghosted First Contact: assigned >2h ago with 0 call logs
+ * 2. Post-Site Visit: verified >24h ago without quotation
+ * 3. Stale Converting: >24h timeout in converting stage (staleConvertingAlert / isAutoFollowUp)
+ * 4. Quotation cycle: revision requested or daily follow-up due
+ * 5. 48-Hour Inactivity: stayed in status >48h with 0 calls in last 48h (inactivity48hAlert)
+ */
+export async function getWorkflowViolationLeadIds(organizationId: string, assignedToId?: string | null): Promise<string[]> {
+  try {
+    const leadIdSet = new Set<string>();
+    const assignedFilter = assignedToId ? { assignedToId } : {};
+
+    // 1. Ghosted First Contact (>2h without call)
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const ghostedLeads = await prisma.lead.findMany({
+      where: {
+        organizationId,
+        ...assignedFilter,
+        assignedAt: { lte: twoHoursAgo },
+        calls: { none: {} },
+        status: { notIn: ["Junk", "Lost", "Won"] }
+      },
+      select: { id: true, status: true, previousAssigneeId: true, customFields: true }
+    });
+
+    for (const lead of ghostedLeads) {
+      const cf = (lead.customFields as any) || {};
+      const isReassigned = !!lead.previousAssigneeId || !!cf.isReassigned || !!cf.reassignedAt;
+      const sLower = (lead.status || "").trim().toLowerCase();
+      const isFollowUp = sLower === "follow up" || sLower === "followup";
+      if (isReassigned && !isFollowUp) continue;
+      leadIdSet.add(lead.id);
+    }
+
+    // 2. Post-Site Visit Silence (>24h without quotation)
+    const activeLeads = await prisma.lead.findMany({
+      where: {
+        organizationId,
+        ...assignedFilter,
+        status: { notIn: ["Junk", "Lost", "Won"] }
+      },
+      select: { id: true, status: true, customFields: true }
+    });
+
+    for (const lead of activeLeads) {
+      const cf = lead.customFields as any;
+      if (cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt) {
+        const verifiedTime = new Date(cf.siteVisit.verifiedAt).getTime();
+        if (Date.now() - verifiedTime > 24 * 60 * 60 * 1000) {
+          if (![
+            "Quotation shared", "Estimated Quotation", "final Quotation", 
+            "Quotation Requested", "Revised Quotation", "Quotation without site visit", 
+            "Won", "Advance recieved", "Pay Pending"
+          ].includes(lead.status)) {
+            leadIdSet.add(lead.id);
+          }
+        }
+      }
+    }
+
+    // 3. Stale Converting Stage Leads (24h timeout)
+    const staleLeads = await prisma.lead.findMany({
+      where: {
+        organizationId,
+        ...assignedFilter,
+        OR: [
+          { customFields: { path: ['staleConvertingAlert'], equals: true } },
+          { customFields: { path: ['isAutoFollowUp'], equals: true } }
+        ]
+      },
+      select: { id: true }
+    });
+    staleLeads.forEach(l => leadIdSet.add(l.id));
+
+    // 4. Quotation Follow-up (1-day frequency) and Revision Alerts
+    const quotationLeads = await prisma.lead.findMany({
+      where: {
+        organizationId,
+        ...assignedFilter,
+        status: {
+          notIn: ["Junk", "Lost", "Job enquiry", "just curious", "Hold", "Won", "Advance recieved", "Pay Pending", "JUNK", "LOST", "HOLD", "JOB ENQUIRY", "JUST CURIOUS"]
+        }
+      },
+      select: { id: true, customFields: true }
+    });
+
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    for (const lead of quotationLeads) {
+      const cf = (lead.customFields as any) || {};
+      if (cf.quotationApproved) continue;
+
+      if (cf.revisionAlertActive) {
+        if (cf.revisionAlertDismissedUntil && new Date(cf.revisionAlertDismissedUntil).getTime() > Date.now()) {
+          continue;
+        }
+        leadIdSet.add(lead.id);
+        continue;
+      }
+
+      if (cf.quotationFollowUpActive) {
+        const lastFollowUp = cf.lastQuotationFollowUpAt 
+          ? new Date(cf.lastQuotationFollowUpAt).getTime()
+          : (cf.quotationSentAt ? new Date(cf.quotationSentAt).getTime() : 0);
+        const isDueByTime = lastFollowUp > 0 && (Date.now() - lastFollowUp >= ONE_DAY_MS);
+        const isOpenImmediately = !!cf.quotationAlertOpen;
+        if (isOpenImmediately || isDueByTime) {
+          leadIdSet.add(lead.id);
+        }
+      }
+    }
+
+    // 5. 48-Hour Inactivity Escalation Alert
+    const inactive48hLeads = await prisma.lead.findMany({
+      where: {
+        organizationId,
+        ...assignedFilter,
+        status: {
+          notIn: [
+            ...CONVERTED_STATUSES,
+            ...JUNK_STATUSES
+          ]
+        }
+      },
+      select: { id: true, customFields: true }
+    });
+
+    for (const lead of inactive48hLeads) {
+      const cf = (lead.customFields as any) || {};
+      if (cf.inactivity48hAlert) {
+        leadIdSet.add(lead.id);
+      }
+    }
+
+    return Array.from(leadIdSet);
+  } catch (error) {
+    console.error("Error fetching workflow violation lead ids:", error);
+    return [];
+  }
+}
+
+export async function getWorkflowViolationsCount(): Promise<number> {
+  const user = await getCurrentUser();
+  if (!user) return 0;
+  const targetAssigneeId = (user.role === "TELECALLER") ? user.id : undefined;
+  const ids = await getWorkflowViolationLeadIds(user.organizationId, targetAssigneeId);
+  return ids.length;
+}
+
 export async function getActionRequiredLeads() {
   const user = await getCurrentUser();
   if (!user) return [];

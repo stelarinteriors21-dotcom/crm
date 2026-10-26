@@ -46,6 +46,7 @@ export default function LeadsFilterDropdowns({
   const initialTag = searchParams.get("tag") || "All";
   const [selectedTag, setSelectedTag] = useState<string>(initialTag);
   const isAutoFollowUp = searchParams.get("autoFollowUp") === "true" || searchParams.get("autoFollowUp") === "1";
+  const isViolations = searchParams.get("violations") === "true" || searchParams.get("violations") === "1";
 
   const toggleAutoFollowUp = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -53,6 +54,16 @@ export default function LeadsFilterDropdowns({
       params.delete("autoFollowUp");
     } else {
       params.set("autoFollowUp", "true");
+    }
+    router.push(`?` + params.toString());
+  };
+
+  const toggleViolations = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (isViolations) {
+      params.delete("violations");
+    } else {
+      params.set("violations", "true");
     }
     router.push(`?` + params.toString());
   };
@@ -189,6 +200,21 @@ export default function LeadsFilterDropdowns({
 
   return (
     <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0 relative z-50" ref={dropdownRef}>
+      {/* Violations Quick Filter */}
+      <button 
+        type="button"
+        onClick={toggleViolations}
+        className={`flex items-center text-xs font-bold border rounded px-2.5 sm:px-3 py-1.5 transition-all whitespace-nowrap shrink-0 cursor-pointer shadow-2xs ${
+          isViolations 
+            ? 'bg-red-600 text-white border-red-700 shadow-red-600/20 ring-2 ring-red-300' 
+            : 'text-red-700 bg-red-50 hover:bg-red-100/80 border-red-200'
+        }`}
+        title="Filter leads with urgent workflow violations"
+      >
+        <span className={`w-2 h-2 rounded-full mr-1.5 ${isViolations ? 'bg-white' : 'bg-red-600 animate-pulse'}`} />
+        Violations
+      </button>
+
       {/* Auto Follow-up Quick Filter */}
       <button 
         type="button"
@@ -322,6 +348,20 @@ export default function LeadsFilterDropdowns({
             <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <span className="text-sm font-semibold text-gray-700">Select Status</span>
               <span className="text-xs text-[#4f46e5] cursor-pointer" onClick={clearStatus}>Clear</span>
+            </div>
+            <div className="p-2 border-b border-red-100 bg-red-50/70">
+              <label className="flex items-center text-[12px] font-bold text-red-900 cursor-pointer hover:bg-red-100/70 px-2 py-1.5 rounded transition-colors">
+                <input 
+                  type="checkbox" 
+                  checked={isViolations}
+                  onChange={() => {
+                    toggleViolations();
+                    setStatusMenuOpen(false);
+                  }}
+                  className="w-3.5 h-3.5 mr-2.5 border-red-300 rounded text-red-600 focus:ring-red-500" 
+                /> 
+                🚨 Filter Workflow Violations
+              </label>
             </div>
             <div className="p-2 border-b border-amber-100 bg-amber-50/70">
               <label className="flex items-center text-[12px] font-bold text-amber-900 cursor-pointer hover:bg-amber-100/70 px-2 py-1.5 rounded transition-colors">

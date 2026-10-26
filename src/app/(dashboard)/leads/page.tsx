@@ -33,8 +33,9 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
   const tag = typeof searchParams.tag === "string" ? searchParams.tag : undefined;
   const stage = typeof searchParams.stage === "string" ? searchParams.stage : undefined;
   const autoFollowUp = searchParams.autoFollowUp === "true" || searchParams.autoFollowUp === "1";
+  const violations = searchParams.violations === "true" || searchParams.violations === "1";
 
-  const dbLeads = await getLeads(query, searchField, status, source, assigned, active, startDate, endDate, tag, city, stage, autoFollowUp);
+  const dbLeads = await getLeads(query, searchField, status, source, assigned, active, startDate, endDate, tag, city, stage, autoFollowUp, violations);
   const settings = await getOrganizationSettings();
   const uniqueCities = await getUniqueCities();
   const autoFollowUpCount = await getAutoFollowUpCount();

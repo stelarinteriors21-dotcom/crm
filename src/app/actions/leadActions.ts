@@ -4,8 +4,9 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "./authActions";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "./activityActions";
+import { getWorkflowViolationLeadIds } from "./alertActions";
 
-export async function getLeads(query?: string, searchField?: string, status?: string | string[], source?: string, assigned?: string, active?: boolean, startDate?: string, endDate?: string, tag?: string, city?: string | string[], stage?: string, autoFollowUp?: boolean | string) {
+export async function getLeads(query?: string, searchField?: string, status?: string | string[], source?: string, assigned?: string, active?: boolean, startDate?: string, endDate?: string, tag?: string, city?: string | string[], stage?: string, autoFollowUp?: boolean | string, violations?: boolean | string) {
   const user = await getCurrentUser();
   if (!user) return [];
 
@@ -86,7 +87,7 @@ export async function getLeads(query?: string, searchField?: string, status?: st
     } else {
       where.status = status;
     }
-  } else if (!stage && !autoFollowUp) {
+  } else if (!stage && !autoFollowUp && !violations) {
     where.status = { notIn: ['Junk'] };
   }
 
@@ -101,6 +102,27 @@ export async function getLeads(query?: string, searchField?: string, status?: st
       where.AND = [autoCondition];
     } else {
       where.AND.push(autoCondition);
+    }
+  }
+
+  if (violations === true || violations === "true" || violations === "1") {
+    let targetAssigneeId: string | undefined = undefined;
+    if (user.role !== "ADMIN" && user.role !== "ROOT" && user.role !== "SITE_VISITOR") {
+      targetAssigneeId = user.id;
+    } else if (assigned === "me") {
+      targetAssigneeId = user.id;
+    } else if (assigned && assigned !== "all" && assigned !== "unassigned") {
+      targetAssigneeId = assigned;
+    }
+
+    const violationIds = await getWorkflowViolationLeadIds(user.organizationId, targetAssigneeId);
+    const violationCondition = {
+      id: { in: violationIds.length > 0 ? violationIds : ["__no_violation_found__"] }
+    };
+    if (!where.AND) {
+      where.AND = [violationCondition];
+    } else {
+      where.AND.push(violationCondition);
     }
   }
 

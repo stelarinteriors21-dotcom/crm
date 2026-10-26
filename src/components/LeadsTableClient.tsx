@@ -534,6 +534,40 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                     </span>
                     {(() => {
                       const cf = (lead.customFields as any) || {};
+                      const isInactive48h = Boolean(cf.inactivity48hAlert);
+                      const isRevisionActive = Boolean(cf.revisionAlertActive);
+                      const isQuoteFollowUp = Boolean(cf.quotationFollowUpActive);
+                      const isSiteVisitDue = cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt && (Date.now() - new Date(cf.siteVisit.verifiedAt).getTime() > 24 * 60 * 60 * 1000) && !["Quotation shared", "Estimated Quotation", "final Quotation", "Quotation Requested", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(lead.status || "");
+                      
+                      if (isInactive48h) {
+                        return (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-300">
+                            🚨 48h Inactive
+                          </span>
+                        );
+                      }
+                      if (isSiteVisitDue) {
+                        return (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                            ⚠️ Site Visit Done (&gt;24h)
+                          </span>
+                        );
+                      }
+                      if (isRevisionActive) {
+                        return (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-300">
+                            📝 Revision Req.
+                          </span>
+                        );
+                      }
+                      if (isQuoteFollowUp) {
+                        return (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-300">
+                            💬 Quote Follow-up
+                          </span>
+                        );
+                      }
+
                       const isStatusFollowUp = (lead.status || "").toLowerCase().includes("follow");
                       const isAutoFollowUp = Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
                       if (!isStatusFollowUp && !isAutoFollowUp) return null;
@@ -656,18 +690,78 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                   </td></React.Fragment>;
                       case 'followUpReason': return <React.Fragment key="followUpReason">{(() => {
                     const cf = (lead.customFields as any) || {};
+                    const isStatusFollowUp = (lead.status || "").toLowerCase().includes("follow");
+                    const isAutoFollowUp = Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
+                    const isInactive48h = Boolean(cf.inactivity48hAlert);
+                    const isRevisionActive = Boolean(cf.revisionAlertActive);
+                    const isQuoteFollowUp = Boolean(cf.quotationFollowUpActive);
+                    const isSiteVisitDue = cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt && (Date.now() - new Date(cf.siteVisit.verifiedAt).getTime() > 24 * 60 * 60 * 1000) && !["Quotation shared", "Estimated Quotation", "final Quotation", "Quotation Requested", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(lead.status || "");
+
+                    let violationBadge = null;
+                    if (isInactive48h) {
+                      violationBadge = (
+                        <span 
+                          title={`Inactivity Alert: ${cf.inactivity48hHours || '>48'} hours with 0 calls in last 48 hours`}
+                          className="inline-flex items-center text-red-900 bg-red-50 border border-red-300 px-2 py-0.5 rounded text-[11px] font-bold truncate max-w-full cursor-help shadow-2xs"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse mr-1 shrink-0" />
+                          <span className="truncate">🚨 48h Inactive (0 calls)</span>
+                        </span>
+                      );
+                    } else if (isSiteVisitDue) {
+                      violationBadge = (
+                        <span 
+                          title="Site visit verified >24h ago without advancing to quotation"
+                          className="inline-flex items-center text-amber-900 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded text-[11px] font-bold truncate max-w-full cursor-help shadow-2xs"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse mr-1 shrink-0" />
+                          <span className="truncate">⚠️ Site Visit Done (&gt;24h)</span>
+                        </span>
+                      );
+                    } else if (isRevisionActive) {
+                      violationBadge = (
+                        <span 
+                          title="Quotation revision requested by client"
+                          className="inline-flex items-center text-purple-900 bg-purple-50 border border-purple-300 px-2 py-0.5 rounded text-[11px] font-bold truncate max-w-full cursor-help shadow-2xs"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-purple-600 mr-1 shrink-0" />
+                          <span className="truncate">📝 Revision Requested</span>
+                        </span>
+                      );
+                    } else if (isQuoteFollowUp) {
+                      violationBadge = (
+                        <span 
+                          title="Quotation follow-up due (24h cycle)"
+                          className="inline-flex items-center text-blue-900 bg-blue-50 border border-blue-300 px-2 py-0.5 rounded text-[11px] font-bold truncate max-w-full cursor-help shadow-2xs"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-1 shrink-0" />
+                          <span className="truncate">💬 Quote Follow-up Due</span>
+                        </span>
+                      );
+                    }
+
                     let reason = cf.lastFollowUpNote || cf.staleFollowUpReason || cf.followUpReason || "";
                     if (!reason && Array.isArray(lead.notes) && lead.notes.length > 0) {
                       const userNote = lead.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"));
                       if (userNote?.content) reason = userNote.content;
                     }
-                    const isStatusFollowUp = (lead.status || "").toLowerCase().includes("follow");
-                    const isAutoFollowUp = Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
                     const shouldShowReason = (isStatusFollowUp || isAutoFollowUp) && Boolean(reason);
 
                     return (
                       <td className="px-4 py-2.5 max-w-[260px] truncate border-r border-gray-100 text-xs">
-                        {shouldShowReason ? (
+                        {violationBadge ? (
+                          <div className="flex flex-col gap-1 items-start">
+                            {violationBadge}
+                            {shouldShowReason && (
+                              <span 
+                                title={reason}
+                                className="inline-flex items-center text-gray-700 text-[11px] truncate max-w-full"
+                              >
+                                {reason}
+                              </span>
+                            )}
+                          </div>
+                        ) : shouldShowReason ? (
                           <span 
                             title={reason}
                             className="inline-flex items-center text-gray-800 bg-amber-50 border border-amber-200/90 px-2.5 py-0.5 rounded-md text-xs font-medium truncate max-w-full cursor-help hover:bg-amber-100 transition-colors shadow-2xs"
