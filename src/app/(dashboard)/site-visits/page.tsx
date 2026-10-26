@@ -1,4 +1,4 @@
-import { getLeads } from "@/app/actions/leadActions";
+import prisma from "@/lib/prisma";
 import { getOrganizationSettings } from "@/app/actions/settingsActions";
 import SiteVisitsDashboardClient from "@/components/SiteVisitsDashboardClient";
 import { getCurrentUser } from "@/app/actions/authActions";
@@ -12,12 +12,33 @@ export default async function SiteVisitsDashboard() {
 
   const settings = await getOrganizationSettings();
   const requireGps = settings?.requireGps || false;
-  const dbLeads = await getLeads(undefined, undefined, undefined, undefined, undefined, true);
+
+  // Fetch leads with site visits and their consolidated notes
+  const dbLeads = await prisma.lead.findMany({
+    where: {
+      organizationId: user.organizationId,
+      ...(user.role === "TELECALLER" ? { assignedToId: user.id } : {}),
+      customFields: {
+        path: ['siteVisit'],
+        not: null
+      }
+    },
+    include: {
+      assignedTo: true,
+      notes: {
+        include: {
+          user: { select: { id: true, name: true, role: true } }
+        },
+        orderBy: { createdAt: "desc" }
+      }
+    },
+    orderBy: { createdAt: "desc" }
+  });
 
   // Filter scheduled leads
   const scheduledLeads = dbLeads.filter((lead: any) => {
     const sv = lead.customFields?.siteVisit;
-    return sv && (sv.type === "Scheduled" || sv.type === "Rescheduled");
+    return sv && (sv.type === "Scheduled" || sv.type === "Rescheduled") && sv.type !== "Done";
   });
 
   // Filter completed/previous leads
@@ -36,10 +57,10 @@ export default async function SiteVisitsDashboard() {
     return dateA.getTime() - dateB.getTime();
   });
 
-  // Sort completed by verifiedAt / updatedAt descending (most recent first)
+  // Sort completed by verifiedAt / createdAt descending (most recent first)
   completedLeads.sort((a: any, b: any) => {
-    const timeA = new Date(a.customFields?.siteVisit?.verifiedAt || a.updatedAt).getTime();
-    const timeB = new Date(b.customFields?.siteVisit?.verifiedAt || b.updatedAt).getTime();
+    const timeA = new Date(a.customFields?.siteVisit?.verifiedAt || a.createdAt).getTime();
+    const timeB = new Date(b.customFields?.siteVisit?.verifiedAt || b.createdAt).getTime();
     return timeB - timeA;
   });
 

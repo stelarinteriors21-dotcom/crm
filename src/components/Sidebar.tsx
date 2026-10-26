@@ -36,6 +36,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Leads", href: "/leads", icon: Users, hideForVisitor: true },
       { label: "Daily Workdesk", href: "/dashboard", icon: LayoutDashboard },
+      { label: "Site Visits", href: "/site-visits", icon: MapPin, adminOnly: true },
       { label: "Site Visits", href: "/site-visits", icon: MapPin, visitorOnly: true },
       { label: "Calls", href: "/calls", icon: PhoneCall, callerOnly: true },
     ],
@@ -43,7 +44,6 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: "Operations",
     items: [
-      { label: "Site Visits", href: "/site-visits", icon: MapPin, adminOnly: true },
       { label: "Team", href: "/team", icon: Briefcase, adminOnly: true },
       { label: "Analytics", href: "/analytics", icon: BarChart3, adminOnly: true },
     ],
