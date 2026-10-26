@@ -57,8 +57,13 @@ export default async function DashboardLayout({
     }
 
     try {
-      await checkAndProcessStaleConvertingLeads(user.organizationId);
-      await checkAndEscalateInactiveLeads(user.organizationId);
+      // Run background checks asynchronously without blocking SSR
+      checkAndProcessStaleConvertingLeads(user.organizationId).catch((err) =>
+        console.warn("Stale leads check warning:", err)
+      );
+      checkAndEscalateInactiveLeads(user.organizationId).catch((err) =>
+        console.warn("Escalate leads check warning:", err)
+      );
     } catch (e) {
       console.warn("Background alert check failed non-critically:", e);
     }

@@ -7,21 +7,17 @@ import {
   Calendar as CalendarIcon,
   Clock,
   MapPin,
-  Phone,
-  MessageCircle,
-  CheckCircle2,
   RotateCcw,
   Search,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   X,
   FileText,
-  Send,
+  Paperclip,
   ExternalLink,
   AlertTriangle,
   User,
-  Plus,
-  Check,
   Loader2,
   CalendarDays
 } from "lucide-react";
@@ -59,10 +55,8 @@ export default function SiteVisitsCalendarView({
   const [selectedVisit, setSelectedVisit] = useState<any | null>(null);
   const [selectedDayVisits, setSelectedDayVisits] = useState<{ dateStr: string; visits: any[] } | null>(null);
 
-  // New note input state
-  const [noteContent, setNoteContent] = useState("");
-  const [isSubmittingNote, setIsSubmittingNote] = useState(false);
-  const [noteSuccessMessage, setNoteSuccessMessage] = useState(false);
+  // Previous notes accordion dropdown state
+  const [isNotesOpen, setIsNotesOpen] = useState(false);
 
   // Reschedule inline state in modal
   const [isRescheduling, setIsRescheduling] = useState(false);
@@ -101,6 +95,7 @@ export default function SiteVisitsCalendarView({
         assignedTo: lead.assignedTo,
         siteVisit: sv,
         notes: lead.notes || [],
+        fileAttachments: lead.fileAttachments || [],
         type,
         date: dateStr,
         time: timeStr,
@@ -262,29 +257,6 @@ export default function SiteVisitsCalendarView({
 
     return days;
   }, [currentYear, currentMonth]);
-
-  // Handle adding a note from the modal
-  const handleAddNote = async () => {
-    if (!noteContent.trim() || !selectedVisit) return;
-
-    setIsSubmittingNote(true);
-    try {
-      const newNote = await addNote(selectedVisit.leadId, noteContent.trim());
-      // Append to active selected visit notes
-      if (selectedVisit.notes) {
-        selectedVisit.notes = [newNote, ...selectedVisit.notes];
-      }
-      setNoteContent("");
-      setNoteSuccessMessage(true);
-      setTimeout(() => setNoteSuccessMessage(false), 3000);
-      router.refresh();
-    } catch (e) {
-      console.error("Failed to add note:", e);
-      alert("Failed to save note. Please try again.");
-    } finally {
-      setIsSubmittingNote(false);
-    }
-  };
 
   // Handle marking complete from modal
   const handleMarkComplete = async () => {
@@ -537,6 +509,7 @@ export default function SiteVisitsCalendarView({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
+                        setIsNotesOpen(false);
                         setSelectedVisit(visit);
                       }}
                       className={`w-full text-left p-1 sm:p-1.5 rounded-lg border text-[11px] leading-tight transition-all shadow-2xs truncate flex flex-col gap-0.5 cursor-pointer ${badgeStyle}`}
@@ -636,6 +609,7 @@ export default function SiteVisitsCalendarView({
                 onClick={() => {
                   setSelectedVisit(null);
                   setIsRescheduling(false);
+                  setIsNotesOpen(false);
                 }}
                 className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
               >
@@ -647,31 +621,38 @@ export default function SiteVisitsCalendarView({
             <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
               {/* Client & Visit Quick Info Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div className="bg-gray-50 border border-gray-200/80 rounded-xl p-3 flex flex-col justify-between">
-                  <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                    Contact & Phone
+                <div className="bg-gray-50 border border-gray-200/80 rounded-xl p-3 flex flex-col justify-between min-h-[72px]">
+                  <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                    <span>Documents Attached</span>
+                    <span className="text-[10px] font-semibold text-gray-400">
+                      ({selectedVisit.fileAttachments?.length || 0})
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-gray-900">{selectedVisit.leadPhone || "No Phone"}</span>
-                    {selectedVisit.leadPhone && (
-                      <div className="flex items-center gap-1">
-                        <a
-                          href={`tel:${selectedVisit.leadPhone}`}
-                          className="w-7 h-7 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex items-center justify-center transition-colors shadow-2xs"
-                          title="Call Client"
-                        >
-                          <Phone className="w-3.5 h-3.5" />
-                        </a>
-                        <a
-                          href={`https://wa.me/${selectedVisit.leadPhone.replace(/\D/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-7 h-7 bg-green-500 hover:bg-green-600 text-white rounded-lg flex items-center justify-center transition-colors shadow-2xs"
-                          title="WhatsApp Client"
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                        </a>
+                  <div>
+                    {selectedVisit.fileAttachments && selectedVisit.fileAttachments.length > 0 ? (
+                      <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1">
+                        {selectedVisit.fileAttachments.map((file: any) => (
+                          <a
+                            key={file.id || file.url}
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 bg-white hover:bg-indigo-50 border border-indigo-200 px-2.5 py-1.5 rounded-lg transition-colors truncate shadow-2xs group"
+                            title={file.name}
+                          >
+                            <Paperclip className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                            <span className="truncate flex-1 group-hover:underline">
+                              {file.name || "Attached Document"}
+                            </span>
+                            <ExternalLink className="w-3 h-3 text-indigo-400 shrink-0 ml-1" />
+                          </a>
+                        ))}
                       </div>
+                    ) : (
+                      <span className="text-xs text-gray-400 italic flex items-center gap-1 py-1">
+                        <Paperclip className="w-3.5 h-3.5 text-gray-300" />
+                        No documents attached
+                      </span>
                     )}
                   </div>
                 </div>
@@ -756,13 +737,12 @@ export default function SiteVisitsCalendarView({
                 </div>
               )}
 
-              {/* ── NOTES SECTION ("with notes") ── */}
-              <div className="border-t border-gray-100 pt-4 space-y-3">
+              {/* ── PREVIOUS NOTES DROPDOWN ACCORDION ── */}
+              <div className="border-t border-gray-100 pt-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-[#4f46e5]" />
-                    Site Visit Notes ({selectedVisit.notes?.length || 0})
-                  </h4>
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    Site Visit Notes
+                  </span>
                   <Link
                     href={`/leads/${selectedVisit.leadId}`}
                     className="text-xs font-bold text-indigo-600 hover:underline flex items-center"
@@ -771,80 +751,61 @@ export default function SiteVisitsCalendarView({
                   </Link>
                 </div>
 
-                {/* Add Note Input Box */}
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-2.5 space-y-2">
-                  <textarea
-                    rows={2}
-                    value={noteContent}
-                    onChange={(e) => setNoteContent(e.target.value)}
-                    placeholder="Add site visit note, measurement remarks, or on-site client instructions..."
-                    className="w-full text-xs p-2 bg-white border border-gray-200 rounded-lg outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none"
+                {/* Dropdown Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsNotesOpen(!isNotesOpen)}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 transition-all cursor-pointer shadow-2xs"
+                >
+                  <span className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-[#4f46e5]" />
+                    Previous Notes ({selectedVisit.notes?.length || 0})
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
+                      isNotesOpen ? "rotate-180" : ""
+                    }`}
                   />
-                  <div className="flex items-center justify-between">
-                    {noteSuccessMessage ? (
-                      <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
-                        <Check className="w-3.5 h-3.5" /> Note saved successfully!
-                      </span>
-                    ) : (
-                      <span className="text-[11px] text-gray-400">Notes are visible to callers and executives</span>
-                    )}
+                </button>
 
-                    <button
-                      type="button"
-                      disabled={isSubmittingNote || !noteContent.trim()}
-                      onClick={handleAddNote}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
-                        noteContent.trim() && !isSubmittingNote
-                          ? "bg-[#4f46e5] hover:bg-indigo-700 text-white"
-                          : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      {isSubmittingNote ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-3 h-3" /> Add Note
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Existing Notes List */}
-                <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                  {selectedVisit.notes && selectedVisit.notes.length > 0 ? (
-                    selectedVisit.notes.map((note: any, nIdx: number) => {
-                      const isSystemNote = note.content?.startsWith("[SYSTEM:");
-                      return (
-                        <div
-                          key={nIdx}
-                          className={`p-2.5 rounded-xl border text-xs leading-relaxed ${
-                            isSystemNote
-                              ? "bg-gray-50/70 border-gray-200/80 text-gray-600 font-mono text-[11px]"
-                              : "bg-white border-gray-200 text-gray-800"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-1 pb-1 border-b border-gray-100/80">
-                            <span className="font-bold text-[11px] text-indigo-700">
-                              {note.user?.name || "Team Member"}
-                            </span>
-                            <span className="text-[10px] text-gray-400">
-                              {new Date(note.createdAt).toLocaleDateString()} at{" "}
-                              {new Date(note.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                            </span>
+                {/* Collapsible Dropdown Content */}
+                {isNotesOpen && (
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1 pt-1">
+                    {selectedVisit.notes && selectedVisit.notes.length > 0 ? (
+                      selectedVisit.notes.map((note: any, nIdx: number) => {
+                        const isSystemNote = note.content?.startsWith("[SYSTEM:");
+                        return (
+                          <div
+                            key={nIdx}
+                            className={`p-2.5 rounded-xl border text-xs leading-relaxed ${
+                              isSystemNote
+                                ? "bg-gray-50/70 border-gray-200/80 text-gray-600 font-mono text-[11px]"
+                                : "bg-white border-gray-200 text-gray-800"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1 pb-1 border-b border-gray-100/80">
+                              <span className="font-bold text-[11px] text-indigo-700">
+                                {note.user?.name || "Team Member"}
+                              </span>
+                              <span className="text-[10px] text-gray-400">
+                                {new Date(note.createdAt).toLocaleDateString()} at{" "}
+                                {new Date(note.createdAt).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit"
+                                })}
+                              </span>
+                            </div>
+                            <div className="whitespace-pre-wrap">{note.content}</div>
                           </div>
-                          <div className="whitespace-pre-wrap">{note.content}</div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="text-center py-4 text-xs text-gray-400 italic">
-                      No notes recorded yet for this site visit. Use the box above to add on-site notes.
-                    </div>
-                  )}
-                </div>
+                        );
+                      })
+                    ) : (
+                      <div className="text-center py-4 text-xs text-gray-400 italic bg-gray-50/60 rounded-xl border border-dashed border-gray-200">
+                        No previous notes recorded for this lead.
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -911,6 +872,7 @@ export default function SiteVisitsCalendarView({
                   key={idx}
                   onClick={() => {
                     setSelectedDayVisits(null);
+                    setIsNotesOpen(false);
                     setSelectedVisit(visit);
                   }}
                   className="p-3 bg-white border border-gray-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/30 transition-all cursor-pointer shadow-2xs flex items-center justify-between"

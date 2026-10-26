@@ -25,6 +25,9 @@ export default async function SiteVisitsDashboard() {
     },
     include: {
       assignedTo: true,
+      fileAttachments: {
+        orderBy: { createdAt: "desc" }
+      },
       notes: {
         include: {
           user: { select: { id: true, name: true, role: true } }
