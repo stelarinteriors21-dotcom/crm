@@ -10,7 +10,6 @@ import {
 import { getCurrentUser } from "@/app/actions/authActions";
 import UserDropdown from "@/components/UserDropdown";
 import NotificationBell from "@/components/NotificationBell";
-import AdminSoundToggle from "@/components/AdminSoundToggle";
 import GlobalSoundWatcher from "@/components/GlobalSoundWatcher";
 import Sidebar from "@/components/Sidebar";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -112,7 +111,6 @@ export default async function DashboardLayout({
             </div>
             
             <div className="flex items-center space-x-1.5 sm:space-x-3 md:space-x-4 shrink-0">
-              <AdminSoundToggle isAdmin={isAdmin} initialMuted={globalSoundMuted} />
               <NotificationBell tasks={upcomingTasks} />
               <AddLeadButton isAdmin={isAdmin} />
               <UserDropdown 
