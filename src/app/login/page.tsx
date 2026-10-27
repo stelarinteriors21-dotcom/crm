@@ -58,8 +58,9 @@ export default function LoginPage() {
         window.location.href = "/dashboard";
       }
     } catch (err: any) {
-      if (err.message === "NEXT_REDIRECT") {
-        throw err;
+      if (err.message === "NEXT_REDIRECT" || (err.digest && String(err.digest).startsWith("NEXT_REDIRECT"))) {
+        window.location.href = "/dashboard";
+        return;
       }
       try {
         localStorage.removeItem("stelar_active_session_email");

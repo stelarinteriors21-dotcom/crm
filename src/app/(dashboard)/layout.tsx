@@ -16,7 +16,6 @@ import Sidebar from "@/components/Sidebar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import AddLeadButton from "@/components/AddLeadButton";
 import prisma from "@/lib/prisma";
-import { checkAndProcessStaleConvertingLeads, checkAndEscalateInactiveLeads } from "@/app/actions/alertActions";
 
 import { redirect } from "next/navigation";
 
@@ -54,18 +53,6 @@ export default async function DashboardLayout({
       globalSoundMuted = Boolean((org?.customFieldLabels as any)?.globalSoundMuted);
     } catch (e) {
       // default false
-    }
-
-    try {
-      // Run background checks asynchronously without blocking SSR
-      checkAndProcessStaleConvertingLeads(user.organizationId).catch((err) =>
-        console.warn("Stale leads check warning:", err)
-      );
-      checkAndEscalateInactiveLeads(user.organizationId).catch((err) =>
-        console.warn("Escalate leads check warning:", err)
-      );
-    } catch (e) {
-      console.warn("Background alert check failed non-critically:", e);
     }
 
     try {

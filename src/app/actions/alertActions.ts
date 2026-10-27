@@ -776,12 +776,6 @@ export async function getActionRequiredLeads() {
   const user = await getCurrentUser();
   if (!user) return [];
 
-  // Automatically process any stale converting leads on each poll
-  await checkAndProcessStaleConvertingLeads(user.organizationId);
-
-  // Automatically check and escalate leads with >48h inactivity (0 calls in 48h)
-  await checkAndEscalateInactiveLeads(user.organizationId);
-
   // STRICT POLICY: System Admins (ADMIN, ROOT) and non-caller staff must NEVER receive call alerts or call prompts!
   // Only callers (role === 'TELECALLER') receive call alerts.
   if (user.role !== "TELECALLER") {
