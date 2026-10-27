@@ -20,10 +20,23 @@ export default function CallsView({ leads }: { leads: any[] }) {
     <div className="flex flex-col flex-1 overflow-hidden h-full">
       {/* Sub-header Toolbar: Responsive and hides on mobile when drilldown into lead */}
       <div className={`${showMobileDetail ? "hidden md:flex" : "flex"} flex-col sm:flex-row h-auto sm:h-14 px-3 sm:px-4 md:px-6 py-2.5 sm:py-0 border-b border-gray-100 sm:items-center shrink-0 justify-between gap-2.5 sm:gap-3 bg-white`}>
-        <div className="flex items-center justify-between w-full sm:w-auto">
+        <div className="flex items-center justify-between w-full sm:w-auto space-x-3">
           <h1 className="text-[16px] sm:text-[17px] font-bold text-gray-800 flex items-center whitespace-nowrap">
             My Calls <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-2.5 text-[#4f46e5] cursor-pointer hover:rotate-180 transition-transform duration-500" onClick={() => window.location.reload()} />
           </h1>
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("crm_manual_sync_calls"));
+              }
+            }}
+            className="flex items-center space-x-1.5 px-2.5 py-1 text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors cursor-pointer"
+            title="Scan and sync recent calls and recordings from phone storage (past 48 hours)"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />
+            <span className="text-[11px] sm:text-xs">Sync from Phone</span>
+          </button>
           <div className="flex items-center space-x-2 sm:hidden">
             <button className="flex items-center px-2.5 py-1 text-gray-600 bg-gray-50 border border-gray-200 rounded text-xs hover:bg-gray-100 transition-colors">
               <Filter className="w-3.5 h-3.5 mr-1" /> Filters

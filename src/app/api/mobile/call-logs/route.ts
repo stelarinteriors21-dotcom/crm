@@ -28,6 +28,14 @@ export async function POST(request: Request) {
     let notes = formData.get('notes') as string || '';
     const recordingFile = formData.get('audio') as File;
     const ringsStr = formData.get('rings') as string;
+    const timestampStr = formData.get('timestamp') as string;
+    let callCreatedAt: Date | undefined;
+    if (timestampStr && !isNaN(parseInt(timestampStr))) {
+      const parsedTime = parseInt(timestampStr);
+      if (parsedTime > 0) {
+        callCreatedAt = new Date(parsedTime);
+      }
+    }
 
     // 1. Duration & Outcome Recovery: If duration was sent as 0 but notes contains verified talk time, recover it!
     if (duration <= 0 && notes) {
@@ -109,12 +117,26 @@ export async function POST(request: Request) {
       const normalizedPhone = phone.replace(/\D/g, "");
       const corePhone = normalizedPhone.length >= 10 ? normalizedPhone.slice(-10) : normalizedPhone;
       
-      const lead = await prisma.lead.findFirst({
+      // 1. Prioritize finding an active lead assigned to this caller
+      let lead = userId ? await prisma.lead.findFirst({
         where: {
-          phone: { contains: corePhone }
+          phone: { contains: corePhone },
+          assignedToId: userId
         },
+        orderBy: { createdAt: 'desc' },
         select: { id: true, status: true }
-      });
+      }) : null;
+
+      // 2. Fallback to newest matching lead across organization
+      if (!lead) {
+        lead = await prisma.lead.findFirst({
+          where: {
+            phone: { contains: corePhone }
+          },
+          orderBy: { createdAt: 'desc' },
+          select: { id: true, status: true }
+        });
+      }
       
       if (!lead) {
         return new NextResponse(`Lead not found for phone: ${phone}`, { status: 404, headers: corsHeaders });
@@ -195,24 +217,36 @@ export async function POST(request: Request) {
       }
     }
 
-    // Check recent call for this lead in the last 90 seconds
-    const ninetySecondsAgo = new Date(Date.now() - 90 * 1000);
+    // Check recent call for this lead:
+    // If callCreatedAt is supplied (e.g. from device log backfill), match within ±2 minute window around the actual call time.
+    // Otherwise fallback to checking recent calls within the last 90 seconds.
+    const searchWindow = callCreatedAt
+      ? {
+          gte: new Date(callCreatedAt.getTime() - 2 * 60 * 1000),
+          lte: new Date(callCreatedAt.getTime() + 2 * 60 * 1000)
+        }
+      : {
+          gte: new Date(Date.now() - 90 * 1000)
+        };
+
     const recentCall = await prisma.callLog.findFirst({
       where: {
         leadId,
-        createdAt: { gte: ninetySecondsAgo }
+        createdAt: searchWindow
       },
       orderBy: { createdAt: 'desc' }
     });
 
     if (recentCall) {
-      const timeDiffMs = Date.now() - new Date(recentCall.createdAt).getTime();
+      const timeDiffMs = Math.abs(
+        (callCreatedAt ? callCreatedAt.getTime() : Date.now()) - new Date(recentCall.createdAt).getTime()
+      );
 
       // Case A: Exact duplicate connected call uploaded twice (SmartCallManager + AutoCallLogWatcher)
-      // e.g. both calls have duration > 0 (e.g. 32s and 32s) within 90 seconds
+      // e.g. both calls have duration > 0 (e.g. 32s and 32s) within window
       if (isConnectedCall && (recentCall.duration > 0 || recentCall.recordingUrl)) {
         const durDiff = Math.abs((recentCall.duration || 0) - duration);
-        if (durDiff <= 3) {
+        if (durDiff <= 5 || isNaN(durDiff)) {
           let updateData: any = {};
           if (recordingUrl && !recentCall.recordingUrl) updateData.recordingUrl = recordingUrl;
           if (Object.keys(updateData).length > 0) {
@@ -261,7 +295,8 @@ export async function POST(request: Request) {
         userId: finalUserId,
         duration,
         recordingUrl,
-        notes: finalNotes
+        notes: finalNotes,
+        ...(callCreatedAt ? { createdAt: callCreatedAt } : {})
       }
     });
 
@@ -274,12 +309,16 @@ export async function POST(request: Request) {
         delete cf.inactivity48hAlert;
       }
 
-      if (duration > 0 || recordingFile || callStatus === 'ANSWERED') {
-        // Automation 1: Call attended/connected -> change from Fresh/NEW/RNR/follow up to Contacted & complete follow-up
-        await handleConnectedCallAutomations(leadId, duration, finalUserId);
+      // Check if this lead has a scheduled follow-up pending in the future
+      const hasPendingFutureFollowUp = cf.followUpDate && new Date(cf.followUpDate).getTime() > Date.now();
+      const isConnected = duration > 0 || recordingFile || callStatus === 'ANSWERED';
+
+      if (hasPendingFutureFollowUp || isConnected) {
+        // Automation 1: Attended call OR call logged before scheduled follow-up -> complete follow-up & change to Contacted
+        await handleConnectedCallAutomations(leadId, Math.max(duration, 1), finalUserId);
       } else if (duration === 0) {
         // Automation 2: Call not attended -> change to RNR
-        const closedStatuses = ['Won', 'Advance recieved', 'Pay Pending', 'Junk', 'Lost', 'Job enquiry'];
+        const closedStatuses = ['Won', 'Advance recieved', 'Pay Pending', 'Junk'];
         if (!closedStatuses.includes(lead.status)) {
           const currentSlot = await getCurrentRnrSlot();
           const isStatusChangingToRnr = lead.status !== 'RNR';

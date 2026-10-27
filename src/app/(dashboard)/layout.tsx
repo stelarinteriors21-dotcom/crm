@@ -13,6 +13,7 @@ import NotificationBell from "@/components/NotificationBell";
 import GlobalSoundWatcher from "@/components/GlobalSoundWatcher";
 import Sidebar from "@/components/Sidebar";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import MobileMenuButton from "@/components/MobileMenuButton";
 import AddLeadButton from "@/components/AddLeadButton";
 import prisma from "@/lib/prisma";
 
@@ -101,7 +102,8 @@ export default async function DashboardLayout({
         {/* Top Header */}
         <header className="bg-white border-b border-gray-200 z-[100] relative shadow-xs shrink-0 pt-[env(safe-area-inset-top,0px)]">
           <div className="h-14 sm:h-16 flex items-center justify-between px-3 md:px-6">
-            <div className="flex items-center space-x-2 sm:space-x-2.5 overflow-hidden min-w-0">
+            <div className="flex items-center space-x-1.5 sm:space-x-2.5 overflow-hidden min-w-0">
+              <MobileMenuButton />
               <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shrink-0 bg-white border border-gray-100 shadow-2xs">
                 <img src="/logo.png" alt="Stelar Interiors" width={32} height={32} style={{ width: 32, height: 32 }} className="w-full h-full object-contain p-0.5" />
               </div>
@@ -130,7 +132,13 @@ export default async function DashboardLayout({
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav isAdmin={isAdmin} userRole={user?.role} />
+      <MobileBottomNav 
+        isAdmin={isAdmin} 
+        userRole={user?.role} 
+        orgName={user?.organization?.name || "Stelar CRM"}
+        userName={user?.name || "Admin"}
+        userEmail={user?.email || ""}
+      />
     </div>
     </>
   );

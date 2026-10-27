@@ -10,7 +10,6 @@ const DISPLAY_NAMES: Record<string, string> = {
   "Site visit done": "Site Visit Done",
   "Estimate without site visit": "Estimate Without Site Visit",
   "Quotation without site visit": "Estimate Without Site Visit",
-  "just curious": "Just Curious",
   "follow up": "Follow Up",
 };
 

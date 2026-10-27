@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getCallers } from "@/app/actions/leadActions";
+import { LEAD_STATUS_OPTIONS } from "@/lib/constants";
 
 export default function LeadsFilterDropdowns({ 
   customTags = [], 
@@ -70,13 +71,7 @@ export default function LeadsFilterDropdowns({
   
   const [callers, setCallers] = useState<any[]>([]);
 
-  const STATUS_OPTIONS = [
-    "Fresh", "RNR", "Job enquiry", "Contacted", "interested",
-    "just curious", "follow up", "Junk", "Whatsapp Chat", "Hot",
-    "Hold", "Site visit Schedules", "Site visit Recheduled", "Site visit done",
-    "Estimate without site visit", "Quotation Requested", "Quotation shared", "Estimated Quotation", "Revised Quotation", "final Quotation",
-    "Advance recieved", "Pay Pending", "Won", "Lost"
-  ];
+  const STATUS_OPTIONS = LEAD_STATUS_OPTIONS;
 
   const TAG_OPTIONS = ["All", ...customTags.map((t: any) => t.name)];
 

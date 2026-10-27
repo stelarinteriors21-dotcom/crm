@@ -443,26 +443,28 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
 
   return (
     <div className="h-full bg-[#f8fafc] flex flex-col -m-3 md:-m-6 overflow-y-auto">
-      <div className="p-3 md:p-6 flex justify-between items-center bg-white border-b border-gray-200">
-        <h1 className="text-xl font-bold text-gray-800">Admin Dashboard</h1>
-        <div className="flex items-center gap-2">
-          <Link href="/audit" className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center transition-colors shadow-sm border border-slate-700">
-            <BarChart3 className="w-4 h-4 mr-2 text-indigo-400" /> Executive Audit & Reports
+      <div className="p-3 md:p-6 flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-white border-b border-gray-200">
+        <h1 className="text-lg sm:text-xl font-bold text-gray-800">Admin Dashboard</h1>
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <Link href="/audit" className="bg-slate-900 hover:bg-slate-800 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center transition-colors shadow-xs border border-slate-700 whitespace-nowrap">
+            <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-indigo-400 shrink-0" /> 
+            <span className="hidden sm:inline">Executive Audit & Reports</span>
+            <span className="sm:hidden">Audit & Reports</span>
           </Link>
-          <button onClick={() => setShowDailyReport(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center transition-colors shadow-sm cursor-pointer">
-            <FileText className="w-4 h-4 mr-2" /> Daily Report
+          <button onClick={() => setShowDailyReport(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center transition-colors shadow-xs cursor-pointer whitespace-nowrap">
+            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 shrink-0" /> Daily Report
           </button>
 
           {/* Quick Reports Download Menu */}
           <div className="relative">
             <button
               onClick={() => setShowReportDropdown(!showReportDropdown)}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-3.5 py-2 rounded-lg text-sm font-bold flex items-center transition-colors shadow-sm cursor-pointer"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-2.5 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center transition-colors shadow-xs cursor-pointer whitespace-nowrap"
               title="Download Detailed Weekly & Monthly Reports"
             >
-              <Download className="w-4 h-4 mr-1.5" /> 
-              Download Reports 
-              <ChevronDown className="w-3.5 h-3.5 ml-1" />
+              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 shrink-0" /> 
+              <span>Export</span>
+              <ChevronDown className="w-3.5 h-3.5 ml-1 opacity-80 shrink-0" />
             </button>
 
             {showReportDropdown && (
@@ -563,12 +565,12 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
           
         {/* Active Team Tasks Overview */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-6 col-span-1 md:col-span-3">
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="p-3 sm:p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
             <div className="text-[13px] font-bold text-gray-800 flex items-center">
-              <CheckCircle className="w-4 h-4 mr-2 text-[#4f46e5]" />
-              Team Pipeline Overview (Active Caller Tasks)
+              <CheckCircle className="w-4 h-4 mr-2 text-[#4f46e5] shrink-0" />
+              <span>Team Pipeline Overview (Active Caller Tasks)</span>
             </div>
-            <div className="text-[11px] font-bold text-gray-500">
+            <div className="text-[11px] font-medium text-gray-500">
               Only showing active stages (Follow Up, Negotiation, etc.)
             </div>
           </div>
@@ -579,24 +581,24 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
               return (
                 <div className="divide-y divide-gray-100">
                   {activeTeamTasks.map((lead: any) => (
-                    <div key={lead.id} className="p-3 px-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                      <div className="min-w-0 pr-4">
+                    <div key={lead.id} className="p-3 px-3 sm:px-4 flex items-center justify-between hover:bg-gray-50 transition-colors gap-2">
+                      <div className="min-w-0 flex-1 pr-2">
                         <div className="font-bold text-[13px] text-gray-900 truncate">{lead.name}</div>
-                        <div className="text-[11px] font-medium text-gray-500 mt-1 flex items-center gap-2 truncate">
-                          <span className="inline-block px-2 py-0.5 rounded text-blue-700 bg-blue-50 font-bold border border-blue-100">
+                        <div className="text-[11px] font-medium text-gray-500 mt-1 flex items-center gap-1.5 sm:gap-2 flex-wrap truncate">
+                          <span className="inline-block px-1.5 sm:px-2 py-0.5 rounded text-blue-700 bg-blue-50 font-bold border border-blue-100 text-[10px] sm:text-[11px]">
                             {lead.status || 'NEW'}
                           </span>
-                          <span className="text-gray-500 font-bold flex items-center bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
-                            <User className="w-3 h-3 mr-1" />
+                          <span className="text-gray-500 font-bold flex items-center bg-gray-100 px-1.5 sm:px-2 py-0.5 rounded border border-gray-200 text-[10px] sm:text-[11px]">
+                            <User className="w-3 h-3 mr-1 shrink-0" />
                             {lead.assignedTo?.name || 'Unassigned'}
                           </span>
                         </div>
                       </div>
                       <Link 
                         href={`/leads/${lead.id}`}
-                        className="whitespace-nowrap px-4 py-1.5 bg-[#4f46e5] text-white text-[12px] font-bold rounded-lg hover:bg-indigo-600 shadow-sm flex items-center"
+                        className="whitespace-nowrap px-3 sm:px-4 py-1.5 bg-[#4f46e5] text-white text-[11px] sm:text-[12px] font-bold rounded-lg hover:bg-indigo-600 shadow-xs flex items-center shrink-0"
                       >
-                        <PhoneCall className="w-3 h-3 mr-1.5" /> Manage Task
+                        <PhoneCall className="w-3 h-3 mr-1 sm:mr-1.5" /> Manage Task
                       </Link>
                     </div>
                   ))}

@@ -73,7 +73,7 @@ export default function AutoCallLogWatcher({ userId }: AutoCallLogWatcherProps) 
     }
   };
 
-  const runSync = async () => {
+  const runSync = async (force48h = false) => {
     if (typeof window === "undefined" || isSyncingRef.current) return;
 
     const capacitor = (window as any).Capacitor;
@@ -82,21 +82,30 @@ export default function AutoCallLogWatcher({ userId }: AutoCallLogWatcherProps) 
     try {
       isSyncingRef.current = true;
       const lastSyncRaw = localStorage.getItem("crm_last_synced_call_time");
-      // Default to last 3 hours if first time
-      const minTime = lastSyncRaw ? Number(lastSyncRaw) : Date.now() - 3 * 3600 * 1000;
+      // Default to last 3 hours if regular sync, or 48 hours if forced backfill
+      const minTime = force48h
+        ? Date.now() - 48 * 3600 * 1000
+        : lastSyncRaw
+        ? Number(lastSyncRaw)
+        : Date.now() - 3 * 3600 * 1000;
 
       const res = await capacitor.Plugins.AndroidCallLog.getRecentCalls({
         sinceTimestamp: minTime,
       });
 
       if (res?.calls && Array.isArray(res.calls) && res.calls.length > 0) {
-        let matchedCount = 0;
-        let maxTimestamp = minTime;
+        // Sort chronologically ascending (oldest first) so cursor advances progressively
+        const sortedCalls = [...res.calls].sort(
+          (a, b) => Number(a.timestamp || 0) - Number(b.timestamp || 0)
+        );
 
-        for (const c of res.calls) {
+        let matchedCount = 0;
+        let highestSuccessTimestamp = minTime;
+        let hasFailure = false;
+
+        for (const c of sortedCalls) {
           const callTime = Number(c.timestamp || 0);
-          if (callTime <= minTime) continue;
-          if (callTime > maxTimestamp) maxTimestamp = callTime;
+          if (!force48h && callTime <= minTime) continue;
 
           const rawNumber = String(c.number || "").trim();
           if (!rawNumber) continue;
@@ -132,6 +141,7 @@ export default function AutoCallLogWatcher({ userId }: AutoCallLogWatcherProps) 
             fd.append("duration", duration.toString());
             fd.append("ringDuration", duration.toString());
             fd.append("callStatus", duration > 0 ? "ANSWERED" : "MISSED");
+            fd.append("timestamp", callTime.toString());
             fd.append(
               "notes",
               isIncoming 
@@ -160,6 +170,9 @@ export default function AutoCallLogWatcher({ userId }: AutoCallLogWatcherProps) 
                 if (recRes && recRes.uploaded) {
                   uploadedWithAudio = true;
                   matchedCount++;
+                  if (!hasFailure && callTime > highestSuccessTimestamp) {
+                    highestSuccessTimestamp = callTime;
+                  }
                 }
               } catch (recErr) {
                 console.warn("Native audio upload error:", recErr);
@@ -177,6 +190,9 @@ export default function AutoCallLogWatcher({ userId }: AutoCallLogWatcherProps) 
                 const data = await uploadRes.json();
                 if (data?.callLog) {
                   matchedCount++;
+                  if (!hasFailure && callTime > highestSuccessTimestamp) {
+                    highestSuccessTimestamp = callTime;
+                  }
 
                   // If connected call, retry scanning for recording in 4 seconds (encoding grace period)
                   if (duration > 0 && data.callLog.id && capacitor?.Plugins?.AndroidCallLog?.syncRecordingsForLead) {
@@ -196,22 +212,38 @@ export default function AutoCallLogWatcher({ userId }: AutoCallLogWatcherProps) 
                     }, 4000);
                   }
                 }
+              } else if (uploadRes.status === 404) {
+                // Not a CRM lead (e.g. personal contact / family call) - safe to advance cursor
+                if (!hasFailure && callTime > highestSuccessTimestamp) {
+                  highestSuccessTimestamp = callTime;
+                }
+              } else {
+                // Server returned error (500, 504, pool exhaustion, timeout)
+                hasFailure = true;
               }
             }
           } catch (e) {
-            // Ignore individual upload failures
+            // Network failure or fetch exception - do not advance cursor past this call!
+            hasFailure = true;
           }
         }
 
-        if (maxTimestamp > minTime) {
-          localStorage.setItem("crm_last_synced_call_time", String(maxTimestamp));
+        // Only advance cursor to the latest successfully synced or verified call
+        if (highestSuccessTimestamp > minTime) {
+          localStorage.setItem("crm_last_synced_call_time", String(highestSuccessTimestamp));
         }
 
         if (matchedCount > 0) {
-          setSyncToast(`📞 Automatically synced ${matchedCount} call${matchedCount > 1 ? "s" : ""} from your phone dialer!`);
+          setSyncToast(`📞 Automatically synced ${matchedCount} call${matchedCount > 1 ? "s" : ""} and audio from your phone!`);
           router.refresh();
           setTimeout(() => setSyncToast(null), 6000);
+        } else if (force48h) {
+          setSyncToast(`✓ Call logs up to date. All recent calls from the last 48 hours are logged.`);
+          setTimeout(() => setSyncToast(null), 4000);
         }
+      } else if (force48h) {
+        setSyncToast(`✓ No calls found on device in the last 48 hours.`);
+        setTimeout(() => setSyncToast(null), 4000);
       }
 
       // Check for unattached past recordings
@@ -228,7 +260,14 @@ export default function AutoCallLogWatcher({ userId }: AutoCallLogWatcherProps) 
     checkStorageAccess();
     runSync();
 
-    // 2. Run sync whenever user returns to the CRM from their phone dialer
+    // 2. Listen for manual sync trigger (e.g. from drawer or button)
+    const handleManualSync = () => {
+      setSyncToast("🔄 Scanning phone call logs for past 48 hours...");
+      runSync(true);
+    };
+    window.addEventListener("crm_manual_sync_calls", handleManualSync);
+
+    // 3. Run sync whenever user returns to the CRM from their phone dialer
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
         checkStorageAccess();
@@ -239,10 +278,11 @@ export default function AutoCallLogWatcher({ userId }: AutoCallLogWatcherProps) 
     window.addEventListener("focus", handleVisibility);
     document.addEventListener("visibilitychange", handleVisibility);
 
-    // 3. Periodic check every 25 seconds while in app
+    // 4. Periodic check every 25 seconds while in app
     const interval = setInterval(runSync, 25000);
 
     return () => {
+      window.removeEventListener("crm_manual_sync_calls", handleManualSync);
       window.removeEventListener("focus", handleVisibility);
       document.removeEventListener("visibilitychange", handleVisibility);
       clearInterval(interval);

@@ -37,7 +37,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
 
   const dbLeads = await getLeads(query, searchField, status, source, assigned, active, startDate, endDate, tag, city, stage, autoFollowUp, violations);
   const settings = await getOrganizationSettings();
-  const uniqueCities = await getUniqueCities();
+  const rawCities = await getUniqueCities();
+  const uniqueCities = (rawCities || []).filter((c): c is string => typeof c === 'string' && c.length > 0);
   const autoFollowUpCount = await getAutoFollowUpCount();
   const customTags = (settings?.customTags as any[]) || [{name: "Potential lead", color: "#3b82f6"}, {name: "Future potential lead", color: "#8b5cf6"}];
 
@@ -52,7 +53,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
           <a href="?stage=" className={`pb-2 text-sm font-medium whitespace-nowrap ${!stage ? 'border-b-2 border-[#4f46e5] text-[#4f46e5]' : 'text-gray-500 hover:text-gray-700'}`}>All Leads</a>
           <a href="?stage=converting" className={`pb-2 text-sm font-medium whitespace-nowrap ${stage === 'converting' ? 'border-b-2 border-[#4f46e5] text-[#4f46e5]' : 'text-gray-500 hover:text-gray-700'}`}>Converting</a>
           <a href="?stage=converted" className={`pb-2 text-sm font-medium whitespace-nowrap ${stage === 'converted' ? 'border-b-2 border-[#4f46e5] text-[#4f46e5]' : 'text-gray-500 hover:text-gray-700'}`}>Converted</a>
-          <a href="?stage=junk" className={`pb-2 text-sm font-medium whitespace-nowrap ${stage === 'junk' ? 'border-b-2 border-[#4f46e5] text-[#4f46e5]' : 'text-gray-500 hover:text-gray-700'}`}>Junk / Lost</a>
+          <a href="?stage=junk" className={`pb-2 text-sm font-medium whitespace-nowrap ${stage === 'junk' ? 'border-b-2 border-[#4f46e5] text-[#4f46e5]' : 'text-gray-500 hover:text-gray-700'}`}>Junk</a>
         </div>
       )}
 
@@ -68,7 +69,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
 
       {/* View Switcher is typically added in LeadsHeaderActions, but we check searchParams here */}
       {searchParams.view === "kanban" ? (
-        <LeadsKanbanClient leads={dbLeads} customTags={customTags} />
+        <LeadsKanbanClient leads={dbLeads} />
       ) : (
         <LeadsTableClient leads={dbLeads} totalLeads={dbLeads.length} customTags={customTags} isAdmin={isAdmin} />
       )}
