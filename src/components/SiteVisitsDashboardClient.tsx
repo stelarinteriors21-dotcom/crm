@@ -46,7 +46,7 @@ export default function SiteVisitsDashboardClient({
   }, [activeTab, scheduledLeads, completedLeads, allLeads, searchQuery]);
 
   return (
-    <div className="h-full bg-gray-50 flex flex-col -m-3 md:-m-6">
+    <div className="w-full max-w-full min-h-full bg-gray-50 flex flex-col md:-m-6 overflow-hidden">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sticky top-0 z-10 shadow-xs">
         <div className="flex items-center">

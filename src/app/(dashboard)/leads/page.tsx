@@ -43,13 +43,13 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
   const customTags = (settings?.customTags as any[]) || [{name: "Potential lead", color: "#3b82f6"}, {name: "Future potential lead", color: "#8b5cf6"}];
 
   return (
-    <div className="h-full bg-white flex flex-col -m-3 md:-m-6">
+    <div className="w-full max-w-full min-h-full bg-white flex flex-col md:-m-6 overflow-hidden">
       <LeadsFilterTracker />
       <LeadsHeaderActions />
 
       {/* Stage Tabs (ROOT only) */}
       {user?.role === "ROOT" && (
-        <div className="px-4 md:px-6 pt-3 flex space-x-4 border-b border-gray-200 overflow-x-auto">
+        <div className="px-3 sm:px-4 md:px-6 pt-3 flex space-x-3 border-b border-gray-200 overflow-x-auto no-scrollbar w-full max-w-full">
           <a href="?stage=" className={`pb-2 text-sm font-medium whitespace-nowrap ${!stage ? 'border-b-2 border-[#4f46e5] text-[#4f46e5]' : 'text-gray-500 hover:text-gray-700'}`}>All Leads</a>
           <a href="?stage=converting" className={`pb-2 text-sm font-medium whitespace-nowrap ${stage === 'converting' ? 'border-b-2 border-[#4f46e5] text-[#4f46e5]' : 'text-gray-500 hover:text-gray-700'}`}>Converting</a>
           <a href="?stage=converted" className={`pb-2 text-sm font-medium whitespace-nowrap ${stage === 'converted' ? 'border-b-2 border-[#4f46e5] text-[#4f46e5]' : 'text-gray-500 hover:text-gray-700'}`}>Converted</a>
@@ -58,11 +58,11 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
       )}
 
       {/* Search & Filters */}
-      <div className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between shrink-0 bg-[#FDFDFD] gap-2.5 sm:gap-3 relative z-50">
-        <div className="w-full lg:w-auto shrink-0">
+      <div className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 border-b border-gray-100 flex flex-col gap-2.5 bg-[#FDFDFD] relative z-50 w-full max-w-full">
+        <div className="w-full">
           <SearchBar />
         </div>
-        <div className="flex items-center w-full lg:w-auto shrink-0 relative z-50">
+        <div className="w-full overflow-x-auto no-scrollbar py-0.5">
           <LeadsFilterDropdowns customTags={customTags} uniqueCities={uniqueCities} autoFollowUpCount={autoFollowUpCount} />
         </div>
       </div>

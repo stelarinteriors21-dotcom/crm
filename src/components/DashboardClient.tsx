@@ -442,7 +442,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
   }
 
   return (
-    <div className="h-full bg-[#f8fafc] flex flex-col -m-3 md:-m-6 overflow-y-auto">
+    <div className="w-full max-w-full min-h-full bg-[#f8fafc] flex flex-col md:-m-6 overflow-y-auto overflow-x-hidden">
       <div className="p-3 md:p-6 flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-white border-b border-gray-200">
         <h1 className="text-lg sm:text-xl font-bold text-gray-800">Admin Dashboard</h1>
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">

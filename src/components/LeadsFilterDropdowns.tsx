@@ -194,7 +194,7 @@ export default function LeadsFilterDropdowns({
   };
 
   return (
-    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0 relative z-50" ref={dropdownRef}>
+    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 relative z-50 py-0.5" ref={dropdownRef}>
       {/* Violations Quick Filter */}
       <button 
         type="button"

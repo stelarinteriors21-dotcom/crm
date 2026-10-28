@@ -38,13 +38,13 @@ export default function LeadsHeaderActions() {
   };
 
   return (
-    <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex items-center shrink-0 relative z-[60]">
-      <div className="relative" ref={dropdownRef}>
+    <div className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 border-b border-gray-100 flex items-center justify-between shrink-0 relative z-[60] w-full max-w-full">
+      <div className="relative min-w-0" ref={dropdownRef}>
         <button 
           onClick={() => setIsViewOpen(!isViewOpen)}
-          className="text-[15px] font-bold text-gray-800 flex items-center mr-6 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
+          className="text-sm sm:text-[15px] font-bold text-gray-800 flex items-center cursor-pointer hover:bg-gray-50 px-2 py-1 rounded max-w-[170px] sm:max-w-none"
         >
-          {currentView} <ChevronDown className="w-4 h-4 ml-1 text-gray-400" />
+          <span className="truncate">{currentView}</span> <ChevronDown className="w-4 h-4 ml-1 text-gray-400 shrink-0" />
         </button>
 
         {isViewOpen && (
@@ -62,19 +62,17 @@ export default function LeadsHeaderActions() {
           </div>
         )}
       </div>
-      
-      <div className="flex-1"></div>
 
-      <div className="flex items-center space-x-1 bg-gray-100 p-1 rounded-lg">
+      <div className="flex items-center space-x-1 bg-gray-100 p-1 rounded-lg shrink-0">
         <button 
           onClick={() => {
             const url = new URL(window.location.href);
             url.searchParams.delete('view');
             router.push(url.pathname + url.search);
           }}
-          className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${!isKanban ? 'bg-white text-[#4f46e5] shadow-sm' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'}`}
+          className={`flex items-center px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs font-bold rounded-md transition-all ${!isKanban ? 'bg-white text-[#4f46e5] shadow-xs' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'}`}
         >
-          <List className="w-3.5 h-3.5 mr-1.5" /> Table
+          <List className="w-3.5 h-3.5 mr-1 sm:mr-1.5" /> Table
         </button>
         <button 
           onClick={() => {
@@ -82,9 +80,9 @@ export default function LeadsHeaderActions() {
             url.searchParams.set('view', 'kanban');
             router.push(url.pathname + url.search);
           }}
-          className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${isKanban ? 'bg-white text-[#4f46e5] shadow-sm' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'}`}
+          className={`flex items-center px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs font-bold rounded-md transition-all ${isKanban ? 'bg-white text-[#4f46e5] shadow-xs' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'}`}
         >
-          <LayoutGrid className="w-3.5 h-3.5 mr-1.5" /> Board
+          <LayoutGrid className="w-3.5 h-3.5 mr-1 sm:mr-1.5" /> Board
         </button>
       </div>
     </div>

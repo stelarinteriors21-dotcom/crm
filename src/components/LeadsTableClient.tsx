@@ -367,9 +367,9 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
 
   return (
     <>
-      <div className="flex items-center justify-between px-3 sm:px-4 md:px-6 py-2 sm:py-3 border-b border-gray-100 bg-white gap-2 flex-wrap sm:flex-nowrap">
-        <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
-          <div className="flex items-center gap-1.5 sm:gap-2">
+      <div className="flex items-center justify-between px-3 sm:px-4 md:px-6 py-2 sm:py-3 border-b border-gray-100 bg-white gap-2 flex-wrap sm:flex-nowrap w-full max-w-full">
+        <div className="flex items-center gap-1.5 sm:gap-4 text-xs sm:text-sm text-gray-600 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <input 
               type="checkbox" 
               checked={filteredLeads.length > 0 && selectedLeads.length === filteredLeads.length}
@@ -485,7 +485,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
         </div>
 
       {/* ── MOBILE CARD VIEW ── */}
-      <div className="flex-1 overflow-auto md:hidden p-2 sm:p-3 space-y-2 bg-gray-50/50">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden md:hidden p-2 sm:p-3 space-y-2 bg-gray-50/50 w-full max-w-full">
         {leads.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-12 text-gray-400">
             <div className="text-4xl mb-3">📭</div>
@@ -497,7 +497,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
           return (
             <div 
               key={lead.id} 
-              className={`p-3 bg-white rounded-xl border transition-all shadow-2xs flex items-center justify-between gap-2.5 ${
+              className={`p-3 bg-white rounded-xl border transition-all shadow-xs flex items-center justify-between gap-2.5 w-full max-w-full ${
                 isSelected ? 'border-[#4f46e5] ring-1 ring-[#4f46e5]/30 bg-purple-50/20' : 'border-gray-200/80 hover:border-gray-300'
               }`}
             >
