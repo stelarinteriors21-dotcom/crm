@@ -5,6 +5,7 @@ import { getCurrentUser } from "./authActions";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "./activityActions";
 import { getWorkflowViolationLeadIds } from "./alertActions";
+import { EMAILS_ENABLED } from "@/lib/emailConfig";
 
 export async function getLeads(query?: string, searchField?: string, status?: string | string[], source?: string, assigned?: string, active?: boolean, startDate?: string, endDate?: string, tag?: string, city?: string | string[], stage?: string, autoFollowUp?: boolean | string, violations?: boolean | string) {
   const user = await getCurrentUser();
@@ -632,66 +633,70 @@ export async function escalateLead(leadId: string, isManualPass: boolean = true)
     }
   });
 
-  // Dispatch escalation email to admins via nodemailer
-  try {
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.SMTP_USER || 'shaji2222222@gmail.com',
-        pass: process.env.SMTP_PASS || 'umlt zsnv cxsr kfjy'
-      }
-    });
+  // Dispatch escalation email to admins via nodemailer (Suppressed if EMAILS_ENABLED = false)
+  if (!EMAILS_ENABLED) {
+    console.log(`[EMAILS PAUSED] Escalation email for lead ${lead.name} (${leadId}) suppressed per admin instruction.`);
+  } else {
+    try {
+      const nodemailer = require('nodemailer');
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.SMTP_USER || 'shaji2222222@gmail.com',
+          pass: process.env.SMTP_PASS || 'umlt zsnv cxsr kfjy'
+        }
+      });
 
-    const org = lead.organization || (await prisma.organization.findUnique({ where: { id: lead.organizationId } }));
-    const adminEmails = org?.escalationEmails || 'stelarinteriors21@gmail.com,shaji2222222@gmail.com';
-    const assigneeName = lead.assignedTo?.name || 'Unknown Caller';
-    const reasonTitle = isManualPass 
-      ? `Lead Passed (Manual Alert) by ${assigneeName}` 
-      : `Escalation Level ${escalationLevel}: Response Overdue`;
+      const org = lead.organization || (await prisma.organization.findUnique({ where: { id: lead.organizationId } }));
+      const adminEmails = org?.escalationEmails || 'stelarinteriors21@gmail.com,shaji2222222@gmail.com';
+      const assigneeName = lead.assignedTo?.name || 'Unknown Caller';
+      const reasonTitle = isManualPass 
+        ? `Lead Passed (Manual Alert) by ${assigneeName}` 
+        : `Escalation Level ${escalationLevel}: Response Overdue`;
 
-    const mailOptions = {
-      from: `"Stelar CRM Alerts" <${process.env.SMTP_USER || 'shaji2222222@gmail.com'}>`,
-      to: adminEmails,
-      subject: `🚨 LEAD ESCALATION: ${reasonTitle} - ${lead.name}`,
-      html: `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937; max-width: 600px; margin: 0 auto; border: 1px solid #fee2e2; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-          <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; padding: 24px 20px; text-align: center;">
-            <h2 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.025em;">🚨 LEAD ESCALATION ALERT</h2>
-            <p style="margin: 6px 0 0; font-size: 14px; opacity: 0.95; font-weight: 500;">${reasonTitle}</p>
-          </div>
-          <div style="padding: 24px; background-color: #ffffff;">
-            <p style="font-size: 15px; line-height: 1.6; color: #374151; margin-top: 0;">
-              ${isManualPass ? `Caller <b>${assigneeName}</b> has passed this lead.` : `This lead has reached escalation level <b>${escalationLevel}</b>.`}
-            </p>
-            <div style="background-color: #f9fafb; border-radius: 10px; padding: 18px; margin: 20px 0; border: 1px solid #e5e7eb;">
-              <h3 style="margin-top: 0; margin-bottom: 14px; font-size: 15px; color: #111827; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Lead Summary</h3>
-              <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
-                <tr><td style="padding: 6px 0; color: #6b7280; width: 140px;"><b>Lead Name:</b></td><td style="padding: 6px 0; color: #111827; font-weight: 700;">${lead.name}</td></tr>
-                <tr><td style="padding: 6px 0; color: #6b7280;"><b>Phone Number:</b></td><td style="padding: 6px 0; color: #111827;"><a href="tel:${lead.phone}" style="color: #2563eb; text-decoration: none; font-weight: 700;">${lead.phone}</a></td></tr>
-                <tr><td style="padding: 6px 0; color: #6b7280;"><b>City:</b></td><td style="padding: 6px 0; color: #111827;">${lead.city || 'N/A'}</td></tr>
-                <tr><td style="padding: 6px 0; color: #6b7280;"><b>Source:</b></td><td style="padding: 6px 0; color: #111827;">${lead.source}</td></tr>
-                <tr><td style="padding: 6px 0; color: #6b7280;"><b>Status:</b></td><td style="padding: 6px 0; color: #111827;">${lead.status}</td></tr>
-                <tr><td style="padding: 6px 0; color: #6b7280;"><b>Assigned Caller:</b></td><td style="padding: 6px 0; color: #111827; font-weight: 700;">${assigneeName}</td></tr>
-                <tr><td style="padding: 6px 0; color: #6b7280;"><b>Assignment Status:</b></td><td style="padding: 6px 0; color: #dc2626; font-weight: 700;">Remains assigned to ${assigneeName} (Awaiting Admin review)</td></tr>
-              </table>
+      const mailOptions = {
+        from: `"Stelar CRM Alerts" <${process.env.SMTP_USER || 'shaji2222222@gmail.com'}>`,
+        to: adminEmails,
+        subject: `🚨 LEAD ESCALATION: ${reasonTitle} - ${lead.name}`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937; max-width: 600px; margin: 0 auto; border: 1px solid #fee2e2; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; padding: 24px 20px; text-align: center;">
+              <h2 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.025em;">🚨 LEAD ESCALATION ALERT</h2>
+              <p style="margin: 6px 0 0; font-size: 14px; opacity: 0.95; font-weight: 500;">${reasonTitle}</p>
             </div>
-            <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 4px; margin-bottom: 20px;">
-              <p style="margin: 0; font-size: 13px; color: #991b1b; line-height: 1.5;">
-                <b>Policy Notice:</b> Leads are never automatically unassigned or reassigned. Reassignment can only be performed manually by an administrator via the CRM dashboard.
+            <div style="padding: 24px; background-color: #ffffff;">
+              <p style="font-size: 15px; line-height: 1.6; color: #374151; margin-top: 0;">
+                ${isManualPass ? `Caller <b>${assigneeName}</b> has passed this lead.` : `This lead has reached escalation level <b>${escalationLevel}</b>.`}
               </p>
+              <div style="background-color: #f9fafb; border-radius: 10px; padding: 18px; margin: 20px 0; border: 1px solid #e5e7eb;">
+                <h3 style="margin-top: 0; margin-bottom: 14px; font-size: 15px; color: #111827; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Lead Summary</h3>
+                <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+                  <tr><td style="padding: 6px 0; color: #6b7280; width: 140px;"><b>Lead Name:</b></td><td style="padding: 6px 0; color: #111827; font-weight: 700;">${lead.name}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #6b7280;"><b>Phone Number:</b></td><td style="padding: 6px 0; color: #111827;"><a href="tel:${lead.phone}" style="color: #2563eb; text-decoration: none; font-weight: 700;">${lead.phone}</a></td></tr>
+                  <tr><td style="padding: 6px 0; color: #6b7280;"><b>City:</b></td><td style="padding: 6px 0; color: #111827;">${lead.city || 'N/A'}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #6b7280;"><b>Source:</b></td><td style="padding: 6px 0; color: #111827;">${lead.source}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #6b7280;"><b>Status:</b></td><td style="padding: 6px 0; color: #111827;">${lead.status}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #6b7280;"><b>Assigned Caller:</b></td><td style="padding: 6px 0; color: #111827; font-weight: 700;">${assigneeName}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #6b7280;"><b>Assignment Status:</b></td><td style="padding: 6px 0; color: #dc2626; font-weight: 700;">Remains assigned to ${assigneeName} (Awaiting Admin review)</td></tr>
+                </table>
+              </div>
+              <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 4px; margin-bottom: 20px;">
+                <p style="margin: 0; font-size: 13px; color: #991b1b; line-height: 1.5;">
+                  <b>Policy Notice:</b> Leads are never automatically unassigned or reassigned. Reassignment can only be performed manually by an administrator via the CRM dashboard.
+                </p>
+              </div>
+            </div>
+            <div style="background-color: #f9fafb; padding: 14px 24px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb;">
+              Stelar CRM Compliance System • Automated Escalation
             </div>
           </div>
-          <div style="background-color: #f9fafb; padding: 14px 24px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb;">
-            Stelar CRM Compliance System • Automated Escalation
-          </div>
-        </div>
-      `
-    };
-    
-    transporter.sendMail(mailOptions).catch(console.error);
-  } catch (e) {
-    console.error("Failed to send escalation email via nodemailer:", e);
+        `
+      };
+      
+      transporter.sendMail(mailOptions).catch(console.error);
+    } catch (e) {
+      console.error("Failed to send escalation email via nodemailer:", e);
+    }
   }
 
   revalidatePath('/leads');

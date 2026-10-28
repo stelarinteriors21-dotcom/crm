@@ -5,6 +5,7 @@ import { getCurrentUser } from "./authActions";
 import { sendPushNotification } from "@/lib/firebaseAdmin";
 import { revalidatePath } from "next/cache";
 import nodemailer from "nodemailer";
+import { EMAILS_ENABLED } from "@/lib/emailConfig";
 
 const CONVERTED_STATUSES = ["Won", "Advance recieved", "Pay Pending", "WON", "ADVANCE RECIEVED", "PAY PENDING"];
 const JUNK_STATUSES = ["Junk", "Lost", "Job enquiry", "just curious", "Hold", "JUNK", "LOST", "HOLD", "JOB ENQUIRY", "JUST CURIOUS"];
@@ -485,9 +486,9 @@ export async function checkAndEscalateInactiveLeads(organizationId?: string) {
         continue;
       }
 
-      // 3. Debounce emails: max 1 escalation email per 24 hours per lead to prevent email spam
+      // 3. Debounce emails: max 1 escalation email per 24 hours per lead to prevent email spam (Suppressed if EMAILS_ENABLED = false)
       const lastEmailed = cf.last48hInactivityEmailedAt ? new Date(cf.last48hInactivityEmailedAt).getTime() : 0;
-      const shouldSendEmail = (now - lastEmailed) >= (24 * 60 * 60 * 1000);
+      const shouldSendEmail = EMAILS_ENABLED && ((now - lastEmailed) >= (24 * 60 * 60 * 1000));
 
       const hoursInStatus = Math.floor(timeInStatusMs / (60 * 60 * 1000));
       const assigneeName = lead.assignedTo?.name || 'Unassigned / Caller Queue';

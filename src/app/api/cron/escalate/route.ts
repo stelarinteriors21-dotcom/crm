@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import nodemailer from 'nodemailer';
 import { sendPushNotification } from '@/lib/firebaseAdmin';
 import { checkAndEscalateInactiveLeads, checkAndProcessStaleConvertingLeads } from '@/app/actions/alertActions';
+import { EMAILS_ENABLED } from '@/lib/emailConfig';
 
 export const dynamic = 'force-dynamic';
 
@@ -131,6 +132,25 @@ export async function GET(request: Request) {
     if (ignoredLeads.length === 0 && wakeLeads.length === 0) {
       return NextResponse.json({ 
         message: 'No ignored, snoozed, or missed follow-up leads found.',
+        inactive48hEscalatedCount: inactiveEscalated.length 
+      });
+    }
+
+    // Check global email dispatch switch
+    if (!EMAILS_ENABLED) {
+      console.log(`[EMAILS PAUSED] Outbound escalation emails suppressed for ${ignoredLeads.length} leads per administrator instruction.`);
+      for (const lead of ignoredLeads) {
+        await prisma.lead.update({
+          where: { id: lead.id },
+          data: {
+            escalationLevel: 2
+          }
+        });
+      }
+
+      return NextResponse.json({ 
+        message: `Escalation emails are paused by administrator. Processed ${ignoredLeads.length} leads without sending emails.`,
+        emailedCount: 0,
         inactive48hEscalatedCount: inactiveEscalated.length 
       });
     }
