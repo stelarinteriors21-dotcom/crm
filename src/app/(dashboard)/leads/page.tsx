@@ -43,7 +43,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
   const customTags = (settings?.customTags as any[]) || [{name: "Potential lead", color: "#3b82f6"}, {name: "Future potential lead", color: "#8b5cf6"}];
 
   return (
-    <div className="w-full max-w-full min-h-full bg-white flex flex-col md:-m-6 overflow-hidden">
+    <div className="w-full max-w-full min-h-full bg-white flex flex-col md:-m-6">
       <LeadsFilterTracker />
       <LeadsHeaderActions />
 
@@ -62,7 +62,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
         <div className="w-full">
           <SearchBar />
         </div>
-        <div className="w-full overflow-x-auto no-scrollbar py-0.5">
+        <div className="w-full relative z-40">
           <LeadsFilterDropdowns customTags={customTags} uniqueCities={uniqueCities} autoFollowUpCount={autoFollowUpCount} />
         </div>
       </div>
