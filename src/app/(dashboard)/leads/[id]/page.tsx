@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { Phone, FileText, MapPin, Mail, User, Calendar, Tag, PhoneCall, ArrowLeft, Edit3, MessageSquare, MessageCircle, Trash2, Home, Ruler, Camera, CheckCircle2, History } from "lucide-react";
+import { Phone, FileText, MapPin, Mail, User, Calendar, Tag, PhoneCall, ArrowLeft, Edit3, MessageSquare, MessageCircle, Trash2, Home, Ruler, Camera, CheckCircle2, History, ExternalLink, FileCheck } from "lucide-react";
 import LeadStatusDropdown from "@/components/LeadStatusDropdown";
 import SiteVisitDropdown from "@/components/SiteVisitDropdown";
 import QuotationDropdown from "@/components/QuotationDropdown";
@@ -552,45 +552,156 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
           </div>
 
           {/* 5. Document Attachments */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-[14px] font-bold text-gray-800 flex items-center">
-                <FileText className="w-4 h-4 mr-2 text-[#F59E0B]" /> Document Attachments
-              </h2>
-              <span className="text-[11px] text-gray-400">{lead.fileAttachments.length} file{lead.fileAttachments.length !== 1 ? "s" : ""}</span>
-            </div>
+          {(() => {
+            const cf = (lead.customFields as any) || {};
+            const currentQuotation = cf.quotation || {};
+            const quotationHistory: any[] = Array.isArray(cf.quotationHistory) ? cf.quotationHistory : [];
 
-            <div className="p-4 bg-gray-50 border-b border-gray-100">
-              <FileAttachmentForm leadId={lead.id} />
-            </div>
+            const allDocuments: Array<{
+              id: string;
+              name: string;
+              url: string;
+              type: "upload" | "drive";
+              category: string;
+              createdAt?: Date | string;
+              isPrimary?: boolean;
+            }> = [];
 
-            <div className="divide-y divide-gray-100">
-              {lead.fileAttachments.length === 0 ? (
-                <div className="text-center py-6 sm:py-8">
-                  <div className="w-10 h-10 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <FileText className="w-5 h-5 text-[#F59E0B]" />
-                  </div>
-                  <div className="text-[12px] font-semibold text-gray-600">No documents attached</div>
+            // Direct attachments from database
+            (lead.fileAttachments || []).forEach((file: any) => {
+              const isDrive = (file.url || "").includes("drive.google.com") || (file.url || "").includes("share.google");
+              allDocuments.push({
+                id: file.id,
+                name: file.name,
+                url: file.url,
+                type: isDrive ? "drive" : "upload",
+                category: isDrive ? "Quotation / Drive Link" : "Uploaded File",
+                createdAt: file.createdAt
+              });
+            });
+
+            // Current Quotation docLink
+            if (currentQuotation.docLink && currentQuotation.docLink.trim()) {
+              const qUrl = currentQuotation.docLink.trim();
+              if (!allDocuments.some(d => d.url === qUrl)) {
+                allDocuments.push({
+                  id: "doc-current-quotation",
+                  name: `Quotation (${currentQuotation.stage || currentQuotation.status || "Estimate"}) - Google Drive`,
+                  url: qUrl,
+                  type: "drive",
+                  category: "Current Quotation",
+                  createdAt: cf.statusChangedAt || lead.createdAt,
+                  isPrimary: true
+                });
+              }
+            }
+
+            // Historical Quotation Revisions
+            quotationHistory.forEach((h: any, idx: number) => {
+              if (h.docLink && h.docLink.trim()) {
+                const hUrl = h.docLink.trim();
+                if (!allDocuments.some(d => d.url === hUrl)) {
+                  allDocuments.push({
+                    id: `doc-quote-history-${idx}`,
+                    name: `Quotation Revision (${h.stage || "Estimate"}) - Google Drive`,
+                    url: hUrl,
+                    type: "drive",
+                    category: "Quotation History",
+                    createdAt: h.timestamp || lead.createdAt
+                  });
+                }
+              }
+            });
+
+            // Floor Plan Link
+            if (cf.floorPlanLink && cf.floorPlanLink.trim()) {
+              const fpUrl = cf.floorPlanLink.trim();
+              if (!allDocuments.some(d => d.url === fpUrl)) {
+                allDocuments.push({
+                  id: "doc-floor-plan",
+                  name: "Floor Plan Document - Google Drive",
+                  url: fpUrl,
+                  type: "drive",
+                  category: "Floor Plan",
+                  createdAt: lead.createdAt
+                });
+              }
+            }
+
+            return (
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <h2 className="text-[14px] font-bold text-gray-800 flex items-center">
+                    <FileText className="w-4 h-4 mr-2 text-[#F59E0B]" /> Document Attachments
+                  </h2>
+                  <span className="text-[11px] text-gray-400">{allDocuments.length} document{allDocuments.length !== 1 ? "s" : ""}</span>
                 </div>
-              ) : (
-                lead.fileAttachments.map((file: any) => (
-                  <div key={file.id} className="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center space-x-3 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-4 h-4 text-[#F59E0B]" />
+
+                <div className="p-4 bg-gray-50 border-b border-gray-100">
+                  <FileAttachmentForm leadId={lead.id} />
+                </div>
+
+                <div className="divide-y divide-gray-100">
+                  {allDocuments.length === 0 ? (
+                    <div className="text-center py-6 sm:py-8">
+                      <div className="w-10 h-10 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <FileText className="w-5 h-5 text-[#F59E0B]" />
                       </div>
-                      <div className="truncate">
-                        <a href={file.url} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold text-gray-800 hover:text-blue-600 hover:underline">
-                          {file.name}
-                        </a>
-                        <div suppressHydrationWarning className="text-[10px] text-gray-400 mt-0.5">{timeAgo(file.createdAt)}</div>
-                      </div>
+                      <div className="text-[12px] font-semibold text-gray-600">No documents attached</div>
                     </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+                  ) : (
+                    allDocuments.map((doc: any) => (
+                      <div key={doc.id} className="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center space-x-3 min-w-0">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            doc.type === "drive" ? "bg-blue-100 text-blue-600" : "bg-yellow-100 text-[#F59E0B]"
+                          }`}>
+                            {doc.type === "drive" ? <FileCheck className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                          </div>
+                          <div className="truncate">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <a
+                                href={doc.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[13px] font-semibold text-gray-800 hover:text-blue-600 hover:underline flex items-center gap-1"
+                              >
+                                <span>{doc.name}</span>
+                                <ExternalLink className="w-3 h-3 text-gray-400 shrink-0" />
+                              </a>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                doc.category === "Current Quotation" 
+                                  ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                  : doc.category === "Quotation History"
+                                  ? "bg-purple-50 text-purple-700 border border-purple-200"
+                                  : doc.category === "Floor Plan"
+                                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                  : "bg-gray-100 text-gray-600"
+                              }`}>
+                                {doc.category}
+                              </span>
+                            </div>
+                            <div suppressHydrationWarning className="text-[10px] text-gray-400 mt-0.5">
+                              {doc.createdAt ? timeAgo(doc.createdAt) : "Attached"}
+                            </div>
+                          </div>
+                        </div>
+                        <a
+                          href={doc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors shrink-0 ml-3"
+                        >
+                          <span>Open Link</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* 6. System Notes & Workflow Activity (System Logs) */}
           <div className="mb-8">

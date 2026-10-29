@@ -789,7 +789,7 @@ public class CallLogPlugin extends Plugin {
         String name = f.getName().toLowerCase();
         boolean isAudio = name.endsWith(".mp3") || name.endsWith(".m4a") || name.endsWith(".aac") ||
                           name.endsWith(".amr") || name.endsWith(".wav") || name.endsWith(".3gp") ||
-                          name.endsWith(".ogg") || name.endsWith(".opus");
+                          name.endsWith(".ogg") || name.endsWith(".opus") || name.endsWith(".mp4");
         if (!isAudio) return -1;
 
         int score = 0;

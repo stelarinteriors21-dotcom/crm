@@ -150,3 +150,78 @@ export async function logManualCall(leadId: string, durationMin: number, notes: 
     return { error: e.message };
   }
 }
+
+/**
+ * Creates a signed upload URL for uploading call recordings directly to Supabase Storage.
+ * Bypasses Vercel's 4.5MB serverless payload limit, supporting recordings up to 50MB.
+ */
+export async function getRecordingUploadUrl(leadId: string, originalFilename?: string) {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Supabase credentials not configured");
+    }
+
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    let ext = "mp3";
+    if (originalFilename) {
+      const match = originalFilename.match(/\.([a-zA-Z0-9]+)$/);
+      if (match) ext = match[1].toLowerCase();
+    }
+    const cleanFilename = `call_${leadId}_${Date.now()}.${ext}`;
+
+    const { data, error } = await supabase.storage
+      .from("call-recordings")
+      .createSignedUploadUrl(cleanFilename);
+
+    if (error || !data) {
+      throw new Error(error?.message || "Failed to create signed upload URL");
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("call-recordings")
+      .getPublicUrl(cleanFilename);
+
+    return {
+      success: true,
+      signedUrl: data.signedUrl,
+      publicUrl: publicUrlData.publicUrl,
+      token: data.token,
+      filename: cleanFilename
+    };
+  } catch (error: any) {
+    console.error("getRecordingUploadUrl error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Attaches a cloud-stored recording URL directly to a call log.
+ */
+export async function attachRecordingToCall(callId: string, recordingUrl: string, duration?: number) {
+  try {
+    const call = await prisma.callLog.update({
+      where: { id: callId },
+      data: {
+        recordingUrl,
+        ...(duration && duration > 0 ? { duration } : {})
+      }
+    });
+
+    if (call.leadId) {
+      await handleConnectedCallAutomations(call.leadId, call.duration || 1, call.userId);
+    }
+
+    revalidatePath("/calls");
+    revalidatePath("/leads");
+    revalidatePath(`/leads/${call.leadId}`);
+    return { success: true, callLog: call };
+  } catch (error: any) {
+    console.error("attachRecordingToCall error:", error);
+    return { success: false, error: error.message };
+  }
+}
+

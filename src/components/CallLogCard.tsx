@@ -15,6 +15,7 @@ async function saveCallNotes(callId: string, notes: string) {
 }
 
 import { parseCallNotes } from "@/lib/callNotes";
+import { getRecordingUploadUrl, attachRecordingToCall } from "@/app/actions/callActions";
 
 export default function CallLogCard({ log, leadPhone }: { log: any; leadPhone: string }) {
   const router = useRouter();
@@ -88,6 +89,30 @@ export default function CallLogCard({ log, leadPhone }: { log: any; leadPhone: s
     setIsUploadingAudio(true);
     setAudioFeedback(null);
     try {
+      // 1. Direct to Supabase Storage via signed URL (bypasses Vercel 4.5MB limit, supports recordings up to 50MB and MP4)
+      const uploadUrlRes = await getRecordingUploadUrl(log.leadId, file.name);
+
+      if (uploadUrlRes && uploadUrlRes.success && uploadUrlRes.signedUrl && uploadUrlRes.publicUrl) {
+        const directUploadRes = await fetch(uploadUrlRes.signedUrl, {
+          method: "PUT",
+          body: file,
+          headers: {
+            "Content-Type": file.type || "audio/mpeg"
+          }
+        });
+
+        if (directUploadRes.ok) {
+          const attachRes = await attachRecordingToCall(log.id, uploadUrlRes.publicUrl, log.duration);
+          if (attachRes?.success) {
+            setCurrentRecordingUrl(uploadUrlRes.publicUrl);
+            setAudioFeedback({ type: "success", message: "Audio recording attached successfully!" });
+            router.refresh();
+            return;
+          }
+        }
+      }
+
+      // 2. Fallback: upload via standard endpoint
       const fd = new FormData();
       fd.append("audio", file);
       fd.append("callId", log.id);
@@ -389,7 +414,7 @@ export default function CallLogCard({ log, leadPhone }: { log: any; leadPhone: s
                   <input
                     type="file"
                     ref={fileInputRef}
-                    accept="audio/*"
+                    accept="audio/*,video/mp4,audio/mp4,.mp4,.m4a,.mp3,.wav,.aac,.ogg,.opus,.3gp"
                     onChange={handleFileUpload}
                     className="hidden"
                   />

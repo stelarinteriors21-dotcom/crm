@@ -19,7 +19,8 @@ import {
   AlertTriangle,
   User,
   Loader2,
-  CalendarDays
+  CalendarDays,
+  CheckCircle2
 } from "lucide-react";
 import { addNote } from "@/app/actions/noteActions";
 import { updateSiteVisitDetails } from "@/app/actions/leadActions";

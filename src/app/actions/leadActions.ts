@@ -1549,6 +1549,29 @@ export async function updateQuotationDetails(leadId: string, quotationData: any)
         scoreQuotation: scoreQuotation
       }
     });
+
+    // Ensure quotation docLink is also synchronized to FileAttachment table
+    if (quotationData.docLink && quotationData.docLink.trim()) {
+      try {
+        const docUrl = quotationData.docLink.trim();
+        const existingAttachment = await prisma.fileAttachment.findFirst({
+          where: { leadId, url: docUrl }
+        });
+        if (!existingAttachment) {
+          await prisma.fileAttachment.create({
+            data: {
+              leadId,
+              userId: targetCallerId || lead.assignedToId || lead.organizationId,
+              name: `Quotation (${stage || "Estimate"}) - Google Drive`,
+              url: docUrl,
+              type: "drive"
+            }
+          });
+        }
+      } catch (attErr) {
+        console.warn("Failed to create fileAttachment for quotation:", attErr);
+      }
+    }
     
     const displayStage = stage === "Estimate" && subStage ? `Estimate - ${subStage}` : stage;
     await prisma.note.create({

@@ -14,14 +14,10 @@ export default async function SiteVisitsDashboard() {
   const requireGps = settings?.requireGps || false;
 
   // Fetch leads with site visits and their consolidated notes
-  const dbLeads = await prisma.lead.findMany({
+  const rawLeads = await prisma.lead.findMany({
     where: {
       organizationId: user.organizationId,
-      ...(user.role === "TELECALLER" ? { assignedToId: user.id } : {}),
-      customFields: {
-        path: ['siteVisit'],
-        not: null
-      }
+      ...(user.role === "SITE_VISITOR" ? { assignedToId: user.id } : {})
     },
     include: {
       assignedTo: true,
@@ -36,6 +32,10 @@ export default async function SiteVisitsDashboard() {
       }
     },
     orderBy: { createdAt: "desc" }
+  });
+
+  const dbLeads = rawLeads.filter((lead: any) => {
+    return Boolean(lead.customFields && (lead.customFields as any).siteVisit);
   });
 
   // Filter scheduled leads

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { MapPin, Phone, Calendar, Clock, KeyRound, CheckCircle2, User, ExternalLink, Check, RefreshCw, ClipboardCheck, Home, Ruler, Camera } from "lucide-react";
 import { updateSiteVisitDetails } from "@/app/actions/leadActions";
 import SiteVisitChecklistModal from "./SiteVisitChecklistModal";
@@ -16,6 +17,7 @@ export default function SiteVisitExecutiveCard({
   overviewMode?: boolean; 
 }) {
   const sv = lead.customFields?.siteVisit || {};
+  const router = useRouter();
   
   const [loading, setLoading] = useState(false);
   const [inputOtp, setInputOtp] = useState("");

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { 
   MessageCircle, ExternalLink, ShieldCheck, KeyRound, 
-  Send, Users, Copy, Check, QrCode, Smartphone, Info 
+  Send, Users, Copy, Check, QrCode, Smartphone, Info, Calendar 
 } from "lucide-react";
 import WhatsAppConversationThread from "@/components/WhatsAppConversationThread";
 import WhatsAppSyncStatusCard from "@/components/WhatsAppSyncStatusCard";
