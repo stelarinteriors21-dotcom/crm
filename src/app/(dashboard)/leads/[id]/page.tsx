@@ -34,7 +34,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
         where: { id: params.id },
         include: {
           calls: { orderBy: { createdAt: "desc" } },
-          tasks: { orderBy: { dueDate: "asc" } },
+          tasks: { orderBy: [{ dueDate: "desc" }, { id: "desc" }] },
           whatsAppLogs: { orderBy: { createdAt: "desc" } },
           fileAttachments: { orderBy: { createdAt: "desc" } },
           emailLogs: { orderBy: { createdAt: "desc" } },
@@ -449,30 +449,37 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
 
             {/* Existing Follow-ups */}
             {lead.tasks && lead.tasks.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
-                <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Upcoming Follow-ups</h4>
-                {lead.tasks.map((task: any) => (
-                  <div key={task.id} className="flex items-center justify-between bg-purple-50/50 p-2.5 rounded-lg border border-purple-100">
-                    <div className="flex flex-col min-w-0 pr-2">
-                      <span className="text-[12px] font-bold text-gray-800 truncate">{task.title}</span>
-                      <span suppressHydrationWarning className="text-[10px] text-[#4f46e5] font-semibold mt-0.5">
-                        {formatDeterministicDateTime(task.dueDate)}
-                      </span>
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    Upcoming Follow-ups ({lead.tasks.length})
+                  </h4>
+                  <span className="text-[10px] text-gray-400 font-medium">Latest on top</span>
+                </div>
+                <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                  {lead.tasks.map((task: any) => (
+                    <div key={task.id} className="flex items-center justify-between bg-purple-50/50 hover:bg-purple-50 p-2.5 rounded-lg border border-purple-100 transition-colors">
+                      <div className="flex flex-col min-w-0 pr-2">
+                        <span className="text-[12px] font-bold text-gray-800 truncate">{task.title}</span>
+                        <span suppressHydrationWarning className="text-[10px] text-[#4f46e5] font-semibold mt-0.5">
+                          {formatDeterministicDateTime(task.dueDate)}
+                        </span>
+                      </div>
+                      <form action={async () => {
+                        "use server";
+                        await deleteTask(task.id, lead.id);
+                      }}>
+                        <button 
+                          type="submit" 
+                          title="Delete follow-up"
+                          className="text-gray-400 hover:text-red-600 p-1 rounded transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </form>
                     </div>
-                    <form action={async () => {
-                      "use server";
-                      await deleteTask(task.id, lead.id);
-                    }}>
-                      <button 
-                        type="submit" 
-                        title="Delete follow-up"
-                        className="text-gray-400 hover:text-red-600 p-1 rounded transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </form>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </div>
