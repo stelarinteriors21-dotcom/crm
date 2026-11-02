@@ -49,8 +49,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. If an audio file is uploaded, this call was answered (audio recordings cannot exist for missed calls)
-    if (recordingFile) {
+    // 2. If an audio file or recordingUrl is supplied, this call was answered (audio recordings cannot exist for missed calls)
+    if (recordingFile || formData.get('recordingUrl')) {
       callStatus = 'ANSWERED';
       if (duration <= 0) {
         duration = Math.max(1, ringDuration);
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     }
 
     let antiFraudTag = "";
-    const isConnectedCall = duration > 0 || callStatus === 'ANSWERED' || !!recordingFile;
+    const isConnectedCall = duration > 0 || callStatus === 'ANSWERED' || !!recordingFile || !!formData.get('recordingUrl');
 
     if (!isConnectedCall) {
       if (estimatedRings === 0 || ringDuration <= 2) {
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
       leadId = lead.id;
     }
 
-    let recordingUrl = null;
+    let recordingUrl = (formData.get('recordingUrl') as string) || null;
 
     // Handle audio file upload
     if (recordingFile) {
