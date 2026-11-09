@@ -9,6 +9,7 @@ const nextConfig = {
   allowedDevOrigins: ["*.ngrok-free.dev", "*.ngrok-free.app", "*.ngrok.io", "*.trycloudflare.com"],
   experimental: {
     serverActions: {
+      bodySizeLimit: "10mb",
       allowedOrigins: ["*.trycloudflare.com", "*.ngrok-free.dev", "*.ngrok-free.app", "*.ngrok.io", "localhost:3000"],
     },
   },

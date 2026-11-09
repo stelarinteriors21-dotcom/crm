@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "./authActions";
 import { revalidatePath } from "next/cache";
+import { isAwsConfigured, getS3PresignedUploadUrl } from "@/lib/s3Storage";
 
 export async function updateCallNote(callId: string, notes: string) {
   const user = await getCurrentUser();
@@ -157,41 +158,44 @@ export async function logManualCall(leadId: string, durationMin: number, notes: 
  */
 export async function getRecordingUploadUrl(leadId: string, originalFilename?: string) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Supabase credentials not configured");
+    const currentUser = await getCurrentUser();
+    let callerName = currentUser?.name || null;
+    let isSiteVisitor = currentUser?.role === "SITE_VISITOR";
+
+    if (!callerName) {
+      const lead = await prisma.lead.findUnique({
+        where: { id: leadId },
+        include: { assignedTo: { select: { name: true, role: true } } }
+      });
+      callerName = lead?.assignedTo?.name || "general";
+      isSiteVisitor = lead?.assignedTo?.role === "SITE_VISITOR";
     }
 
-    const { createClient } = await import("@supabase/supabase-js");
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const userFolder = callerName.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '_');
+    const categoryFolder = isSiteVisitor ? "site-visits" : "recordings";
 
     let ext = "mp3";
     if (originalFilename) {
       const match = originalFilename.match(/\.([a-zA-Z0-9]+)$/);
       if (match) ext = match[1].toLowerCase();
     }
-    const cleanFilename = `call_${leadId}_${Date.now()}.${ext}`;
+    const cleanFilename = `${categoryFolder}/${userFolder}/call_${leadId}_${Date.now()}.${ext}`;
 
-    const { data, error } = await supabase.storage
-      .from("call-recordings")
-      .createSignedUploadUrl(cleanFilename);
-
-    if (error || !data) {
-      throw new Error(error?.message || "Failed to create signed upload URL");
+    // 1. Upload directly to AWS S3 (designated cloud storage)
+    if (isAwsConfigured) {
+      const s3Res = await getS3PresignedUploadUrl(cleanFilename, `audio/${ext === "mp3" ? "mpeg" : ext}`);
+      if (s3Res.success && s3Res.signedUrl) {
+        return {
+          success: true,
+          signedUrl: s3Res.signedUrl,
+          publicUrl: s3Res.publicUrl,
+          filename: cleanFilename
+        };
+      }
+      throw new Error(`AWS S3 error: ${s3Res.error || "Failed to generate presigned upload URL"}`);
     }
 
-    const { data: publicUrlData } = supabase.storage
-      .from("call-recordings")
-      .getPublicUrl(cleanFilename);
-
-    return {
-      success: true,
-      signedUrl: data.signedUrl,
-      publicUrl: publicUrlData.publicUrl,
-      token: data.token,
-      filename: cleanFilename
-    };
+    throw new Error("AWS S3 storage is not configured. Supabase storage has been retired to preserve quota.");
   } catch (error: any) {
     console.error("getRecordingUploadUrl error:", error);
     return { success: false, error: error.message };

@@ -13,7 +13,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const audioResponse = await fetch(recordingUrl);
+    const targetUrl = recordingUrl.startsWith("http") ? recordingUrl : new URL(recordingUrl, req.url).toString();
+    const audioResponse = await fetch(targetUrl);
     if (!audioResponse.ok) {
       return NextResponse.json({ error: "Could not fetch recording file" }, { status: 400 });
     }

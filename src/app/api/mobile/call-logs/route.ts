@@ -6,6 +6,7 @@ import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { getCurrentRnrSlot } from '@/app/actions/leadActions';
 import { handleConnectedCallAutomations } from '@/app/actions/callActions';
+import { isAwsConfigured, uploadBufferToS3 } from '@/lib/s3Storage';
 
 export async function POST(request: Request) {
   const corsHeaders = {
@@ -146,56 +147,62 @@ export async function POST(request: Request) {
 
     let recordingUrl = (formData.get('recordingUrl') as string) || null;
 
-    // Handle audio file upload
-    if (recordingFile) {
-      const bytes = await recordingFile.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const filename = `call_${leadId}_${Date.now()}.mp3`;
-      
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; 
-      
-      if (!supabaseUrl || !supabaseKey) {
-        console.error('Supabase credentials missing!');
+    let finalUserId = userId;
+    let callerUser = (userId && userId !== 'MANUAL_WEB') ? await prisma.user.findUnique({ where: { id: userId }, select: { id: true, name: true, role: true } }) : null;
+    if (!callerUser) {
+      const leadForUser = await prisma.lead.findUnique({ where: { id: leadId }, include: { assignedTo: { select: { id: true, name: true, role: true } } } });
+      if (leadForUser && leadForUser.assignedTo) {
+        finalUserId = leadForUser.assignedTo.id;
+        callerUser = leadForUser.assignedTo;
       } else {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-
-        const { data, error } = await supabase.storage
-          .from('call-recordings')
-          .upload(filename, buffer, {
-            contentType: 'audio/mpeg',
-            upsert: false
-          });
-
-        if (error) {
-          console.error('Error uploading to Supabase, falling back to PC disk storage:', error);
-          try {
-            const localDir = path.join(process.cwd(), 'public', 'uploads', 'recordings');
-            if (!fs.existsSync(localDir)) fs.mkdirSync(localDir, { recursive: true });
-            const localFilePath = path.join(localDir, filename);
-            await writeFile(localFilePath, buffer);
-            recordingUrl = `/uploads/recordings/${filename}`;
-          } catch (localErr) {
-            console.error('Local fallback error:', localErr);
-          }
-        } else {
-          const { data: publicUrlData } = supabase.storage
-            .from('call-recordings')
-            .getPublicUrl(filename);
-          recordingUrl = publicUrlData.publicUrl;
+        const admin = await prisma.user.findFirst({ select: { id: true, name: true, role: true } });
+        if (admin) {
+          finalUserId = admin.id;
+          callerUser = admin;
         }
       }
     }
 
-    let finalUserId = userId;
-    const userExists = userId ? await prisma.user.findUnique({ where: { id: userId } }) : null;
-    if (!userExists) {
-      const leadForUser = await prisma.lead.findUnique({ where: { id: leadId } });
-      if (leadForUser && leadForUser.assignedToId) {
-        finalUserId = leadForUser.assignedToId;
-      } else {
-        const admin = await prisma.user.findFirst();
-        if (admin) finalUserId = admin.id;
+    // Determine target folder by user role and name:
+    // e.g. "recordings/zulvath", "recordings/shilpa", "site-visits/ramachandran"
+    const rawUserName = callerUser?.name || 'general';
+    const userFolder = rawUserName.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '_');
+    const isSiteVisitor = callerUser?.role === 'SITE_VISITOR';
+    const categoryFolder = isSiteVisitor ? 'site-visits' : 'recordings';
+    const folderPath = `${categoryFolder}/${userFolder}`;
+    const cleanStorageName = `${folderPath}/call_${leadId}_${Date.now()}.mp3`;
+
+    // Handle audio file upload
+    if (recordingFile) {
+      const bytes = await recordingFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      // 1. Upload to AWS S3 (designated cloud storage)
+      if (isAwsConfigured) {
+        try {
+          const s3Res = await uploadBufferToS3(cleanStorageName, buffer, 'audio/mpeg');
+          if (s3Res.success && s3Res.url) {
+            recordingUrl = s3Res.url;
+            console.log(`[AWS S3] Uploaded recording to: ${cleanStorageName}`);
+          }
+        } catch (s3Err) {
+          console.error('[AWS S3] Upload failed:', s3Err);
+        }
+      }
+
+      // 2. Emergency local fallback if AWS S3 not configured or failed (Never upload to Supabase)
+      if (!recordingUrl) {
+        try {
+          const localDir = path.join(process.cwd(), 'public', 'uploads', categoryFolder, userFolder);
+          if (!fs.existsSync(localDir)) fs.mkdirSync(localDir, { recursive: true });
+          const localBaseName = `call_${leadId}_${Date.now()}.mp3`;
+          const localFilePath = path.join(localDir, localBaseName);
+          await writeFile(localFilePath, buffer);
+          recordingUrl = `/uploads/${categoryFolder}/${userFolder}/${localBaseName}`;
+          console.log(`[Local Fallback] Saved recording to PC disk: ${localFilePath}`);
+        } catch (localErr) {
+          console.error('Local fallback error:', localErr);
+        }
       }
     }
 
