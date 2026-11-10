@@ -3,17 +3,13 @@ import prisma from '@/lib/prisma';
 import { writeFile } from 'fs/promises';
 import fs from 'fs';
 import path from 'path';
-import { createClient } from '@supabase/supabase-js';
 import { getCurrentRnrSlot } from '@/app/actions/leadActions';
 import { handleConnectedCallAutomations } from '@/app/actions/callActions';
 import { isAwsConfigured, uploadBufferToS3 } from '@/lib/s3Storage';
+import { MOBILE_CORS_HEADERS, resolveCallLeadAndStoragePath } from '@/lib/callLogHelpers';
 
 export async function POST(request: Request) {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  };
+  const corsHeaders = MOBILE_CORS_HEADERS;
 
   try {
     const formData = await request.formData();
@@ -106,71 +102,18 @@ export async function POST(request: Request) {
     // Final clean note with system tag prepended
     const finalNotes = cleanUserNote ? `${antiFraudTag} ${cleanUserNote}` : antiFraudTag;
 
-    if (!leadIdFromForm && !phone) {
-      return new NextResponse('Missing required fields: leadId or phone', { status: 400, headers: corsHeaders });
+    const resolved = await resolveCallLeadAndStoragePath({
+      leadIdFromForm,
+      phone,
+      userId,
+      fileName: recordingFile?.name,
+    });
+    if (!resolved.ok) {
+      return new NextResponse(resolved.error, { status: resolved.status, headers: corsHeaders });
     }
 
-    let leadId = leadIdFromForm;
-
-    // Look up the lead by phone number if we don't have the ID
-    if (!leadId && phone) {
-      // Extract the last 10 digits for robust matching across country codes
-      const normalizedPhone = phone.replace(/\D/g, "");
-      const corePhone = normalizedPhone.length >= 10 ? normalizedPhone.slice(-10) : normalizedPhone;
-      
-      // 1. Prioritize finding an active lead assigned to this caller
-      let lead = userId ? await prisma.lead.findFirst({
-        where: {
-          phone: { contains: corePhone },
-          assignedToId: userId
-        },
-        orderBy: { createdAt: 'desc' },
-        select: { id: true, status: true }
-      }) : null;
-
-      // 2. Fallback to newest matching lead across organization
-      if (!lead) {
-        lead = await prisma.lead.findFirst({
-          where: {
-            phone: { contains: corePhone }
-          },
-          orderBy: { createdAt: 'desc' },
-          select: { id: true, status: true }
-        });
-      }
-      
-      if (!lead) {
-        return new NextResponse(`Lead not found for phone: ${phone}`, { status: 404, headers: corsHeaders });
-      }
-      leadId = lead.id;
-    }
-
+    const { leadId, finalUserId, categoryFolder, userFolder, s3Key: cleanStorageName, contentType, ext } = resolved;
     let recordingUrl = (formData.get('recordingUrl') as string) || null;
-
-    let finalUserId = userId;
-    let callerUser = (userId && userId !== 'MANUAL_WEB') ? await prisma.user.findUnique({ where: { id: userId }, select: { id: true, name: true, role: true } }) : null;
-    if (!callerUser) {
-      const leadForUser = await prisma.lead.findUnique({ where: { id: leadId }, include: { assignedTo: { select: { id: true, name: true, role: true } } } });
-      if (leadForUser && leadForUser.assignedTo) {
-        finalUserId = leadForUser.assignedTo.id;
-        callerUser = leadForUser.assignedTo;
-      } else {
-        const admin = await prisma.user.findFirst({ select: { id: true, name: true, role: true } });
-        if (admin) {
-          finalUserId = admin.id;
-          callerUser = admin;
-        }
-      }
-    }
-
-    // Determine target folder by user role and name:
-    // e.g. "recordings/zulvath", "recordings/shilpa", "site-visits/ramachandran"
-    const rawUserName = callerUser?.name || 'general';
-    const userFolder = rawUserName.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '_');
-    const isSiteVisitor = callerUser?.role === 'SITE_VISITOR';
-    const categoryFolder = isSiteVisitor ? 'site-visits' : 'recordings';
-    const folderPath = `${categoryFolder}/${userFolder}`;
-    const cleanStorageName = `${folderPath}/call_${leadId}_${Date.now()}.mp3`;
 
     // Handle audio file upload
     if (recordingFile) {
@@ -180,7 +123,7 @@ export async function POST(request: Request) {
       // 1. Upload to AWS S3 (designated cloud storage)
       if (isAwsConfigured) {
         try {
-          const s3Res = await uploadBufferToS3(cleanStorageName, buffer, 'audio/mpeg');
+          const s3Res = await uploadBufferToS3(cleanStorageName, buffer, contentType);
           if (s3Res.success && s3Res.url) {
             recordingUrl = s3Res.url;
             console.log(`[AWS S3] Uploaded recording to: ${cleanStorageName}`);
@@ -195,7 +138,7 @@ export async function POST(request: Request) {
         try {
           const localDir = path.join(process.cwd(), 'public', 'uploads', categoryFolder, userFolder);
           if (!fs.existsSync(localDir)) fs.mkdirSync(localDir, { recursive: true });
-          const localBaseName = `call_${leadId}_${Date.now()}.mp3`;
+          const localBaseName = `call_${leadId}_${Date.now()}.${ext}`;
           const localFilePath = path.join(localDir, localBaseName);
           await writeFile(localFilePath, buffer);
           recordingUrl = `/uploads/${categoryFolder}/${userFolder}/${localBaseName}`;
@@ -318,7 +261,7 @@ export async function POST(request: Request) {
 
       // Check if this lead has a scheduled follow-up pending in the future
       const hasPendingFutureFollowUp = cf.followUpDate && new Date(cf.followUpDate).getTime() > Date.now();
-      const isConnected = duration > 0 || recordingFile || callStatus === 'ANSWERED';
+      const isConnected = duration > 0 || !!recordingFile || !!recordingUrl || callStatus === 'ANSWERED';
 
       if (hasPendingFutureFollowUp || isConnected) {
         // Automation 1: Attended call OR call logged before scheduled follow-up -> complete follow-up & change to Contacted

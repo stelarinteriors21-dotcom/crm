@@ -52,6 +52,7 @@ export default function AutoCallLogWatcher({ userId }: AutoCallLogWatcherProps) 
               timestamp: new Date(call.createdAt).getTime(),
               duration: call.duration,
               serverUrl: window.location.origin + "/api/mobile/call-logs",
+              presignUrl: window.location.origin + "/api/mobile/call-logs/presign",
             });
 
             if (syncRes?.uploaded) {
@@ -166,10 +167,16 @@ export default function AutoCallLogWatcher({ userId }: AutoCallLogWatcherProps) 
                   recordingPath: c.recordingPath,
                   recordingUri: c.recordingUri,
                   serverUrl: window.location.origin + "/api/mobile/call-logs",
+                  presignUrl: window.location.origin + "/api/mobile/call-logs/presign",
                 });
                 if (recRes && recRes.uploaded) {
                   uploadedWithAudio = true;
                   matchedCount++;
+                  if (!hasFailure && callTime > highestSuccessTimestamp) {
+                    highestSuccessTimestamp = callTime;
+                  }
+                } else if (recRes && recRes.notLead) {
+                  uploadedWithAudio = true;
                   if (!hasFailure && callTime > highestSuccessTimestamp) {
                     highestSuccessTimestamp = callTime;
                   }
@@ -206,6 +213,7 @@ export default function AutoCallLogWatcher({ userId }: AutoCallLogWatcherProps) 
                           timestamp: callTime,
                           duration: duration,
                           serverUrl: window.location.origin + "/api/mobile/call-logs",
+                          presignUrl: window.location.origin + "/api/mobile/call-logs/presign",
                         });
                         router.refresh();
                       } catch (ignored) {}

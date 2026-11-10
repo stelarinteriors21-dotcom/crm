@@ -214,6 +214,7 @@ export default function SmartCallManager({ currentUserId }: { currentUserId?: st
             recordingPath: detectedRecordingPath,
             recordingUri: detectedRecordingUri,
             serverUrl: window.location.origin + "/api/mobile/call-logs",
+            presignUrl: window.location.origin + "/api/mobile/call-logs/presign",
           });
           if (recRes && recRes.uploaded) {
             savedOk = true;

@@ -68,7 +68,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
         try {
             android.webkit.CookieManager.getInstance().flush();
@@ -76,7 +76,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onStop() {
+    public void onStop() {
         super.onStop();
         try {
             android.webkit.CookieManager.getInstance().flush();

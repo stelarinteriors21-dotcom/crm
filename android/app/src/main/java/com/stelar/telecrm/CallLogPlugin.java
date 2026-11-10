@@ -6,12 +6,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.CallLog;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.accessibility.AccessibilityManager;
@@ -23,16 +25,22 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Executors;
+import org.json.JSONObject;
 
 @CapacitorPlugin(
     name = "AndroidCallLog",
@@ -419,6 +427,7 @@ public class CallLogPlugin extends Plugin {
         String notes = call.getString("notes");
         Long callTimestamp = getLongValue(call, "timestamp");
         String serverUrl = call.getString("serverUrl");
+        String presignUrl = call.getString("presignUrl");
         String userId = call.getString("userId");
         Long duration = getLongValue(call, "duration");
         String recordingPath = call.getString("recordingPath");
@@ -448,7 +457,7 @@ public class CallLogPlugin extends Plugin {
             rec = findLatestRecording(ts, phone, leadName, dur);
         }
 
-        uploadRecordingInternal(call, rec, serverUrl, phone, leadId, callId, notes, duration, userId);
+        uploadRecordingInternal(call, rec, serverUrl, presignUrl, phone, leadId, callId, notes, duration, userId, callTimestamp);
     }
 
     @PluginMethod
@@ -460,6 +469,7 @@ public class CallLogPlugin extends Plugin {
         Long timestamp = getLongValue(call, "timestamp");
         Long duration = getLongValue(call, "duration");
         String serverUrl = call.getString("serverUrl");
+        String presignUrl = call.getString("presignUrl");
         String userId = call.getString("userId");
 
         if (serverUrl == null || serverUrl.isEmpty()) {
@@ -478,19 +488,21 @@ public class CallLogPlugin extends Plugin {
             return;
         }
 
-        uploadRecordingInternal(call, rec, serverUrl, phone, leadId, callId, "Auto-detected device recording: " + rec.fileName, duration, userId);
+        uploadRecordingInternal(call, rec, serverUrl, presignUrl, phone, leadId, callId, "Auto-detected device recording: " + rec.fileName, duration, userId, timestamp);
     }
 
     private void uploadRecordingInternal(
         PluginCall call,
         RecordingSource rec,
         String serverUrl,
+        String presignUrl,
         String phone,
         String leadId,
         String callId,
         String notes,
         Long duration,
-        String userId
+        String userId,
+        Long callTimestamp
     ) {
         if (!rec.found || (rec.file == null && rec.uri == null)) {
             JSObject ret = new JSObject();
@@ -502,75 +514,129 @@ public class CallLogPlugin extends Plugin {
 
         final RecordingSource finalRec = rec;
         final String finalServerUrl = serverUrl;
+        final String resolvedPresignUrl = (presignUrl != null && !presignUrl.isEmpty())
+            ? presignUrl
+            : (finalServerUrl.endsWith("/api/mobile/call-logs") ? (finalServerUrl + "/presign") : null);
 
         Executors.newSingleThreadExecutor().execute(() -> {
-            InputStream is = null;
+            File tempCacheFile = null;
             try {
-                if (finalRec.uri != null) {
-                    is = getContext().getContentResolver().openInputStream(finalRec.uri);
-                } else if (finalRec.file != null) {
-                    is = new FileInputStream(finalRec.file);
-                }
+                // Resolve exact file size and original filename so S3 PUT never uses chunked encoding
+                ResolvedAudioPayload payloadInfo = resolveAudioPayload(finalRec);
+                tempCacheFile = payloadInfo.tempFile;
+                long contentLength = payloadInfo.contentLength;
+                String effectiveFileName = payloadInfo.fileName;
 
-                if (is == null) {
+                if (contentLength <= 0) {
                     JSObject ret = new JSObject();
                     ret.put("uploaded", false);
-                    ret.put("error", "Cannot open stream for audio recording");
+                    ret.put("error", "Cannot open or read non-empty audio stream");
                     call.resolve(ret);
                     return;
                 }
 
-                String boundary = "===" + System.currentTimeMillis() + "===";
-                URL url = new URL(finalServerUrl);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setDoOutput(true);
-                conn.setConnectTimeout(60000);
-                conn.setReadTimeout(60000);
-                conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+                // 1. Try direct-to-S3 streaming via presigned PUT URL (supports files > 4.5 MB cleanly)
+                boolean shouldTryLegacyMultipart = (resolvedPresignUrl == null);
+                if (resolvedPresignUrl != null) {
+                    PresignResponse presign = requestPresignedS3Upload(
+                        resolvedPresignUrl,
+                        phone,
+                        leadId,
+                        userId,
+                        effectiveFileName
+                    );
 
-                OutputStream os = conn.getOutputStream();
-                PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, "UTF-8"), true);
+                    if (presign.httpCode == 404) {
+                        // Not a CRM lead (e.g. personal call) - never upload audio to S3
+                        JSObject ret = new JSObject();
+                        ret.put("uploaded", false);
+                        ret.put("notLead", true);
+                        ret.put("responseCode", 404);
+                        call.resolve(ret);
+                        return;
+                    }
 
-                if (phone != null) addFormField(writer, boundary, "phone", phone);
-                if (leadId != null) addFormField(writer, boundary, "leadId", leadId);
-                if (callId != null && !callId.isEmpty()) addFormField(writer, boundary, "callId", callId);
-                if (duration != null) {
-                    addFormField(writer, boundary, "duration", String.valueOf(duration));
-                    addFormField(writer, boundary, "ringDuration", String.valueOf(duration));
+                    if (presign.success && presign.signedUrl != null && !presign.signedUrl.isEmpty()) {
+                        S3PutResult s3Res = streamFileToS3SignedUrl(
+                            presign.signedUrl,
+                            finalRec,
+                            tempCacheFile,
+                            contentLength,
+                            presign.contentType
+                        );
+
+                        if (s3Res.success) {
+                            // Notify CRM API with tiny metadata + publicUrl (no heavy binary payload)
+                            int serverCode = postCallLogMultipart(
+                                finalServerUrl,
+                                null,
+                                null,
+                                effectiveFileName,
+                                phone,
+                                leadId,
+                                callId,
+                                duration,
+                                userId,
+                                notes,
+                                callTimestamp,
+                                presign.publicUrl
+                            );
+                            Log.d(TAG, "Direct S3 metadata confirm response=" + serverCode + " for " + effectiveFileName);
+                            JSObject ret = new JSObject();
+                            ret.put("uploaded", serverCode >= 200 && serverCode < 300);
+                            ret.put("fileName", effectiveFileName);
+                            ret.put("responseCode", serverCode);
+                            ret.put("recordingUrl", presign.publicUrl);
+                            ret.put("directS3", true);
+                            call.resolve(ret);
+                            return;
+                        }
+
+                        Log.e(TAG, "Direct S3 PUT failed (" + s3Res.statusCode + "): " + s3Res.error);
+                        if (contentLength > 4 * 1024 * 1024L) {
+                            JSObject ret = new JSObject();
+                            ret.put("uploaded", false);
+                            ret.put("responseCode", s3Res.statusCode);
+                            ret.put("error", "Direct S3 upload failed: " + s3Res.error);
+                            call.resolve(ret);
+                            return;
+                        }
+                        shouldTryLegacyMultipart = true;
+                    } else if (contentLength <= 4 * 1024 * 1024L) {
+                        shouldTryLegacyMultipart = true;
+                    } else {
+                        JSObject ret = new JSObject();
+                        ret.put("uploaded", false);
+                        ret.put("responseCode", presign.httpCode);
+                        ret.put("error", "Presign failed (" + presign.httpCode + "): " + presign.error);
+                        call.resolve(ret);
+                        return;
+                    }
                 }
-                if (userId != null) addFormField(writer, boundary, "userId", userId);
-                addFormField(writer, boundary, "callStatus", (duration != null && duration > 0) ? "ANSWERED" : "MISSED");
-                if (notes != null && !notes.isEmpty()) {
-                    addFormField(writer, boundary, "notes", notes);
-                } else {
-                    addFormField(writer, boundary, "notes", "Auto-synced audio recording: " + finalRec.fileName);
+
+                // 2. Fallback multipart upload for small (<4 MB) files or endpoints without presign
+                if (shouldTryLegacyMultipart) {
+                    int responseCode = postCallLogMultipart(
+                        finalServerUrl,
+                        finalRec,
+                        tempCacheFile,
+                        effectiveFileName,
+                        phone,
+                        leadId,
+                        callId,
+                        duration,
+                        userId,
+                        notes,
+                        callTimestamp,
+                        null
+                    );
+                    Log.d(TAG, "Legacy multipart upload response=" + responseCode + " for " + effectiveFileName);
+                    JSObject ret = new JSObject();
+                    ret.put("uploaded", responseCode >= 200 && responseCode < 300);
+                    ret.put("fileName", effectiveFileName);
+                    ret.put("responseCode", responseCode);
+                    call.resolve(ret);
                 }
-
-                writer.append("--").append(boundary).append("\r\n");
-                writer.append("Content-Disposition: form-data; name=\"audio\"; filename=\"").append(finalRec.fileName).append("\"\r\n");
-                writer.append("Content-Type: audio/mpeg\r\n\r\n");
-                writer.flush();
-
-                byte[] buffer = new byte[8192];
-                int bytesRead;
-                while ((bytesRead = is.read(buffer)) != -1) {
-                    os.write(buffer, 0, bytesRead);
-                }
-                os.flush();
-                is.close();
-
-                writer.append("\r\n").flush();
-                writer.append("--").append(boundary).append("--\r\n").flush();
-                writer.close();
-
-                int responseCode = conn.getResponseCode();
-                Log.d(TAG, "Audio upload response=" + responseCode + " for " + finalRec.fileName);
-                JSObject ret = new JSObject();
-                ret.put("uploaded", responseCode >= 200 && responseCode < 300);
-                ret.put("fileName", finalRec.fileName);
-                ret.put("responseCode", responseCode);
-                call.resolve(ret);
             } catch (Exception e) {
                 Log.e(TAG, "Audio upload error: " + e.getMessage());
                 JSObject ret = new JSObject();
@@ -578,11 +644,292 @@ public class CallLogPlugin extends Plugin {
                 ret.put("error", e.getMessage());
                 call.resolve(ret);
             } finally {
-                if (is != null) {
-                    try { is.close(); } catch (Exception ignored) {}
+                if (tempCacheFile != null && tempCacheFile.exists()) {
+                    try { tempCacheFile.delete(); } catch (Exception ignored) {}
                 }
             }
         });
+    }
+
+    private static class ResolvedAudioPayload {
+        File tempFile = null;
+        long contentLength = -1;
+        String fileName = "call_recording.mp3";
+    }
+
+    private static class PresignResponse {
+        boolean success = false;
+        int httpCode = 0;
+        String signedUrl = null;
+        String publicUrl = null;
+        String contentType = "audio/mpeg";
+        String error = "";
+    }
+
+    private static class S3PutResult {
+        boolean success = false;
+        int statusCode = 0;
+        String error = "";
+    }
+
+    private ResolvedAudioPayload resolveAudioPayload(RecordingSource rec) throws IOException {
+        ResolvedAudioPayload info = new ResolvedAudioPayload();
+        info.fileName = (rec.fileName != null && !rec.fileName.isEmpty()) ? rec.fileName : "call_recording.mp3";
+
+        if (rec.file != null && rec.file.exists()) {
+            info.contentLength = rec.file.length();
+            return info;
+        }
+
+        if (rec.uri != null) {
+            try (Cursor cursor = getContext().getContentResolver().query(
+                rec.uri,
+                new String[]{ OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE },
+                null,
+                null,
+                null
+            )) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int nameIdx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    int sizeIdx = cursor.getColumnIndex(OpenableColumns.SIZE);
+                    if (nameIdx >= 0) {
+                        String displayName = cursor.getString(nameIdx);
+                        if (displayName != null && !displayName.trim().isEmpty()) {
+                            info.fileName = displayName.trim();
+                        }
+                    }
+                    if (sizeIdx >= 0 && !cursor.isNull(sizeIdx)) {
+                        long sz = cursor.getLong(sizeIdx);
+                        if (sz > 0) info.contentLength = sz;
+                    }
+                }
+            } catch (Exception ignored) {}
+
+            if (info.contentLength <= 0) {
+                try (AssetFileDescriptor afd = getContext().getContentResolver().openAssetFileDescriptor(rec.uri, "r")) {
+                    if (afd != null && afd.getLength() > 0) {
+                        info.contentLength = afd.getLength();
+                    }
+                } catch (Exception ignored) {}
+            }
+
+            // Copy stream once to app cache if content provider didn't expose exact byte length
+            if (info.contentLength <= 0) {
+                File tmp = File.createTempFile("stelar_audio_", ".tmp", getContext().getCacheDir());
+                try (InputStream in = getContext().getContentResolver().openInputStream(rec.uri);
+                     OutputStream out = new FileOutputStream(tmp)) {
+                    if (in == null) {
+                        tmp.delete();
+                        return info;
+                    }
+                    byte[] buf = new byte[8192];
+                    int read;
+                    while ((read = in.read(buf)) != -1) {
+                        out.write(buf, 0, read);
+                    }
+                    out.flush();
+                }
+                info.tempFile = tmp;
+                info.contentLength = tmp.length();
+            }
+        }
+        return info;
+    }
+
+    private InputStream openSourceStream(RecordingSource rec, File tempFile) throws IOException {
+        if (tempFile != null) {
+            return new FileInputStream(tempFile);
+        }
+        if (rec.uri != null) {
+            return getContext().getContentResolver().openInputStream(rec.uri);
+        }
+        if (rec.file != null) {
+            return new FileInputStream(rec.file);
+        }
+        return null;
+    }
+
+    private String readHttpStream(InputStream stream) {
+        if (stream == null) return "";
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private PresignResponse requestPresignedS3Upload(
+        String presignUrl,
+        String phone,
+        String leadId,
+        String userId,
+        String fileName
+    ) {
+        PresignResponse res = new PresignResponse();
+        HttpURLConnection conn = null;
+        try {
+            JSONObject body = new JSONObject();
+            if (phone != null) body.put("phone", phone);
+            if (leadId != null) body.put("leadId", leadId);
+            if (userId != null) body.put("userId", userId);
+            body.put("fileName", fileName);
+
+            byte[] payloadBytes = body.toString().getBytes(StandardCharsets.UTF_8);
+            conn = (HttpURLConnection) new URL(presignUrl).openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setConnectTimeout(30000);
+            conn.setReadTimeout(30000);
+            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            conn.setFixedLengthStreamingMode(payloadBytes.length);
+
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(payloadBytes);
+                os.flush();
+            }
+
+            res.httpCode = conn.getResponseCode();
+            String respText = readHttpStream(res.httpCode >= 200 && res.httpCode < 300 ? conn.getInputStream() : conn.getErrorStream());
+            if (res.httpCode >= 200 && res.httpCode < 300) {
+                JSONObject json = new JSONObject(respText);
+                res.success = json.optBoolean("success", false);
+                res.signedUrl = json.optString("signedUrl", null);
+                res.publicUrl = json.optString("publicUrl", null);
+                res.contentType = json.optString("contentType", "audio/mpeg");
+            } else {
+                res.error = respText;
+            }
+        } catch (Exception e) {
+            res.error = e.getMessage() != null ? e.getMessage() : "Presign request failed";
+        } finally {
+            if (conn != null) conn.disconnect();
+        }
+        return res;
+    }
+
+    private S3PutResult streamFileToS3SignedUrl(
+        String signedUrl,
+        RecordingSource rec,
+        File tempFile,
+        long contentLength,
+        String contentType
+    ) {
+        S3PutResult res = new S3PutResult();
+        HttpURLConnection conn = null;
+        try {
+            conn = (HttpURLConnection) new URL(signedUrl).openConnection();
+            conn.setRequestMethod("PUT");
+            conn.setDoOutput(true);
+            conn.setConnectTimeout(60000);
+            conn.setReadTimeout(300000);
+            conn.setFixedLengthStreamingMode(contentLength);
+            conn.setRequestProperty("Content-Type", (contentType != null && !contentType.isEmpty()) ? contentType : "audio/mpeg");
+
+            try (InputStream is = openSourceStream(rec, tempFile);
+                 OutputStream os = conn.getOutputStream()) {
+                if (is == null) {
+                    res.error = "Cannot open local audio stream for S3 upload";
+                    return res;
+                }
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = is.read(buffer)) != -1) {
+                    os.write(buffer, 0, bytesRead);
+                }
+                os.flush();
+            }
+
+            res.statusCode = conn.getResponseCode();
+            if (res.statusCode >= 200 && res.statusCode < 300) {
+                res.success = true;
+            } else {
+                res.error = readHttpStream(conn.getErrorStream());
+            }
+        } catch (Exception e) {
+            res.error = e.getMessage() != null ? e.getMessage() : "S3 stream error";
+        } finally {
+            if (conn != null) conn.disconnect();
+        }
+        return res;
+    }
+
+    private int postCallLogMultipart(
+        String serverUrl,
+        RecordingSource rec,
+        File tempFile,
+        String effectiveFileName,
+        String phone,
+        String leadId,
+        String callId,
+        Long duration,
+        String userId,
+        String notes,
+        Long callTimestamp,
+        String recordingUrl
+    ) throws IOException {
+        String boundary = "===" + System.currentTimeMillis() + "===";
+        HttpURLConnection conn = (HttpURLConnection) new URL(serverUrl).openConnection();
+        try {
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setConnectTimeout(60000);
+            conn.setReadTimeout(60000);
+            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+            OutputStream os = conn.getOutputStream();
+            PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8), true);
+
+            if (phone != null) addFormField(writer, boundary, "phone", phone);
+            if (leadId != null) addFormField(writer, boundary, "leadId", leadId);
+            if (callId != null && !callId.isEmpty()) addFormField(writer, boundary, "callId", callId);
+            if (duration != null) {
+                addFormField(writer, boundary, "duration", String.valueOf(duration));
+                addFormField(writer, boundary, "ringDuration", String.valueOf(duration));
+            }
+            if (callTimestamp != null && callTimestamp > 0) {
+                addFormField(writer, boundary, "timestamp", String.valueOf(callTimestamp));
+            }
+            if (userId != null) addFormField(writer, boundary, "userId", userId);
+            addFormField(writer, boundary, "callStatus", (duration != null && duration > 0) ? "ANSWERED" : "MISSED");
+            if (notes != null && !notes.isEmpty()) {
+                addFormField(writer, boundary, "notes", notes);
+            } else {
+                addFormField(writer, boundary, "notes", "Auto-synced audio recording: " + effectiveFileName);
+            }
+            if (recordingUrl != null && !recordingUrl.isEmpty()) {
+                addFormField(writer, boundary, "recordingUrl", recordingUrl);
+            }
+
+            if (rec != null) {
+                writer.append("--").append(boundary).append("\r\n");
+                writer.append("Content-Disposition: form-data; name=\"audio\"; filename=\"").append(effectiveFileName).append("\"\r\n");
+                writer.append("Content-Type: audio/mpeg\r\n\r\n");
+                writer.flush();
+
+                try (InputStream is = openSourceStream(rec, tempFile)) {
+                    if (is == null) throw new IOException("Cannot open audio stream for multipart fallback");
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    while ((bytesRead = is.read(buffer)) != -1) {
+                        os.write(buffer, 0, bytesRead);
+                    }
+                    os.flush();
+                }
+                writer.append("\r\n").flush();
+            }
+
+            writer.append("--").append(boundary).append("--\r\n").flush();
+            writer.close();
+
+            return conn.getResponseCode();
+        } finally {
+            conn.disconnect();
+        }
     }
 
     private void addFormField(PrintWriter writer, String boundary, String name, String value) {

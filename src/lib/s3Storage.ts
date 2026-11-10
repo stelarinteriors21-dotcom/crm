@@ -11,11 +11,37 @@ export const isAwsConfigured = Boolean(accessKeyId && secretAccessKey && bucketN
 export function getS3Client(): S3Client {
   return new S3Client({
     region,
+    requestChecksumCalculation: "WHEN_REQUIRED",
     credentials: {
       accessKeyId,
       secretAccessKey
     }
   });
+}
+
+const AUDIO_EXT_MIME: Record<string, string> = {
+  mp3: "audio/mpeg",
+  m4a: "audio/mp4",
+  mp4: "audio/mp4",
+  aac: "audio/aac",
+  amr: "audio/amr",
+  "3gp": "audio/3gpp",
+  ogg: "audio/ogg",
+  opus: "audio/ogg",
+  wav: "audio/wav",
+};
+
+/**
+ * Extracts a safe lowercase extension and MIME type from an audio filename.
+ */
+export function resolveAudioFileMeta(filename?: string | null): { ext: string; contentType: string } {
+  const match = (filename || "").trim().match(/\.([a-zA-Z0-9]+)$/);
+  const candidateExt = match ? match[1].toLowerCase() : "mp3";
+  const ext = AUDIO_EXT_MIME[candidateExt] ? candidateExt : "mp3";
+  return {
+    ext,
+    contentType: AUDIO_EXT_MIME[ext] || "audio/mpeg",
+  };
 }
 
 /**

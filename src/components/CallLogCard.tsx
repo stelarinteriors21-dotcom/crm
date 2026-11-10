@@ -168,6 +168,7 @@ export default function CallLogCard({ log, leadPhone }: { log: any; leadPhone: s
         timestamp: new Date(log.createdAt).getTime(),
         duration: log.duration,
         serverUrl: window.location.origin + "/api/mobile/call-logs",
+        presignUrl: window.location.origin + "/api/mobile/call-logs/presign",
       });
 
       if (res?.uploaded) {
