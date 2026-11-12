@@ -4,11 +4,15 @@ import nodemailer from 'nodemailer';
 import { sendPushNotification } from '@/lib/firebaseAdmin';
 import { checkAndEscalateInactiveLeads, checkAndProcessStaleConvertingLeads } from '@/app/actions/alertActions';
 import { EMAILS_ENABLED } from '@/lib/emailConfig';
+import { getHiddenLeadIdsAllOrgs } from '@/lib/metaFormFilter';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    const hiddenIds = await getHiddenLeadIdsAllOrgs();
+    const hiddenExclusion = hiddenIds.length > 0 ? { id: { notIn: hiddenIds } } : {};
+
     // 0. Automated 24-Hour Active Converting Status Timeout (Moves stale Contacted, RNR, interested, etc. to follow up after 24h)
     await checkAndProcessStaleConvertingLeads();
 
@@ -19,7 +23,8 @@ export async function GET(request: Request) {
     const wakeLeads = await prisma.lead.findMany({
       where: {
         assignedStatus: 'SNOOZED',
-        snoozedUntil: { lte: new Date() }
+        snoozedUntil: { lte: new Date() },
+        ...hiddenExclusion,
       },
       include: { assignedTo: true }
     });
@@ -48,7 +53,8 @@ export async function GET(request: Request) {
       where: {
         assignedStatus: 'PENDING',
         assignedAt: { lte: tenMinutesAgo },
-        escalationLevel: { lt: 2 } // 0 = unescalated, 1 = warning, 2 = admin alert via email
+        escalationLevel: { lt: 2 }, // 0 = unescalated, 1 = warning, 2 = admin alert via email
+        ...hiddenExclusion,
       },
       include: {
         assignedTo: true
@@ -60,7 +66,8 @@ export async function GET(request: Request) {
       where: {
         status: "follow up",
         escalationLevel: { lt: 2 },
-        assignedToId: { not: null }
+        assignedToId: { not: null },
+        ...hiddenExclusion,
       },
       include: {
         assignedTo: true
@@ -86,7 +93,8 @@ export async function GET(request: Request) {
       where: {
         escalationLevel: { lt: 2 },
         assignedToId: { not: null },
-        status: { notIn: ["JUNK", "LOST", "WON"] }
+        status: { notIn: ["JUNK", "LOST", "WON"] },
+        ...hiddenExclusion,
       },
       include: { assignedTo: true }
     });

@@ -4,6 +4,7 @@ import CallsView from "@/components/CallsView";
 import { getCurrentUser } from "@/app/actions/authActions";
 import SearchBar from "@/components/SearchBar";
 import { redirect } from "next/navigation";
+import { getHiddenFormExclusionWhere } from "@/lib/metaFormFilter";
 
 export default async function CallsPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
   const user = await getCurrentUser();
@@ -11,10 +12,12 @@ export default async function CallsPage({ searchParams }: { searchParams: { [key
     redirect("/site-visits");
   }
   const query = typeof searchParams.query === "string" ? searchParams.query : undefined;
+  const hiddenExclusion = user?.organizationId ? await getHiddenFormExclusionWhere(user.organizationId) : {};
   
   // Enforce RBAC for callers
   const whereClause: any = {
-    organizationId: user?.organizationId
+    organizationId: user?.organizationId,
+    ...hiddenExclusion,
   };
   
   if (user?.role !== "ADMIN" && user?.role !== "ROOT") {

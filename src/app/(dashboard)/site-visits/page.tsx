@@ -3,6 +3,7 @@ import { getOrganizationSettings } from "@/app/actions/settingsActions";
 import SiteVisitsDashboardClient from "@/components/SiteVisitsDashboardClient";
 import { getCurrentUser } from "@/app/actions/authActions";
 import { redirect } from "next/navigation";
+import { getHiddenFormExclusionWhere } from "@/lib/metaFormFilter";
 
 export default async function SiteVisitsDashboard() {
   const user = await getCurrentUser();
@@ -12,11 +13,13 @@ export default async function SiteVisitsDashboard() {
 
   const settings = await getOrganizationSettings();
   const requireGps = settings?.requireGps || false;
+  const hiddenExclusion = await getHiddenFormExclusionWhere(user.organizationId);
 
   // Fetch leads with site visits and their consolidated notes
   const rawLeads = await prisma.lead.findMany({
     where: {
       organizationId: user.organizationId,
+      ...hiddenExclusion,
       ...(user.role === "SITE_VISITOR" ? { assignedToId: user.id } : {})
     },
     include: {

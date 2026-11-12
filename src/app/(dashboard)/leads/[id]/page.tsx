@@ -314,12 +314,14 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
                 const isInternal = [
                   "sitevisit", "sitevisithistory", "quotation", "quotationhistory",
                   "followupdate", "statuschangedat", "converted", "junk", "batch",
-                  "alert", "stale", "import", "alternatephone", "altphone"
+                  "alert", "stale", "import", "alternatephone", "altphone",
+                  "metaform", "metaleadgen", "hiddenbyformfilter"
                 ].some(x => norm.includes(x));
                 return !isInternal && typeof val !== "object";
               });
 
-            if (customFieldEntries.length === 0) return null;
+            const metaFormName = (lead.customFields as any)?.metaFormName;
+            if (customFieldEntries.length === 0 && !metaFormName) return null;
 
             return (
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
@@ -327,6 +329,12 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
                   <FileText className="w-4 h-4 mr-2 text-[#4f46e5]" /> Additional Information
                 </h3>
                 <div className="space-y-3">
+                  {metaFormName && (
+                    <div className="flex flex-col text-[13px]">
+                      <span className="text-gray-500 mb-0.5">Meta Lead Form</span>
+                      <span className="text-indigo-700 font-semibold break-words">{String(metaFormName)}</span>
+                    </div>
+                  )}
                   {customFieldEntries.map(([key, value]) => {
                     const labels = (lead.organization?.customFieldLabels as Record<string, string>) || {};
                     const displayName = labels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());

@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/app/actions/authActions";
 import { revalidatePath } from "next/cache";
+import { getHiddenFormExclusionWhere } from "@/lib/metaFormFilter";
 
 export interface SiteVisitAlertItem {
   id: string;
@@ -32,10 +33,12 @@ export async function getSiteVisitAlerts(): Promise<{
   }
 
   const isAdmin = user.role === "ADMIN" || user.role === "ROOT";
+  const hiddenExclusion = await getHiddenFormExclusionWhere(user.organizationId);
 
   // 1. Query leads that are in site visit scheduling stages
   const where: any = {
     organizationId: user.organizationId,
+    ...hiddenExclusion,
     status: {
       in: [
         "Site visit Schedules",

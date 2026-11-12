@@ -9,6 +9,7 @@ import prisma from "@/lib/prisma";
 import DashboardClient from "@/components/DashboardClient";
 import { calculateLeadScore } from "@/lib/leadScore";
 import { getUserInvolvementStats } from "@/app/actions/activityActions";
+import { getHiddenFormExclusionWhere } from "@/lib/metaFormFilter";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -26,15 +27,17 @@ export default async function DashboardPage() {
   let teamActivity: any[] = []; let sLeads: any[] = [];
 
   if (user) {
+    const hiddenExclusion = await getHiddenFormExclusionWhere(user.organizationId);
+
     // Leads pending acceptance
     pendingLeads = await prisma.lead.findMany({
-      where: { assignedToId: user.id, assignedStatus: "PENDING" },
+      where: { assignedToId: user.id, assignedStatus: "PENDING", ...hiddenExclusion },
       orderBy: { assignedAt: "desc" }
     });
 
     // All leads in the org
     allLeads = await prisma.lead.findMany({
-      where: { organizationId: user.organizationId },
+      where: { organizationId: user.organizationId, ...hiddenExclusion },
       include: { assignedTo: true },
       orderBy: { createdAt: "desc" },
       take: 100
@@ -54,7 +57,7 @@ export default async function DashboardPage() {
     // Status breakdown
     const grouped = await prisma.lead.groupBy({
       by: ["status"],
-      where: { organizationId: user.organizationId },
+      where: { organizationId: user.organizationId, ...hiddenExclusion },
       _count: { status: true },
       orderBy: { _count: { status: "desc" } }
     });

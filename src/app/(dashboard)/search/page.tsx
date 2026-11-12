@@ -1,20 +1,28 @@
 import { Search as SearchIcon } from "lucide-react";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
+import { getCurrentUser } from "@/app/actions/authActions";
+import { getHiddenFormExclusionWhere } from "@/lib/metaFormFilter";
 
 export default async function SearchPage({
   searchParams,
 }: {
   searchParams: { q?: string; type?: string };
 }) {
+  const user = await getCurrentUser();
   const query = searchParams.q || "";
   const type = searchParams.type || "Auto";
 
   let results: any[] = [];
 
-  if (query.length > 2) {
+  if (user && query.length > 2) {
+    const hiddenExclusion = await getHiddenFormExclusionWhere(user.organizationId);
+    const isAdmin = user.role === "ADMIN" || user.role === "ROOT" || user.role === "SITE_VISITOR";
     results = await prisma.lead.findMany({
       where: {
+        organizationId: user.organizationId,
+        ...(!isAdmin ? { assignedToId: user.id } : {}),
+        ...hiddenExclusion,
         OR: [
           { name: { contains: query, mode: 'insensitive' } },
           { phone: { contains: query, mode: 'insensitive' } },

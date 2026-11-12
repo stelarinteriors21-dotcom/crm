@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "./authActions";
+import { getHiddenFormExclusionWhere } from "@/lib/metaFormFilter";
 
 function formatCallDuration(seconds: number): string {
   if (!seconds || seconds <= 0) return "0s (Missed / Unanswered)";
@@ -34,12 +35,14 @@ export async function getTeamTasksData() {
   });
 
   const teamUserIds = teamUsers.map(u => u.id);
+  const hiddenExclusion = await getHiddenFormExclusionWhere(orgId);
 
   // Get all active leads to calculate pending tasks
   const activeLeads = await prisma.lead.findMany({
     where: { 
       organizationId: orgId,
-      status: { notIn: ["JUNK", "LOST", "WON", "NOT_INTERESTED"] }
+      status: { notIn: ["JUNK", "LOST", "WON", "NOT_INTERESTED"] },
+      ...hiddenExclusion,
     }
   });
 
@@ -187,10 +190,12 @@ export async function getDetailedReportData(timeframe: "weekly" | "monthly" | "d
   });
 
   // Get active leads with tasks
+  const hiddenExclusion = await getHiddenFormExclusionWhere(orgId);
   const activeLeads = await prisma.lead.findMany({
     where: {
       organizationId: orgId,
-      status: { notIn: ["JUNK", "LOST", "WON", "NOT_INTERESTED"] }
+      status: { notIn: ["JUNK", "LOST", "WON", "NOT_INTERESTED"] },
+      ...hiddenExclusion,
     },
     include: {
       assignedTo: { select: { id: true, name: true } },

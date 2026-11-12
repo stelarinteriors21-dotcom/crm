@@ -9,6 +9,7 @@ import { triggerSmartCall } from "@/components/SmartCallManager";
 import { updateLeadTag } from "@/app/actions/leadActions";
 import { addCustomTag } from "@/app/actions/settingsActions";
 import { LEAD_STATUS_OPTIONS, LEAD_STATUS_COLORS } from "@/lib/constants";
+import { stripInternalOrgConfigKeys } from "@/lib/metaFormConfig";
 
 type Lead = any;
 
@@ -25,6 +26,7 @@ const BASE_COLUMNS = [
     { id: "capturedOn", label: "Captured On", type: "📅", defaultVisible: true },
   { id: "facebookAd", label: "Facebook Ad", type: "T", defaultVisible: true },
   { id: "facebookCampaign", label: "Facebook Campaign", type: "T", defaultVisible: false },
+  { id: "metaForm", label: "Meta Form", type: "📋", defaultVisible: false },
   { id: "leadSource", label: "Lead Source", type: "🌐", defaultVisible: true },
   { id: "modifiedOn", label: "Modified On", type: "📅", defaultVisible: false },
     { id: "tag", label: "Tag", type: "🏷️", defaultVisible: true },
@@ -122,6 +124,10 @@ const INTERNAL_SYSTEM_KEYS = new Set([
   "imported_at",
   "inactivity48halert",
   "inactivity48h_alert",
+  "metaformid",
+  "metaformname",
+  "metaleadgenid",
+  "hiddenbyformfilter",
 ]);
 
 function isInternalCustomField(key: string): boolean {
@@ -137,7 +143,9 @@ function isInternalCustomField(key: string): boolean {
     normalized.includes("junk") ||
     normalized.includes("batch") ||
     normalized.includes("alert") ||
-    normalized.includes("history")
+    normalized.includes("history") ||
+    normalized.includes("metaform") ||
+    normalized.includes("metaleadgen")
   ) {
     return true;
   }
@@ -152,7 +160,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
   
   leads.forEach(l => {
     if (l.organization?.customFieldLabels) {
-      customLabels = { ...customLabels, ...(l.organization.customFieldLabels as Record<string, string>) };
+      customLabels = { ...customLabels, ...stripInternalOrgConfigKeys(l.organization.customFieldLabels) };
     }
     if (l.customFields && typeof l.customFields === "object") {
       Object.entries(l.customFields as Record<string, any>).forEach(([k, val]) => {
@@ -903,6 +911,14 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                           </React.Fragment>
                         );
                       }
+                      case 'metaForm':
+                        return (
+                          <React.Fragment key="metaForm">
+                            <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 text-gray-600 text-xs">
+                              {(lead.customFields as any)?.metaFormName || '--'}
+                            </td>
+                          </React.Fragment>
+                        );
                       default:
                         if (colId.startsWith('custom_')) {
                           const rawKey = colId.replace('custom_', '');

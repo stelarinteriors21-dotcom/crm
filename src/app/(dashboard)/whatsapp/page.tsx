@@ -1,11 +1,13 @@
 import { getCurrentUser } from "@/app/actions/authActions";
 import prisma from "@/lib/prisma";
 import WhatsAppCompanionClient from "@/components/WhatsAppCompanionClient";
+import { getHiddenFormExclusionWhere } from "@/lib/metaFormFilter";
 
 export default async function WhatsAppCompanionPage() {
   const user = await getCurrentUser();
 
-  const whereClause: any = {};
+  const hiddenExclusion = user?.organizationId ? await getHiddenFormExclusionWhere(user.organizationId) : {};
+  const whereClause: any = { ...hiddenExclusion };
   if (user?.organizationId) {
     whereClause.organizationId = user.organizationId;
   }

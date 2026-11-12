@@ -1,21 +1,24 @@
 "use client";
 import { useState } from "react";
-import { updateEscalationEmails, updateCustomFieldLabels, updateCustomTags, updateRequireGps, toggleGlobalSoundMuted } from "@/app/actions/settingsActions";
+import { updateEscalationEmails, updateCustomFieldLabels, updateCustomTags, updateRequireGps, toggleGlobalSoundMuted, MetaFormsSettingsPayload } from "@/app/actions/settingsActions";
 import { Loader2, Save, Mail, FileText, Plus, Trash2, Tag, Volume2, VolumeX } from "lucide-react";
 import { AlertNotificationManager } from "@/lib/alertNotifier";
+import MetaFormsSettingsSection from "./MetaFormsSettingsSection";
 
 export default function SettingsClient({ 
   initialEmails, 
   initialLabels, 
   initialTags, 
   initialRequireGps,
-  initialSoundMuted = false 
+  initialSoundMuted = false,
+  initialMetaForms,
 }: { 
   initialEmails: string; 
   initialLabels: Record<string, string>; 
   initialTags?: any[]; 
   initialRequireGps?: boolean;
   initialSoundMuted?: boolean;
+  initialMetaForms?: MetaFormsSettingsPayload;
 }) {
   const [emails, setEmails] = useState(initialEmails);
   const [labels, setLabels] = useState(initialLabels);
@@ -130,6 +133,7 @@ export default function SettingsClient({
 
   return (
     <div className="space-y-8">
+      {initialMetaForms && <MetaFormsSettingsSection initialData={initialMetaForms} />}
 
       {/* Global Audio Override */}
       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">

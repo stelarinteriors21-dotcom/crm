@@ -4,17 +4,20 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "./authActions";
 import { logActivity } from "./activityActions";
 import { revalidatePath } from "next/cache";
+import { getHiddenFormExclusionWhere } from "@/lib/metaFormFilter";
 
 export async function getMorningDispatchData() {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
   const isAdmin = user.role === "ADMIN" || user.role === "ROOT";
+  const hiddenExclusion = await getHiddenFormExclusionWhere(user.organizationId);
 
   // Active leads that are not won/lost/junk
   const whereClause: any = {
     organizationId: user.organizationId,
-    status: { notIn: ["JUNK", "LOST", "NOT_INTERESTED"] }
+    status: { notIn: ["JUNK", "LOST", "NOT_INTERESTED"] },
+    ...hiddenExclusion,
   };
 
   if (!isAdmin) {
