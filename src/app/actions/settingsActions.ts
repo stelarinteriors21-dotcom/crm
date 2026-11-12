@@ -353,6 +353,28 @@ export async function updateMetaFormVisibility(input: {
     `;
   }
 
+  // Automatically match & tag existing untagged leads belonging to any hidden Meta forms
+  // so clicking "Hidden" + "Save" hides historical leads right away without needing an extra click.
+  let matchedHiddenCount = 0;
+  let syncError: string | undefined;
+  if (nextConfig.hiddenMetaFormIds.length > 0) {
+    try {
+      const syncRes = await syncMetaFormsAndBackfillLeads(user.organizationId, {
+        targetFormIds: nextConfig.hiddenMetaFormIds,
+        maxPagesPerForm: 6,
+      });
+      matchedHiddenCount = syncRes.matchedCount || 0;
+      if (!syncRes.success && syncRes.error) {
+        syncError = syncRes.error;
+      }
+    } catch (syncErr: any) {
+      console.warn("Auto-backfill for hidden forms failed:", syncErr);
+      syncError = syncErr?.message;
+    }
+  }
+
+  const refreshedData = await getMetaFormsSettingsData();
+
   revalidatePath("/settings");
   revalidatePath("/leads");
   revalidatePath("/dashboard");
@@ -360,7 +382,12 @@ export async function updateMetaFormVisibility(input: {
   revalidatePath("/analytics");
   revalidatePath("/reports");
 
-  return { success: true };
+  return {
+    success: true,
+    matchedHiddenCount,
+    syncError,
+    data: refreshedData,
+  };
 }
 
 export async function syncExistingMetaLeadForms() {

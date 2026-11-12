@@ -413,7 +413,10 @@ export async function ingestMetaLead(input: IngestMetaLeadInput): Promise<{
  * CRM leads by last-10-digit phone number so historical leads get tagged with their
  * `metaFormId` and `metaFormName` without altering statuses or callers.
  */
-export async function syncMetaFormsAndBackfillLeads(organizationId: string): Promise<{
+export async function syncMetaFormsAndBackfillLeads(
+  organizationId: string,
+  options?: { targetFormIds?: string[]; maxPagesPerForm?: number }
+): Promise<{
   success: boolean;
   formsCount: number;
   matchedCount: number;
@@ -482,21 +485,31 @@ export async function syncMetaFormsAndBackfillLeads(organizationId: string): Pro
     customFields: Record<string, any>;
   }> = [];
   const graphBase = getMetaGraphBaseUrl();
+  const targetSet = options?.targetFormIds?.length ? new Set(options.targetFormIds) : null;
+  const maxPages = options?.maxPagesPerForm ?? (targetSet ? 4 : 8);
+  let graphWarning: string | undefined;
 
   if (token && phoneToLeads.size > 0) {
     for (const form of forms) {
+      if (targetSet && !targetSet.has(form.id)) continue;
       if (typeof form.leadsCount === "number" && form.leadsCount === 0) continue;
 
       let nextUrl: string | null =
         `${graphBase}/${form.id}/leads?fields=id,created_time,field_data&limit=500&access_token=${token}`;
       let pagesFetched = 0;
 
-      while (nextUrl && pagesFetched < 4) {
+      while (nextUrl && pagesFetched < maxPages) {
         pagesFetched++;
         try {
           const res: Response = await fetch(nextUrl, { cache: "no-store" });
           const payload = await res.json();
-          if (!res.ok || !Array.isArray(payload?.data)) break;
+          if (!res.ok || !Array.isArray(payload?.data)) {
+            if (payload?.error?.message) {
+              graphWarning = `${form.name}: ${payload.error.message}`;
+              console.warn(`[Meta Sync] ${graphWarning}`);
+            }
+            break;
+          }
 
           for (const item of payload.data) {
             const parsed = extractMetaLeadFields(item.field_data || []);
@@ -521,8 +534,9 @@ export async function syncMetaFormsAndBackfillLeads(organizationId: string): Pro
           }
 
           nextUrl = payload?.paging?.next || null;
-        } catch (pageErr) {
+        } catch (pageErr: any) {
           console.error(`Error paginating leads for form ${form.id}:`, pageErr);
+          graphWarning = pageErr?.message || graphWarning;
           break;
         }
       }
@@ -545,5 +559,6 @@ export async function syncMetaFormsAndBackfillLeads(organizationId: string): Pro
     success: true,
     formsCount: forms.length,
     matchedCount: pendingUpdates.length,
+    ...(graphWarning && pendingUpdates.length === 0 ? { error: graphWarning } : {}),
   };
 }

@@ -87,14 +87,27 @@ export default function MetaFormsSettingsSection({
     setSavedMsg("");
     setErrorMsg("");
     try {
-      await updateMetaFormVisibility({
+      const res = await updateMetaFormVisibility({
         hiddenMetaFormIds: hiddenIds,
         hiddenMetaFormNames: hiddenNames,
         autoHideNewForms: autoHideNew,
       });
-      setSavedMsg("Form visibility saved! Hidden forms will not appear in Leads.");
+      if (res?.data) {
+        setForms(res.data.forms || []);
+        setHiddenIds(res.data.hiddenMetaFormIds || []);
+        setHiddenNames(res.data.hiddenMetaFormNames || []);
+        setAutoHideNew(Boolean(res.data.autoHideNewForms));
+      }
+      if (res?.syncError) {
+        setErrorMsg(`Visibility saved, but matching existing leads hit an issue: ${res.syncError}`);
+      }
+      const matchedInfo =
+        res?.matchedHiddenCount && res.matchedHiddenCount > 0
+          ? ` (${res.matchedHiddenCount} existing lead${res.matchedHiddenCount === 1 ? "" : "s"} matched & hidden)`
+          : "";
+      setSavedMsg(`Form visibility saved! Hidden forms will not appear in Leads.${matchedInfo}`);
       router.refresh();
-      setTimeout(() => setSavedMsg(""), 4000);
+      setTimeout(() => setSavedMsg(""), 5000);
     } catch (err: any) {
       setErrorMsg(err?.message || "Failed to save form visibility settings.");
     } finally {
@@ -117,6 +130,7 @@ export default function MetaFormsSettingsSection({
           setHiddenNames(res.data.hiddenMetaFormNames || []);
           setAutoHideNew(Boolean(res.data.autoHideNewForms));
         }
+        if (res.error) setErrorMsg(res.error);
         setSyncMsg(
           `Synced ${res.formsCount} Meta form(s) and matched ${res.matchedCount} existing CRM lead(s).`
         );
