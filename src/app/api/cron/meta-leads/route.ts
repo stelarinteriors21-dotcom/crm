@@ -25,7 +25,8 @@ export async function GET(request: Request) {
 
     // 1. Get all forms for the page
     const formsRes = await fetch(
-      `${graphBase}/${META_PAGE_ID}/leadgen_forms?access_token=${META_PAGE_ACCESS_TOKEN}`
+      `${graphBase}/${META_PAGE_ID}/leadgen_forms?access_token=${META_PAGE_ACCESS_TOKEN}`,
+      { cache: 'no-store' }
     );
     const formsData = await formsRes.json();
     
@@ -36,6 +37,7 @@ export async function GET(request: Request) {
     let leadsProcessed = 0;
     let leadsAdded = 0;
     let leadsHidden = 0;
+    const formBreakdown: Array<{ id: string; name: string; count: number; error?: string }> = [];
 
     const org = await prisma.organization.findFirst();
     if (!org) return new NextResponse('No org found', { status: 400 });
@@ -44,12 +46,30 @@ export async function GET(request: Request) {
     for (const form of formsData.data) {
       // 3. Fetch leads for this form
       const leadsRes = await fetch(
-        `${graphBase}/${form.id}/leads?since=${sinceTimestamp}&access_token=${META_PAGE_ACCESS_TOKEN}`
+        `${graphBase}/${form.id}/leads?since=${sinceTimestamp}&access_token=${META_PAGE_ACCESS_TOKEN}`,
+        { cache: 'no-store' }
       );
       const leadsData = await leadsRes.json();
 
-      if (leadsData.data && leadsData.data.length > 0) {
-        for (const lead of leadsData.data) {
+      if (leadsData?.error) {
+        formBreakdown.push({
+          id: String(form.id),
+          name: String(form.name || ''),
+          count: 0,
+          error: leadsData.error.message || JSON.stringify(leadsData.error),
+        });
+        continue;
+      }
+
+      const items = Array.isArray(leadsData?.data) ? leadsData.data : [];
+      formBreakdown.push({
+        id: String(form.id),
+        name: String(form.name || ''),
+        count: items.length,
+      });
+
+      if (items.length > 0) {
+        for (const lead of items) {
           leadsProcessed++;
           const res = await ingestMetaLead({
             organizationId: org.id,
@@ -68,7 +88,7 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, leadsProcessed, leadsAdded, leadsHidden });
+    return NextResponse.json({ success: true, leadsProcessed, leadsAdded, leadsHidden, formBreakdown });
   } catch (error) {
     console.error('Error fetching Meta leads:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
