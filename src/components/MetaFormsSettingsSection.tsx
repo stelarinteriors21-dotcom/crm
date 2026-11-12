@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Eye,
@@ -37,6 +37,14 @@ export default function MetaFormsSettingsSection({
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState(initialData.metaApiError || "");
+
+  useEffect(() => {
+    setForms(initialData.forms || []);
+    setHiddenIds(initialData.hiddenMetaFormIds || []);
+    setHiddenNames(initialData.hiddenMetaFormNames || []);
+    setAutoHideNew(Boolean(initialData.autoHideNewForms));
+    setErrorMsg(initialData.metaApiError || "");
+  }, [initialData]);
 
   const isFormHidden = (form: MetaFormListItem) => {
     if (form.id && hiddenIds.includes(form.id)) return true;
@@ -103,6 +111,12 @@ export default function MetaFormsSettingsSection({
       if (!res.success) {
         setErrorMsg(res.error || "Could not fetch Meta forms.");
       } else {
+        if (res.data) {
+          setForms(res.data.forms || []);
+          setHiddenIds(res.data.hiddenMetaFormIds || []);
+          setHiddenNames(res.data.hiddenMetaFormNames || []);
+          setAutoHideNew(Boolean(res.data.autoHideNewForms));
+        }
         setSyncMsg(
           `Synced ${res.formsCount} Meta form(s) and matched ${res.matchedCount} existing CRM lead(s).`
         );

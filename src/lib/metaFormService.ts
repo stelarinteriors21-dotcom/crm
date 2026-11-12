@@ -477,11 +477,16 @@ export async function syncMetaFormsAndBackfillLeads(organizationId: string): Pro
     phoneToLeads.set(key, arr);
   }
 
-  let matchedCount = 0;
+  const pendingUpdates: Array<{
+    id: string;
+    customFields: Record<string, any>;
+  }> = [];
   const graphBase = getMetaGraphBaseUrl();
 
   if (token && phoneToLeads.size > 0) {
     for (const form of forms) {
+      if (typeof form.leadsCount === "number" && form.leadsCount === 0) continue;
+
       let nextUrl: string | null =
         `${graphBase}/${form.id}/leads?fields=id,created_time,field_data&limit=500&access_token=${token}`;
       let pagesFetched = 0;
@@ -502,18 +507,15 @@ export async function syncMetaFormsAndBackfillLeads(organizationId: string): Pro
             if (!matchingLeads || matchingLeads.length === 0) continue;
 
             for (const target of matchingLeads) {
-              await prisma.lead.update({
-                where: { id: target.id },
-                data: {
-                  customFields: {
-                    ...target.customFields,
-                    metaFormId: form.id,
-                    metaFormName: form.name,
-                    ...(item.id && !target.customFields.metaLeadgenId ? { metaLeadgenId: item.id } : {}),
-                  },
+              pendingUpdates.push({
+                id: target.id,
+                customFields: {
+                  ...target.customFields,
+                  metaFormId: form.id,
+                  metaFormName: form.name,
+                  ...(item.id && !target.customFields.metaLeadgenId ? { metaLeadgenId: item.id } : {}),
                 },
               });
-              matchedCount++;
             }
             phoneToLeads.delete(phoneKey);
           }
@@ -527,9 +529,21 @@ export async function syncMetaFormsAndBackfillLeads(organizationId: string): Pro
     }
   }
 
+  for (let i = 0; i < pendingUpdates.length; i += 15) {
+    const batch = pendingUpdates.slice(i, i + 15);
+    await Promise.all(
+      batch.map((u) =>
+        prisma.lead.update({
+          where: { id: u.id },
+          data: { customFields: u.customFields },
+        })
+      )
+    );
+  }
+
   return {
     success: true,
     formsCount: forms.length,
-    matchedCount,
+    matchedCount: pendingUpdates.length,
   };
 }

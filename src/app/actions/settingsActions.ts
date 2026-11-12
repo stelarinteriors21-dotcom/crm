@@ -371,8 +371,9 @@ export async function syncExistingMetaLeadForms() {
   }
 
   const result = await syncMetaFormsAndBackfillLeads(user.organizationId);
+  const refreshedData = await getMetaFormsSettingsData();
   revalidatePath("/settings");
   revalidatePath("/leads");
   revalidatePath("/dashboard");
-  return result;
+  return { ...result, data: refreshedData };
 }
