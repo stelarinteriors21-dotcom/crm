@@ -192,11 +192,28 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
     // Purge any column IDs that no longer exist (e.g. removed 'createdOn', internal custom fields)
     savedOrder = savedOrder.filter(id => allColumns.some(c => c.id === id));
 
-    // Ensure followUpReason is inserted right next to status if not already in saved order
-    if (savedOrder.length > 0 && !savedOrder.includes("followUpReason")) {
+    // Ensure pastStatus is inserted right next to status if not already in saved order
+    if (savedOrder.length > 0) {
       const statusIdx = savedOrder.indexOf("status");
       if (statusIdx !== -1) {
-        savedOrder.splice(statusIdx + 1, 0, "followUpReason");
+        const currentPastIdx = savedOrder.indexOf("pastStatus");
+        if (currentPastIdx === -1) {
+          savedOrder.splice(statusIdx + 1, 0, "pastStatus");
+        } else if (currentPastIdx !== statusIdx + 1) {
+          savedOrder.splice(currentPastIdx, 1);
+          const newStatusIdx = savedOrder.indexOf("status");
+          savedOrder.splice(newStatusIdx + 1, 0, "pastStatus");
+        }
+      }
+    }
+
+    // Ensure followUpReason is inserted right next to pastStatus if not already in saved order
+    if (savedOrder.length > 0 && !savedOrder.includes("followUpReason")) {
+      const pastIdx = savedOrder.indexOf("pastStatus");
+      const statusIdx = savedOrder.indexOf("status");
+      const targetIdx = pastIdx !== -1 ? pastIdx : statusIdx;
+      if (targetIdx !== -1) {
+        savedOrder.splice(targetIdx + 1, 0, "followUpReason");
       }
     }
 
