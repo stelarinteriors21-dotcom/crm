@@ -63,3 +63,9 @@ scripts/log_*
 scripts/update_*
 scripts/embed_*
 scripts/list_users*
+stelar-chrome-extension*
+public/uploads/demo/
+scripts/demo-runner*
+scripts/seed-demo-data*
+scripts/create-full-backup*
+

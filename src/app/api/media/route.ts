@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getS3Client, isAwsConfigured, bucketName, resolveAudioFileMeta } from "@/lib/s3Storage";
+import { getS3Client, isAwsConfigured, bucketName, resolveMediaFileMeta } from "@/lib/s3Storage";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 
 export async function GET(req: NextRequest) {
@@ -37,14 +37,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Determine content type from key extension
-    const lowerKey = cleanKey.toLowerCase();
-    let contentType = response.ContentType || "application/octet-stream";
-    if (lowerKey.endsWith(".jpg") || lowerKey.endsWith(".jpeg")) contentType = "image/jpeg";
-    else if (lowerKey.endsWith(".png")) contentType = "image/png";
-    else if (lowerKey.endsWith(".webp")) contentType = "image/webp";
-    else if (/\.(mp3|m4a|mp4|aac|amr|3gp|ogg|opus|wav)$/.test(lowerKey)) {
-      contentType = resolveAudioFileMeta(lowerKey).contentType;
-    }
+    const contentType = resolveMediaFileMeta(cleanKey, response.ContentType || "application/octet-stream").contentType;
+    const baseFileName = cleanKey.split("/").pop()?.replace(/[^\w.\-() ]+/g, "_") || "file";
 
     // Transform AWS body stream to web stream
     const bodyStream = (response.Body as any).transformToWebStream
@@ -56,6 +50,7 @@ export async function GET(req: NextRequest) {
       status: isPartial ? 206 : 200,
       headers: {
         "Content-Type": contentType,
+        "Content-Disposition": `inline; filename="${baseFileName}"`,
         "Accept-Ranges": "bytes",
         "Cache-Control": "public, max-age=31536000, immutable",
         ...(response.ContentRange ? { "Content-Range": response.ContentRange } : {}),

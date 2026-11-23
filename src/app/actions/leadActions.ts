@@ -6,8 +6,9 @@ import { revalidatePath } from "next/cache";
 import { logActivity } from "./activityActions";
 import { getWorkflowViolationLeadIds } from "./alertActions";
 import { EMAILS_ENABLED } from "@/lib/emailConfig";
+import { computeLeadMilestones } from "@/lib/constants";
 
-export async function getLeads(query?: string, searchField?: string, status?: string | string[], source?: string, assigned?: string, active?: boolean, startDate?: string, endDate?: string, tag?: string, city?: string | string[], stage?: string, autoFollowUp?: boolean | string, violations?: boolean | string) {
+export async function getLeads(query?: string, searchField?: string, status?: string | string[], source?: string, assigned?: string, active?: boolean, startDate?: string, endDate?: string, tag?: string, city?: string | string[], stage?: string, autoFollowUp?: boolean | string, violations?: boolean | string, pastStatus?: string | string[]) {
   const user = await getCurrentUser();
   if (!user) return [];
 
@@ -94,6 +95,7 @@ export async function getLeads(query?: string, searchField?: string, status?: st
 
   if (autoFollowUp === true || autoFollowUp === "true" || autoFollowUp === "1") {
     const autoCondition = {
+      status: "RNR",
       OR: [
         { customFields: { path: ['staleConvertingAlert'], equals: true } },
         { customFields: { path: ['isAutoFollowUp'], equals: true } }
@@ -134,6 +136,24 @@ export async function getLeads(query?: string, searchField?: string, status?: st
       where.city = { in: city.split(",") };
     } else {
       where.city = city;
+    }
+  }
+
+  if (pastStatus) {
+    const pastArr = Array.isArray(pastStatus) ? pastStatus : pastStatus.includes(",") ? pastStatus.split(",") : [pastStatus];
+    const cleanPastArr = pastArr.map(p => p.trim()).filter(Boolean);
+    if (cleanPastArr.length > 0) {
+      const pastCondition = {
+        OR: cleanPastArr.flatMap(ps => [
+          { customFields: { path: ['pastStatus'], equals: ps } },
+          { customFields: { path: ['pastMilestones'], array_contains: ps } }
+        ])
+      };
+      if (!where.AND) {
+        where.AND = [pastCondition];
+      } else {
+        where.AND.push(pastCondition);
+      }
     }
   }
 
@@ -308,8 +328,24 @@ export async function updateLeadStatus(leadId: string, status: string | null) {
     }
   }
 
-    const currentLead = await prisma.lead.findUnique({ where: { id: leadId }, select: { customFields: true } });
+    const currentLead = await prisma.lead.findUnique({ where: { id: leadId }, select: { status: true, customFields: true } });
     const cf = (currentLead?.customFields as any) || {};
+    const previousStatus = currentLead?.status || "Fresh";
+
+    // Track past status and audit history
+    if (previousStatus && previousStatus !== status) {
+      const history = Array.isArray(cf.statusHistory) ? cf.statusHistory : [];
+      history.push({
+        from: previousStatus,
+        to: status || "Contacted",
+        changedAt: new Date().toISOString()
+      });
+      cf.statusHistory = history;
+
+      const { pastStatus: latestMilestone, pastMilestones } = computeLeadMilestones(history, cf.pastStatus, status);
+      cf.pastStatus = latestMilestone;
+      cf.pastMilestones = pastMilestones;
+    }
 
     if (["Won", "Advance recieved", "Pay Pending", "Junk", "Lost", "Job enquiry", "just curious", "Hold"].includes(status || "")) {
       cf.quotationFollowUpActive = false;
@@ -1017,6 +1053,7 @@ export async function getAutoFollowUpCount(): Promise<number> {
   if (!user) return 0;
   const where: any = {
     organizationId: user.organizationId,
+    status: "RNR",
     OR: [
       { customFields: { path: ['staleConvertingAlert'], equals: true } },
       { customFields: { path: ['isAutoFollowUp'], equals: true } }
@@ -1554,6 +1591,13 @@ export async function updateQuotationDetails(leadId: string, quotationData: any)
     if (quotationData.docLink && quotationData.docLink.trim()) {
       try {
         const docUrl = quotationData.docLink.trim();
+        const isDrive = docUrl.includes("drive.google.com") || docUrl.includes("share.google");
+        const docLabel = quotationData.docName
+          ? `${stage || "Quotation"} - ${quotationData.docName}`
+          : stage === "Quotation Requested"
+          ? (isDrive ? "Floor Plan - Google Drive" : "Floor Plan (Uploaded File)")
+          : `Quotation (${stage || "Estimate"}) - ${isDrive ? "Google Drive" : "Uploaded File"}`;
+
         const existingAttachment = await prisma.fileAttachment.findFirst({
           where: { leadId, url: docUrl }
         });
@@ -1562,9 +1606,9 @@ export async function updateQuotationDetails(leadId: string, quotationData: any)
             data: {
               leadId,
               userId: targetCallerId || lead.assignedToId || lead.organizationId,
-              name: `Quotation (${stage || "Estimate"}) - Google Drive`,
+              name: docLabel,
               url: docUrl,
-              type: "drive"
+              type: isDrive ? "drive" : "UPLOAD"
             }
           });
         }
@@ -1601,7 +1645,7 @@ export async function updateConvertedDetails(leadId: string, convertedData: any)
     const isProofMandatory = status === "Advance recieved" || status === "Pay Pending" || status === "Won";
 
     if (isProofMandatory && (!convertedData.proofLink || !convertedData.proofLink.trim())) {
-      throw new Error(`A proof document/drive link is mandatory for "${status}".`);
+      throw new Error(`A proof document upload is mandatory for "${status}".`);
     }
 
     const currentCustomFields = (lead.customFields as any) || {};
@@ -1632,6 +1676,20 @@ export async function updateConvertedDetails(leadId: string, convertedData: any)
       if (["Won", "Advance recieved", "Pay Pending"].includes(lead.status)) {
         newStatus = "follow up";
       }
+    }
+
+    if (newStatus && newStatus !== lead.status) {
+      const sHist = Array.isArray((updatedCustomFields as any).statusHistory) ? (updatedCustomFields as any).statusHistory : [];
+      sHist.push({
+        from: lead.status || "Fresh",
+        to: newStatus,
+        changedAt: new Date().toISOString()
+      });
+      (updatedCustomFields as any).statusHistory = sHist;
+
+      const { pastStatus: latestMilestone, pastMilestones } = computeLeadMilestones(sHist, (updatedCustomFields as any).pastStatus, newStatus);
+      (updatedCustomFields as any).pastStatus = latestMilestone;
+      (updatedCustomFields as any).pastMilestones = pastMilestones;
     }
 
     if (["Won", "Advance recieved", "Pay Pending"].includes(status)) {
@@ -1666,9 +1724,37 @@ export async function updateConvertedDetails(leadId: string, convertedData: any)
     });
 
     const displayLabel = status === "Advance recieved" ? "Advance Received" : status;
+    // Also synchronize payment/agreement proof to FileAttachment table
+    if (convertedData.proofLink && convertedData.proofLink.trim()) {
+      try {
+        const pUrl = convertedData.proofLink.trim();
+        const isDrive = pUrl.includes("drive.google.com") || pUrl.includes("share.google");
+        const pName = convertedData.proofName
+          ? `Proof (${displayLabel}) - ${convertedData.proofName}`
+          : `Payment / Conversion Proof (${displayLabel})`;
+
+        const existingProofAtt = await prisma.fileAttachment.findFirst({
+          where: { leadId, url: pUrl }
+        });
+        if (!existingProofAtt) {
+          await prisma.fileAttachment.create({
+            data: {
+              leadId,
+              userId: lead.assignedToId || lead.organizationId,
+              name: pName,
+              url: pUrl,
+              type: isDrive ? "drive" : "UPLOAD"
+            }
+          });
+        }
+      } catch (attErr) {
+        console.warn("Failed to create fileAttachment for payment proof:", attErr);
+      }
+    }
+
     await prisma.note.create({
       data: {
-        content: `[SYSTEM: Converted Stage Changed to ${displayLabel}]\nStatus updated to: ${newStatus}\nProof Link: ${convertedData.proofLink || 'None'}${convertedData.amount ? `\nAmount: ${convertedData.amount}` : ''}${convertedData.notes ? `\nNotes: ${convertedData.notes}` : ''}`,
+        content: `[SYSTEM: Converted Stage Changed to ${displayLabel}]\nStatus updated to: ${newStatus}\nProof File: ${convertedData.proofLink || 'None'}${convertedData.amount ? `\nAmount: ${convertedData.amount}` : ''}${convertedData.notes ? `\nNotes: ${convertedData.notes}` : ''}`,
         leadId: leadId,
         userId: lead.assignedToId || lead.organizationId,
       }
@@ -1739,6 +1825,20 @@ export async function updateJunkDetails(leadId: string, junkData: any) {
       if (["Junk", "Lost", "Job enquiry", "just curious", "Hold"].includes(lead.status)) {
         newStatus = "follow up";
       }
+    }
+
+    if (newStatus && newStatus !== lead.status) {
+      const sHist = Array.isArray((updatedCustomFields as any).statusHistory) ? (updatedCustomFields as any).statusHistory : [];
+      sHist.push({
+        from: lead.status || "Fresh",
+        to: newStatus,
+        changedAt: new Date().toISOString()
+      });
+      (updatedCustomFields as any).statusHistory = sHist;
+
+      const { pastStatus: latestMilestone, pastMilestones } = computeLeadMilestones(sHist, (updatedCustomFields as any).pastStatus, newStatus);
+      (updatedCustomFields as any).pastStatus = latestMilestone;
+      (updatedCustomFields as any).pastMilestones = pastMilestones;
     }
 
     const updatedLead = await prisma.lead.update({

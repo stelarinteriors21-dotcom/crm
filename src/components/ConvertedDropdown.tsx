@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { updateConvertedDetails } from "@/app/actions/leadActions";
-import { Trophy, CheckCircle2, Clock, Link as LinkIcon, Save, History, ChevronDown, ChevronUp, AlertCircle, IndianRupee } from "lucide-react";
+import { Trophy, CheckCircle2, Clock, Upload, Save, History, ChevronDown, ChevronUp, IndianRupee } from "lucide-react";
+import DirectFileUploader, { normalizeDocumentHref } from "./DirectFileUploader";
 
 export default function ConvertedDropdown({ lead }: { lead: any }) {
   const currentConverted = (lead.customFields as any)?.converted || {};
@@ -18,6 +19,7 @@ export default function ConvertedDropdown({ lead }: { lead: any }) {
 
   const [status, setStatus] = useState(getInitialStatus());
   const [proofLink, setProofLink] = useState(currentConverted.proofLink || "");
+  const [proofName, setProofName] = useState(currentConverted.proofName || "");
   const [amount, setAmount] = useState(currentConverted.amount || "");
   const [notes, setNotes] = useState(currentConverted.notes || "");
   const [loading, setLoading] = useState(false);
@@ -40,7 +42,7 @@ export default function ConvertedDropdown({ lead }: { lead: any }) {
     if (isProofMandatory && !proofLink.trim()) {
       setHasError(true);
       const stageObj = CONVERTED_STAGES.find(s => s.value === status);
-      alert(`Google Drive / proof document link is mandatory for saving "${stageObj?.label || status}". Please paste the link to proceed.`);
+      alert(`Please upload a payment/agreement proof file before saving "${stageObj?.label || status}".`);
       return;
     }
 
@@ -49,6 +51,7 @@ export default function ConvertedDropdown({ lead }: { lead: any }) {
       const payload: any = {
         status,
         proofLink: proofLink.trim(),
+        proofName: proofName.trim() || undefined,
         amount: amount.trim(),
         notes: notes.trim()
       };
@@ -137,12 +140,12 @@ export default function ConvertedDropdown({ lead }: { lead: any }) {
               {h.amount && <div className="text-gray-500 text-[10px]">Amount: {h.amount}</div>}
               {h.proofLink && (
                 <a 
-                  href={h.proofLink.startsWith("http") ? h.proofLink : `https://${h.proofLink}`}
+                  href={normalizeDocumentHref(h.proofLink)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[10px] text-blue-500 hover:underline truncate block"
                 >
-                  Proof: {h.proofLink}
+                  Proof: {h.proofName || h.proofLink}
                 </a>
               )}
             </div>
@@ -185,9 +188,9 @@ export default function ConvertedDropdown({ lead }: { lead: any }) {
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1 flex items-center justify-between">
+            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center justify-between">
               <span className="flex items-center">
-                <LinkIcon className="w-3 h-3 mr-1" /> Proof of Payment / Won (Drive Link)
+                <Upload className="w-3 h-3 mr-1" /> Proof of Payment / Won File
                 {isProofMandatory ? (
                   <span className="text-red-600 font-bold ml-1.5 text-[10px] bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
                     * Mandatory
@@ -198,33 +201,29 @@ export default function ConvertedDropdown({ lead }: { lead: any }) {
                   </span>
                 )}
               </span>
-              {proofLink && (
-                <a 
-                  href={proofLink.startsWith("http") ? proofLink : `https://${proofLink}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-[10px] text-blue-600 hover:underline flex items-center font-normal"
-                >
-                  Open Link ↗
-                </a>
-              )}
             </label>
-            <textarea
+            <DirectFileUploader
+              leadId={lead.id}
+              category="payment-proof"
               value={proofLink}
-              onChange={e => {
-                setProofLink(e.target.value);
+              fileName={proofName}
+              hasError={hasError}
+              mandatory={isProofMandatory}
+              accentColor="green"
+              helperText="Upload Payment Screenshot, Receipt or Agreement PDF — auto-compressed"
+              onUploaded={(res) => {
+                setProofLink(res.url);
+                setProofName(res.fileName);
                 if (hasError) setHasError(false);
               }}
-              placeholder="Paste Google Drive receipt, transaction screenshot, or agreement link here..."
-              className={`w-full px-2 py-1.5 text-sm border rounded-md focus:outline-none min-h-[60px] ${
-                hasError 
-                  ? "border-red-400 focus:border-red-500 bg-red-50/20" 
-                  : "border-gray-200 focus:border-amber-500 bg-white"
-              }`}
+              onClear={() => {
+                setProofLink("");
+                setProofName("");
+              }}
             />
             {hasError && (
               <p className="text-[11px] text-red-600 mt-1 font-semibold flex items-center">
-                ⚠️ A Google Drive or Document proof link is required to advance to this stage.
+                ⚠️ A proof file upload is required to advance to this stage.
               </p>
             )}
           </div>

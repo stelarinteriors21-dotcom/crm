@@ -43,19 +43,27 @@ export async function POST(request: Request) {
     const lowerMsg = cleanMsg.toLowerCase();
 
     // Reject system, accessibility, or junk test spam
-    const junkPhrases = [
+    const systemSubstrings = [
       'whatsapp locked', 'unlock to use whatsapp', 'recent chats', 'message yourself',
       'touch the fingerprint', 'use pin', 'use password', 'online', 'typing...',
-      'system apps', 'more apps', 'recents', 'photo', 'video', 'video note',
-      'add a caption…', 'add a caption...', 'contacts', 'camera', 'settings',
-      'themes', 'notes', 'tools', 'dice', 'clock', 'date calculator',
-      'phone', 'messaging', 'lock', 'stelar crm', 'follow up', '• source:',
+      'system apps', 'more apps', 'recents',
+      'add a caption…', 'add a caption...', 'contacts',
       'tucson-queen-supplement-olive', 'thoughts-capabilities-marshall-les',
       'messages are end-to-end', 'tap here for contact info', 'end-to-end encrypted'
     ];
-    if (junkPhrases.some(p => lowerMsg.includes(p))) {
+    if (systemSubstrings.some(p => lowerMsg.includes(p))) {
       console.log(`[whatsapp-sync] Ignored system/metadata message: "${cleanMsg.slice(0, 30)}"`);
       return NextResponse.json({ success: true, ignored: true, reason: 'system_metadata' }, { headers: corsHeaders });
+    }
+
+    // Exact single-word UI label rejections (from Android accessibility scanner)
+    const exactUiWords = [
+      'camera', 'settings', 'themes', 'notes', 'tools', 'dice', 'clock',
+      'date calculator', 'phone', 'messaging', 'lock', 'stelar crm', 'follow up'
+    ];
+    if (exactUiWords.includes(lowerMsg)) {
+      console.log(`[whatsapp-sync] Ignored single-word UI label: "${cleanMsg}"`);
+      return NextResponse.json({ success: true, ignored: true, reason: 'ui_label' }, { headers: corsHeaders });
     }
 
     // Reject known test spam strings
@@ -75,6 +83,25 @@ export async function POST(request: Request) {
     let lead: any = null;
     if (leadId) {
       lead = await prisma.lead.findUnique({ where: { id: leadId } });
+
+      // STRICT SAFETY: Verify phone number matches the lead to prevent cross-contamination
+      if (lead && corePhone && corePhone.length >= 7) {
+        const leadPhoneDigits = (lead.phone || '').replace(/[^0-9]/g, '');
+        const leadCore = leadPhoneDigits.slice(-10);
+        const altDigits = (((lead.customFields as any)?.alternatePhone || '') as string).replace(/[^0-9]/g, '');
+        const altCore = altDigits.slice(-10);
+
+        const matchesPrimary = leadCore && (leadCore.endsWith(corePhone) || corePhone.endsWith(leadCore));
+        const matchesAlt = altCore && (altCore.endsWith(corePhone) || corePhone.endsWith(altCore));
+
+        if (leadCore && !matchesPrimary && !matchesAlt) {
+          console.warn(`[whatsapp-sync] REJECTED MISMATCH: leadId=${lead.id} (${lead.name}) phone="${lead.phone}" does not match payload phone="${phone}"`);
+          return NextResponse.json(
+            { error: `Phone number mismatch: Lead is ${lead.name} (${lead.phone}), but message payload is from ${phone}` },
+            { status: 400, headers: corsHeaders }
+          );
+        }
+      }
     }
 
     // A) Search by contactName if specific
@@ -136,6 +163,33 @@ export async function POST(request: Request) {
       }
     }
 
+    // Reject self-chat or "You" chat
+    if (cleanName.includes('(You)') || cleanName.toLowerCase() === 'you' || cleanName.toLowerCase() === 'message yourself') {
+      console.log(`[whatsapp-sync] Ignored self-chat: "${cleanName}"`);
+      return NextResponse.json({ success: true, ignored: true, reason: 'self_chat' }, { headers: corsHeaders });
+    }
+
+    // D) Auto-create lead ONLY if explicitly requested and valid phone number exists
+    if (!lead && body.autoCreate === true && corePhone && corePhone.length >= 10) {
+      const defaultOrg = await prisma.organization.findFirst();
+      if (defaultOrg) {
+        lead = await prisma.lead.create({
+          data: {
+            name: cleanName && cleanName.length >= 2 && !isGenericContact ? cleanName : `WhatsApp Lead (${cleanPhone})`,
+            phone: cleanPhone,
+            source: 'WHATSAPP',
+            status: 'Fresh',
+            organizationId: defaultOrg.id,
+            customFields: {
+              sourceChannel: 'WhatsApp Web Extension',
+              autoCreatedFromWhatsApp: true,
+            }
+          }
+        });
+        console.log(`[whatsapp-sync] Auto-created new Lead for phone="${cleanPhone}", name="${lead.name}" (id=${lead.id})`);
+      }
+    }
+
     if (!lead) {
       console.warn(`[whatsapp-sync] NO matching lead for phone="${phone}", contactName="${contactName}", corePhone="${corePhone}"`);
       return NextResponse.json(
@@ -185,6 +239,28 @@ export async function POST(request: Request) {
         { success: true, duplicated: true, logId: existingLog.id },
         { headers: corsHeaders }
       );
+    }
+
+    // If incoming payload is OUTBOUND, but this exact message was previously saved as INBOUND, correct it to OUTBOUND!
+    if (finalDir === 'OUTBOUND') {
+      const existingInbound = await prisma.whatsAppLog.findFirst({
+        where: {
+          leadId: lead.id,
+          direction: 'INBOUND',
+          message: cleanMsg,
+        }
+      });
+      if (existingInbound) {
+        await prisma.whatsAppLog.update({
+          where: { id: existingInbound.id },
+          data: { direction: 'OUTBOUND' }
+        });
+        console.log(`[whatsapp-sync] Corrected INBOUND to OUTBOUND for: "${cleanMsg.slice(0, 30)}" for lead=${lead.name}`);
+        return NextResponse.json(
+          { success: true, updated: true, logId: existingInbound.id, notice: 'Corrected to OUTBOUND' },
+          { headers: corsHeaders }
+        );
+      }
     }
 
     // If incoming payload claims to be INBOUND, but this exact message was already recorded as OUTBOUND for this lead, NEVER re-save as INBOUND!
@@ -255,6 +331,33 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const leadId = searchParams.get('leadId');
+
+    // Return list of all CRM lead phone numbers and names for 1-click extension bulk sync
+    if (searchParams.get('crmLeads') === 'true' || searchParams.get('getLeads') === 'true') {
+      const leads = await prisma.lead.findMany({
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          customFields: true
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      const formatted = leads.map(l => {
+        const cleanDigits = (l.phone || '').replace(/[^0-9]/g, '');
+        const core10 = cleanDigits.length >= 10 ? cleanDigits.slice(-10) : cleanDigits;
+        return {
+          id: l.id,
+          name: l.name,
+          phone: cleanDigits,
+          core10,
+          alternatePhone: (l.customFields as any)?.alternatePhone || null
+        };
+      });
+
+      return NextResponse.json({ success: true, count: formatted.length, leads: formatted }, { headers: corsHeaders });
+    }
 
     if (!leadId) {
       return NextResponse.json({ error: 'leadId is required' }, { status: 400, headers: corsHeaders });

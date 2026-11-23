@@ -7,7 +7,7 @@ import {
   Users, LayoutDashboard, PhoneCall, MapPin, 
   Briefcase, BarChart3, Settings, 
   Menu, X, BarChart2, Download, Calendar, 
-  LogOut, Shield, ChevronRight, RefreshCw
+  LogOut, Shield, ChevronRight, RefreshCw, MessageCircle
 } from "lucide-react";
 import { logout } from "@/app/actions/authActions";
 import ManageLeavesModal from "./ManageLeavesModal";
@@ -30,13 +30,25 @@ export default function MobileBottomNav({
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showLeavesModal, setShowLeavesModal] = useState(false);
+  const [waUnreadCount, setWaUnreadCount] = useState<number>(0);
   const isVisitor = userRole === "SITE_VISITOR";
 
-  // Listen to open events from the top header hamburger button
+  // Listen to open events from the top header hamburger button and WhatsApp unread changes
   useEffect(() => {
     const handleOpen = () => setDrawerOpen(true);
     window.addEventListener("crm_open_mobile_menu", handleOpen);
-    return () => window.removeEventListener("crm_open_mobile_menu", handleOpen);
+
+    const handleUnreadUpdate = (e: any) => {
+      if (typeof e.detail?.count === "number") {
+        setWaUnreadCount(e.detail.count);
+      }
+    };
+    window.addEventListener("crm_whatsapp_unread_changed", handleUnreadUpdate);
+
+    return () => {
+      window.removeEventListener("crm_open_mobile_menu", handleOpen);
+      window.removeEventListener("crm_whatsapp_unread_changed", handleUnreadUpdate);
+    };
   }, []);
 
   // Close drawer whenever pathname changes
@@ -57,17 +69,19 @@ export default function MobileBottomNav({
     ? [
         { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
         { label: "Leads", href: "/leads", icon: Users },
+        { label: "WhatsApp", href: "/whatsapp", icon: MessageCircle },
         { label: "Site Visits", href: "/site-visits", icon: MapPin },
-        { label: "Team", href: "/team", icon: Briefcase },
       ]
     : isVisitor
     ? [
         { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+        { label: "WhatsApp", href: "/whatsapp", icon: MessageCircle },
         { label: "Site Visits", href: "/site-visits", icon: MapPin },
       ]
     : [
         { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
         { label: "Leads", href: "/leads", icon: Users },
+        { label: "WhatsApp", href: "/whatsapp", icon: MessageCircle },
         { label: "Calls", href: "/calls", icon: PhoneCall },
       ];
 
@@ -82,19 +96,27 @@ export default function MobileBottomNav({
         {bottomItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          const isWhatsApp = item.href === "/whatsapp";
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex-1 flex flex-col items-center justify-center p-1.5 transition-colors ${
+              className={`relative flex-1 flex flex-col items-center justify-center p-1.5 transition-colors ${
                 isActive ? "text-[#4f46e5] font-bold" : "text-gray-500 hover:text-[#4f46e5]"
               }`}
             >
-              <Icon 
-                className={`w-5 h-5 mb-0.5 ${isActive ? "text-[#4f46e5]" : "text-gray-500"}`} 
-                strokeWidth={isActive ? 2.5 : 1.8} 
-              />
+              <div className="relative">
+                <Icon 
+                  className={`w-5 h-5 mb-0.5 ${isWhatsApp && waUnreadCount > 0 ? "text-emerald-600" : isActive ? "text-[#4f46e5]" : "text-gray-500"}`} 
+                  strokeWidth={isActive ? 2.5 : 1.8} 
+                />
+                {isWhatsApp && waUnreadCount > 0 && (
+                  <span className="absolute -top-1 -right-2 px-1 text-[9px] font-bold bg-emerald-600 text-white rounded-full leading-tight shadow-xs animate-pulse">
+                    {waUnreadCount}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] tracking-tight">{item.label}</span>
             </Link>
           );
@@ -199,6 +221,22 @@ export default function MobileBottomNav({
                       <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
                     </Link>
                   )}
+
+                  <Link
+                    href="/whatsapp"
+                    onClick={() => setDrawerOpen(false)}
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                      pathname.startsWith("/whatsapp") ? "bg-emerald-50 text-emerald-700 font-bold" : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span className="flex items-center space-x-2.5">
+                      <MessageCircle className="w-4 h-4 text-emerald-600" />
+                      <span>WhatsApp Hub</span>
+                    </span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-full">
+                      Live
+                    </span>
+                  </Link>
 
                   {(isAdmin || isVisitor) && (
                     <Link

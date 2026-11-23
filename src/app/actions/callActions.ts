@@ -195,7 +195,7 @@ export async function getRecordingUploadUrl(leadId: string, originalFilename?: s
       throw new Error(`AWS S3 error: ${s3Res.error || "Failed to generate presigned upload URL"}`);
     }
 
-    throw new Error("AWS S3 storage is not configured. Supabase storage has been retired to preserve quota.");
+    return { success: false, useFallback: true };
   } catch (error: any) {
     console.error("getRecordingUploadUrl error:", error);
     return { success: false, error: error.message };

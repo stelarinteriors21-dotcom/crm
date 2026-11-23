@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { KeyRound, CheckCircle2, Camera, Calendar, Clock, Ruler, Home, X, RefreshCw, Upload, AlertCircle, Trash2 } from "lucide-react";
+import { KeyRound, CheckCircle2, Camera, Calendar, Clock, Ruler, Home, X, RefreshCw, Upload, AlertCircle, Trash2, Sparkles, Loader2 } from "lucide-react";
 import { updateSiteVisitDetails } from "@/app/actions/leadActions";
+import { uploadSiteVisitPhotoAction } from "@/app/actions/siteVisitActions";
+import { compressImageAdaptive, formatBytes } from "@/lib/imageCompressor";
 import { useRouter } from "next/navigation";
 
 interface SiteVisitChecklistModalProps {
@@ -29,24 +31,69 @@ export default function SiteVisitChecklistModal({
   const [photos, setPhotos] = useState<string[]>(Array.isArray(sv.photos) ? sv.photos : []);
   const [nextMeetingDate, setNextMeetingDate] = useState(sv.nextMeetingDate || "");
   const [loading, setLoading] = useState(false);
+  const [compressing, setCompressing] = useState(false);
+  const [compressionStats, setCompressionStats] = useState<{
+    totalOriginal: number;
+    totalCompressed: number;
+    savingsPercent: number;
+  } | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [success, setSuccess] = useState(false);
 
   if (!isOpen || !lead) return null;
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setPhotos((prev) => [...prev, event.target!.result as string]);
+    setCompressing(true);
+    setErrorMsg("");
+
+    let newOriginal = compressionStats?.totalOriginal || 0;
+    let newCompressed = compressionStats?.totalCompressed || 0;
+    const newPhotos: string[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        try {
+          // Adaptive compression: slight optimization on small images, aggressive on large photos
+          const result = await compressImageAdaptive(file, 350 * 1024);
+          newPhotos.push(result.dataUrl);
+          newOriginal += result.originalSize;
+          newCompressed += result.compressedSize;
+        } catch (imgErr) {
+          console.warn("Fallback reading photo file:", imgErr);
+          await new Promise<void>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              if (event.target?.result) {
+                newPhotos.push(event.target.result as string);
+                newOriginal += file.size;
+                newCompressed += file.size;
+              }
+              resolve();
+            };
+            reader.onerror = () => resolve();
+            reader.readAsDataURL(file);
+          });
         }
-      };
-      reader.readAsDataURL(file);
-    });
+      }
+
+      setPhotos((prev) => [...prev, ...newPhotos]);
+      const savings = newOriginal > 0 ? Math.round(((newOriginal - newCompressed) / newOriginal) * 100) : 0;
+      setCompressionStats({
+        totalOriginal: newOriginal,
+        totalCompressed: newCompressed,
+        savingsPercent: savings
+      });
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg("Failed to compress some site photos.");
+    } finally {
+      setCompressing(false);
+      // Reset input so user can pick more or re-take
+      e.target.value = "";
+    }
   };
 
   const handleRemovePhoto = (index: number) => {
@@ -87,13 +134,25 @@ export default function SiteVisitChecklistModal({
 
     setLoading(true);
     try {
+      // 1. Upload compressed photos to AWS S3 if configured
+      const finalPhotos: string[] = [];
+      for (const photo of photos) {
+        if (photo.startsWith("data:image/")) {
+          const uploadRes = await uploadSiteVisitPhotoAction(lead.id, photo);
+          finalPhotos.push(uploadRes.url || photo);
+        } else {
+          finalPhotos.push(photo);
+        }
+      }
+
+      // 2. Save site visit details with photo URLs
       await updateSiteVisitDetails(lead.id, {
         ...sv,
         type: "Done",
         verifiedAt: new Date().toISOString(),
         roomsToRenovate: finalRooms,
         measurements: measurements.trim(),
-        photos: photos,
+        photos: finalPhotos,
         nextMeetingDate: nextMeetingDate
       });
 
@@ -209,12 +268,17 @@ export default function SiteVisitChecklistModal({
             />
           </div>
 
-          {/* 4. Site Photos */}
+          {/* 4. Site Photos & Smart Compressor */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
                 <Camera className="w-3.5 h-3.5 text-gray-500" />
                 Site Photos ({photos.length})
+                {compressing && (
+                  <span className="text-[10px] text-indigo-600 font-normal flex items-center ml-1">
+                    <Loader2 className="w-3 h-3 animate-spin mr-1" /> Compressing...
+                  </span>
+                )}
               </label>
               <label className="cursor-pointer text-[11px] font-bold text-[#4f46e5] hover:underline flex items-center">
                 <Upload className="w-3 h-3 mr-1" /> Add Photos
@@ -224,20 +288,38 @@ export default function SiteVisitChecklistModal({
                   accept="image/*"
                   capture="environment"
                   onChange={handlePhotoUpload}
+                  disabled={compressing}
                   className="hidden"
                 />
               </label>
             </div>
 
+            {/* Smart Compression Savings Banner */}
+            {compressionStats && photos.length > 0 && (
+              <div className="px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-between text-[11px] text-emerald-800">
+                <span className="flex items-center font-medium">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600 mr-1.5 shrink-0" />
+                  Auto-Compressed: <strong className="ml-1">{formatBytes(compressionStats.totalOriginal)} → {formatBytes(compressionStats.totalCompressed)}</strong>
+                </span>
+                <span className="px-1.5 py-0.2 bg-emerald-600 text-white rounded font-bold text-[10px]">
+                  -{compressionStats.savingsPercent}% Storage Saved
+                </span>
+              </div>
+            )}
+
             {photos.length > 0 ? (
-              <div className="grid grid-cols-4 gap-2 max-h-32 overflow-y-auto p-1 bg-gray-50 rounded-xl border border-gray-100">
+              <div className="grid grid-cols-4 gap-2 max-h-36 overflow-y-auto p-1.5 bg-gray-50 rounded-xl border border-gray-100">
                 {photos.map((photo, idx) => (
                   <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 aspect-square bg-gray-100">
                     <img src={photo} alt={`Site photo ${idx + 1}`} className="w-full h-full object-cover" />
+                    <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1 py-0.2 rounded font-mono">
+                      #{idx + 1}
+                    </span>
                     <button
                       type="button"
                       onClick={() => handleRemovePhoto(idx)}
-                      className="absolute top-1 right-1 bg-black/70 hover:bg-red-600 text-white rounded-full p-0.5 transition-colors"
+                      className="absolute top-1 right-1 bg-black/70 hover:bg-red-600 text-white rounded-full p-1 transition-colors shadow-xs"
+                      title="Remove photo"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -247,14 +329,15 @@ export default function SiteVisitChecklistModal({
             ) : (
               <label className="border border-dashed border-gray-200 hover:border-indigo-300 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer bg-gray-50/50 hover:bg-indigo-50/20 transition-colors">
                 <Camera className="w-5 h-5 text-gray-400 mb-1" />
-                <span className="text-[11px] text-gray-500 font-medium">Click to take or upload site photos</span>
-                <span className="text-[10px] text-gray-400">Supports camera capture on mobile</span>
+                <span className="text-[11px] text-gray-700 font-semibold">Click to take or upload site photos</span>
+                <span className="text-[10px] text-gray-400">Auto-compressed client-side for ultra-fast storage & zero bloat</span>
                 <input
                   type="file"
                   multiple
                   accept="image/*"
                   capture="environment"
                   onChange={handlePhotoUpload}
+                  disabled={compressing}
                   className="hidden"
                 />
               </label>

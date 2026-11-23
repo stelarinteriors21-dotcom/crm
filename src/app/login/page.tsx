@@ -92,10 +92,33 @@ export default function LoginPage() {
             <img src="/logo.png" alt="Stelar Interiors" className="w-full h-full object-contain" />
           </div>
           <span className="font-extrabold text-[11px] text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full tracking-wider uppercase">
-            Official CRM
+            {process.env.NEXT_PUBLIC_LOCAL_DEMO === "true" ? "Local Demo Mode (Offline)" : "Official CRM"}
           </span>
         </div>
         <h1 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-6">Sign In to Stelar CRM</h1>
+
+        {process.env.NEXT_PUBLIC_LOCAL_DEMO === "true" && (
+          <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2">
+            <div className="font-bold">Isolated Demo Database & Local Storage Active</div>
+            <div className="text-[11px] text-amber-800">No connection to live website DB or S3. Quick fill credentials (password: <code>demo123</code>):</div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setEmail("admin@demo.local"); setPassword("demo123"); }}
+                className="flex-1 bg-white border border-amber-300 hover:bg-amber-100 font-semibold py-1.5 px-2 rounded text-[11px] cursor-pointer"
+              >
+                Admin Demo
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail("caller@demo.local"); setPassword("demo123"); }}
+                className="flex-1 bg-white border border-amber-300 hover:bg-amber-100 font-semibold py-1.5 px-2 rounded text-[11px] cursor-pointer"
+              >
+                Caller Demo
+              </button>
+            </div>
+          </div>
+        )}
         
         {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4">{error}</div>}
         

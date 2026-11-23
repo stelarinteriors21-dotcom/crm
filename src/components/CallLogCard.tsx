@@ -16,6 +16,8 @@ async function saveCallNotes(callId: string, notes: string) {
 
 import { parseCallNotes } from "@/lib/callNotes";
 import { getRecordingUploadUrl, attachRecordingToCall } from "@/app/actions/callActions";
+import { compressAudioAdaptive } from "@/lib/audioCompressor";
+import { formatBytes } from "@/lib/imageCompressor";
 
 export default function CallLogCard({ log, leadPhone }: { log: any; leadPhone: string }) {
   const router = useRouter();
@@ -83,21 +85,34 @@ export default function CallLogCard({ log, leadPhone }: { log: any; leadPhone: s
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const pickedFile = e.target.files?.[0];
+    if (!pickedFile) return;
 
     setIsUploadingAudio(true);
     setAudioFeedback(null);
     try {
-      // 1. Direct to Supabase Storage via signed URL (bypasses Vercel 4.5MB limit, supports recordings up to 50MB and MP4)
-      const uploadUrlRes = await getRecordingUploadUrl(log.leadId, file.name);
+      // Adaptive compression: light on small clips, stronger mono voice compression on large recordings
+      let uploadFile: File = pickedFile;
+      let compressionNote = "";
+      try {
+        const comp = await compressAudioAdaptive(pickedFile, 3.5 * 1024 * 1024);
+        uploadFile = comp.file;
+        if (comp.savingsPercent > 0) {
+          compressionNote = ` (${formatBytes(comp.originalSize)} -> ${formatBytes(comp.compressedSize)}, ${comp.savingsPercent}% saved)`;
+        }
+      } catch (compErr) {
+        console.warn("Audio compression skipped, using original file:", compErr);
+      }
+
+      // 1. Direct to AWS S3 via signed URL (bypasses Vercel 4.5MB limit)
+      const uploadUrlRes = await getRecordingUploadUrl(log.leadId, uploadFile.name);
 
       if (uploadUrlRes && uploadUrlRes.success && uploadUrlRes.signedUrl && uploadUrlRes.publicUrl) {
         const directUploadRes = await fetch(uploadUrlRes.signedUrl, {
           method: "PUT",
-          body: file,
+          body: uploadFile,
           headers: {
-            "Content-Type": file.type || "audio/mpeg"
+            "Content-Type": uploadFile.type || "audio/mpeg"
           }
         });
 
@@ -105,7 +120,7 @@ export default function CallLogCard({ log, leadPhone }: { log: any; leadPhone: s
           const attachRes = await attachRecordingToCall(log.id, uploadUrlRes.publicUrl, log.duration);
           if (attachRes?.success) {
             setCurrentRecordingUrl(uploadUrlRes.publicUrl);
-            setAudioFeedback({ type: "success", message: "Audio recording attached successfully!" });
+            setAudioFeedback({ type: "success", message: `Audio recording attached successfully!${compressionNote}` });
             router.refresh();
             return;
           }
@@ -114,7 +129,7 @@ export default function CallLogCard({ log, leadPhone }: { log: any; leadPhone: s
 
       // 2. Fallback: upload via standard endpoint
       const fd = new FormData();
-      fd.append("audio", file);
+      fd.append("audio", uploadFile);
       fd.append("callId", log.id);
       fd.append("leadId", log.leadId);
       fd.append("phone", leadPhone);
@@ -130,7 +145,7 @@ export default function CallLogCard({ log, leadPhone }: { log: any; leadPhone: s
         const url = data.callLog?.recordingUrl;
         if (url) {
           setCurrentRecordingUrl(url);
-          setAudioFeedback({ type: "success", message: "Audio recording attached successfully!" });
+          setAudioFeedback({ type: "success", message: `Audio recording attached successfully!${compressionNote}` });
           router.refresh();
         } else {
           setAudioFeedback({ type: "error", message: "Audio uploaded, refresh to listen." });
@@ -321,9 +336,7 @@ export default function CallLogCard({ log, leadPhone }: { log: any; leadPhone: s
           {/* Audio Player + Transcribe */}
           {currentRecordingUrl ? (
             <div className="space-y-2">
-              <audio controls className="w-full h-9">
-                <source src={currentRecordingUrl} type="audio/mpeg" />
-              </audio>
+              <audio controls src={currentRecordingUrl} className="w-full h-9" />
 
               <button
                 onClick={handleTranscribe}
@@ -421,19 +434,19 @@ export default function CallLogCard({ log, leadPhone }: { log: any; leadPhone: s
                   />
                 </div>
               </div>
+            </div>
+          )}
 
-              {audioFeedback && (
-                <div className={`mt-2 text-[11px] px-2.5 py-1.5 rounded-lg font-medium flex items-center justify-between ${
-                  audioFeedback.type === "success" 
-                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200" 
-                    : "bg-amber-50 text-amber-800 border border-amber-200"
-                }`}>
-                  <span>{audioFeedback.message}</span>
-                  <button onClick={() => setAudioFeedback(null)} className="ml-2 hover:opacity-75">
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              )}
+          {audioFeedback && (
+            <div className={`mt-2 text-[11px] px-2.5 py-1.5 rounded-lg font-medium flex items-center justify-between ${
+              audioFeedback.type === "success" 
+                ? "bg-emerald-50 text-emerald-800 border border-emerald-200" 
+                : "bg-amber-50 text-amber-800 border border-amber-200"
+            }`}>
+              <span>{audioFeedback.message}</span>
+              <button onClick={() => setAudioFeedback(null)} className="ml-2 hover:opacity-75">
+                <X className="w-3 h-3" />
+              </button>
             </div>
           )}
         </div>

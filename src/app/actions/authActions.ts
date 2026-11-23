@@ -23,9 +23,11 @@ export async function getCurrentUser() {
       });
 
       if (!user) {
-        // Check if the primary admin user exists instead of blindly recreating it
+        const fallbackEmail = process.env.LOCAL_DEMO_MODE === "true"
+          ? "admin@demo.local"
+          : "stelarinteriors21@gmail.com";
         const fallbackUser = await prisma.user.findUnique({
-          where: { email: "stelarinteriors21@gmail.com" },
+          where: { email: fallbackEmail },
           include: { organization: true }
         });
         if (fallbackUser) return fallbackUser;
@@ -80,7 +82,7 @@ export async function login(formData: FormData) {
     expires: expiresAt,
     maxAge: 60 * 60 * 24 * 30, // 30 days
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production"
+    secure: process.env.NODE_ENV === "production" && process.env.LOCAL_DEMO_MODE !== "true"
   });
   
   // NOTE: logActivity requires the cookie to be set first to identify the user
@@ -109,7 +111,7 @@ export async function restoreSession(email: string) {
       expires: expiresAt,
       maxAge: 60 * 60 * 24 * 30, // 30 days
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production"
+      secure: process.env.NODE_ENV === "production" && process.env.LOCAL_DEMO_MODE !== "true"
     });
 
     return { success: true };

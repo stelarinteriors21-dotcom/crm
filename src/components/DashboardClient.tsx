@@ -10,6 +10,7 @@ import { acceptLead, rejectLead, acceptAllLeads, rejectAllLeads } from "@/app/ac
 import { getUserActivityLogs } from "@/app/actions/activityActions";
 import { triggerSmartCall } from "@/components/SmartCallManager";
 import { downloadDetailedExcelReport, downloadDetailedCsvReport } from "@/lib/exportDetailedReport";
+import { getLeadPastMilestone } from "@/lib/constants";
 
 type Lead = {
   id: string;
@@ -112,8 +113,8 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
       const hasFutureFollowUp = cf.followUpDate && new Date(cf.followUpDate).getTime() > nowTime;
       const hasFutureSiteVisit = cf.siteVisit && (cf.siteVisit.type === "Scheduled" || cf.siteVisit.type === "Rescheduled") && cf.siteVisit.date;
 
-      // Active converting stage that automatically switches to follow-up after 24 hours if unchanged
-      const isAutoFollowUpStatus = !isConvertedOrJunk && !isFollowUp && !isFresh && !isSiteVisit && !hasFutureFollowUp && !hasFutureSiteVisit;
+      // Only RNR status flags for follow-up after 24 hours if unchanged
+      const isAutoFollowUpStatus = (lead.status === "RNR") && !hasFutureFollowUp && !hasFutureSiteVisit;
 
       const timeInStatus = nowTime - statusTimestamp;
       const timeRemainingUntilAutoFollowUp = TWENTY_FOUR_HOURS_MS - timeInStatus;
@@ -731,14 +732,33 @@ const DATE_OPTIONS = ["All Time", "Today", "Yesterday", "Last 7 days", "Last 30 
 type DateOption = typeof DATE_OPTIONS[number];
 type SortOption = "default" | "count-high" | "count-low" | "a-z";
 
-function AllLeadsWidget({ statusBreakdown, totalLeads, title = "All Leads" }: { statusBreakdown: StatusStat[]; totalLeads: number; title?: string }) {
+function AllLeadsWidget({ statusBreakdown, totalLeads, title = "All Leads", leads = [] }: { statusBreakdown: StatusStat[]; totalLeads: number; title?: string; leads?: Lead[] }) {
   const [dateFilter, setDateFilter] = useState<DateOption>("All Time");
   const [dateOpen, setDateOpen] = useState(false);
   const [sort, setSort] = useState<SortOption>("default");
+  const [statusMode, setStatusMode] = useState<"current" | "past">("current");
 
-  // Since status breakdown comes from the server, we sort/filter client-side
-  // (Date filter is a UI label — actual filtering would need server data by date)
-  const sorted = [...statusBreakdown].sort((a, b) => {
+  // Compute past status breakdown when in "past" mode
+  const activeBreakdown = React.useMemo(() => {
+    if (statusMode === "current" || leads.length === 0) return statusBreakdown;
+
+    const breakdown: Record<string, number> = {};
+    leads.forEach((l) => {
+      const cf = ((l as any).customFields as any) || {};
+      const ps = getLeadPastMilestone(cf, l.status || undefined);
+      if (ps) {
+        breakdown[ps] = (breakdown[ps] || 0) + 1;
+      }
+    });
+
+    return Object.keys(breakdown).map((label) => ({
+      label,
+      count: breakdown[label],
+      percent: ((breakdown[label] / leads.length) * 100).toFixed(1) + "%"
+    }));
+  }, [statusMode, statusBreakdown, leads]);
+
+  const sorted = [...activeBreakdown].sort((a, b) => {
     if (sort === "count-high") return b.count - a.count;
     if (sort === "count-low") return a.count - b.count;
     if (sort === "a-z") return a.label.localeCompare(b.label);
@@ -786,6 +806,33 @@ function AllLeadsWidget({ statusBreakdown, totalLeads, title = "All Leads" }: { 
         </div>
       </div>
 
+      {/* Current Status vs Past Status Mode Toggle */}
+      <div className="px-4 py-2 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
+        <div className="flex items-center bg-gray-200/70 p-0.5 rounded-lg text-xs font-semibold">
+          <button
+            type="button"
+            onClick={() => setStatusMode("current")}
+            className={`px-3 py-1 rounded-md transition-all ${
+              statusMode === "current" ? "bg-white text-indigo-700 font-bold shadow-2xs" : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Current Status
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusMode("past")}
+            className={`px-3 py-1 rounded-md transition-all ${
+              statusMode === "past" ? "bg-white text-blue-700 font-bold shadow-2xs" : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Past Status
+          </button>
+        </div>
+        <span className="text-[11px] text-gray-500 font-medium">
+          {statusMode === "current" ? "Active current status" : "Previous historical status"}
+        </span>
+      </div>
+
       {/* Sort Buttons */}
       <div className="px-4 py-2.5 border-b border-gray-100 flex space-x-1.5 text-[11px]">
         {([
@@ -810,7 +857,7 @@ function AllLeadsWidget({ statusBreakdown, totalLeads, title = "All Leads" }: { 
 
       {/* Column Headers */}
       <div className="px-3 py-2 border-b border-gray-100 flex text-[11px] font-bold text-gray-500">
-        <span className="flex-1">STATUS</span>
+        <span className="flex-1">{statusMode === "current" ? "CURRENT STATUS" : "PAST STATUS"}</span>
         <span className="w-16 text-center">COUNT</span>
         <span className="w-16 text-center">SHARE</span>
       </div>
@@ -818,12 +865,19 @@ function AllLeadsWidget({ statusBreakdown, totalLeads, title = "All Leads" }: { 
       {/* Rows */}
       <div className="overflow-y-auto max-h-72 divide-y divide-gray-50">
         {sorted.length === 0 ? (
-          <div className="p-6 text-center text-gray-400 text-sm">No leads yet.</div>
+          <div className="p-6 text-center text-gray-400 text-sm">No leads recorded.</div>
         ) : (
           sorted.map((s, i) => (
-            <div key={s.label} className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = '/leads?status=' + encodeURIComponent(s.label)}>
+            <div 
+              key={s.label} 
+              className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer" 
+              onClick={() => {
+                const param = statusMode === "current" ? "status" : "pastStatus";
+                window.location.href = `/leads?${param}=${encodeURIComponent(s.label)}`;
+              }}
+            >
               <div className={`w-2 h-2 rounded-full mr-2 flex-shrink-0 ${STATUS_BAR_COLORS[i % STATUS_BAR_COLORS.length]}`} />
-              <span className="flex-1 text-[13px] text-gray-700">{s.label}</span>
+              <span className="flex-1 text-[13px] text-gray-700 font-medium">{s.label}</span>
               <span className="w-16 text-center text-[13px] font-bold text-gray-800">{s.count}</span>
               <div className="w-16 flex items-center">
                 <div
@@ -933,7 +987,7 @@ function UserReportModal({ userName, onClose, allLeads, teamActivity }: { userNa
         </div>
         <div className="p-6 bg-gray-50 overflow-y-auto flex-1">
           {activeTab === "overview" ? (
-            <AllLeadsWidget statusBreakdown={statusBreakdown} totalLeads={userLeads.length} title={`${userName}'s Leads`} />
+            <AllLeadsWidget statusBreakdown={statusBreakdown} totalLeads={userLeads.length} title={`${userName}'s Leads`} leads={userLeads} />
           ) : (
             <div className="space-y-4">
               {logs.length > 0 ? (

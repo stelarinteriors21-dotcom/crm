@@ -25,6 +25,7 @@ import SmartCallButton from "@/components/SmartCallButton";
 import WhatsAppConversationThread from "@/components/WhatsAppConversationThread";
 import BackToLeadsButton from "@/components/BackToLeadsButton";
 import LeadTagSelector from "@/components/LeadTagSelector";
+import SiteVisitPhotoGallery from "@/components/SiteVisitPhotoGallery";
 
 export default async function LeadDetailsPage({ params }: { params: { id: string } }) {
   let lead: any = null;
@@ -194,7 +195,14 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
               <div className="flex-1 min-w-0">
                 <h1 className="text-[15px] sm:text-[16px] font-bold text-gray-900 truncate">{lead.name}</h1>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <LeadStatusDropdown leadId={lead.id} initialStatus={lead.status ?? "NEW"} isAdmin={isAdmin} />
+                  <LeadStatusDropdown 
+                    leadId={lead.id} 
+                    initialStatus={lead.status ?? "NEW"} 
+                    pastStatus={cf.pastStatus}
+                    statusHistory={cf.statusHistory}
+                    statusChangedAt={cf.statusChangedAt}
+                    isAdmin={isAdmin} 
+                  />
                   <LeadTagSelector leadId={lead.id} initialTag={lead.tag} customTags={customTags} isAdmin={isAdmin} />
                 </div>
               </div>
@@ -416,23 +424,21 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
 
                       {log.photos && Array.isArray(log.photos) && log.photos.length > 0 && (
                         <div className="pt-1">
-                          <div className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1 flex items-center">
-                            <Camera className="w-3 h-3 mr-1 text-pink-600" /> Site Photos ({log.photos.length})
+                          <div className="font-bold text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+                            <span className="flex items-center">
+                              <Camera className="w-3 h-3 mr-1 text-pink-600" /> Site Photos ({log.photos.length})
+                            </span>
+                            <span className="text-[9px] text-gray-400 font-normal">Click to zoom</span>
                           </div>
-                          <div className="flex flex-wrap gap-2">
-                            {log.photos.map((pUrl: string, pIdx: number) => (
-                              <a
-                                key={pIdx}
-                                href={pUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 hover:border-indigo-500 shadow-2xs block"
-                                title="Click to view full photo"
-                              >
-                                <img src={pUrl} alt={`Photo ${pIdx + 1}`} className="w-full h-full object-cover" />
-                              </a>
-                            ))}
-                          </div>
+                          <SiteVisitPhotoGallery
+                            photos={log.photos}
+                            leadName={lead.name}
+                            leadId={lead.id}
+                            date={log.date || log.verifiedAt}
+                            rooms={log.roomsToRenovate}
+                            measurements={log.measurements}
+                            compact={true}
+                          />
                         </div>
                       )}
                     </div>
@@ -558,11 +564,88 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
             </div>
           </div>
 
+          {/* Site Inspection & Visit Photos (Full Gallery) */}
+          {(() => {
+            const cf = (lead.customFields as any) || {};
+            const sv = cf.siteVisit || {};
+            const history = cf.siteVisitHistory || [];
+            
+            const photoList: string[] = [];
+            if (Array.isArray(sv.photos)) {
+              photoList.push(...sv.photos);
+            }
+            if (Array.isArray(history)) {
+              history.forEach((h: any) => {
+                if (Array.isArray(h.photos)) {
+                  h.photos.forEach((p: string) => {
+                    if (p && !photoList.includes(p)) photoList.push(p);
+                  });
+                }
+              });
+            }
+
+            if (photoList.length === 0) return null;
+
+            return (
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden p-5 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-100 gap-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-lg bg-pink-50 border border-pink-100 flex items-center justify-center text-pink-600">
+                      <Camera className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h2 className="text-[14px] font-bold text-gray-800 leading-tight">
+                        Site Visit Inspection Photos ({photoList.length})
+                      </h2>
+                      <p className="text-[11px] text-gray-400">
+                        High-definition photos captured on site • Click any image to open full viewer & download
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {sv.roomsToRenovate && (
+                      <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100 flex items-center">
+                        <Home className="w-3 h-3 mr-1 text-indigo-500" /> {sv.roomsToRenovate}
+                      </span>
+                    )}
+                    {sv.verifiedAt && (
+                      <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 font-bold flex items-center">
+                        <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" /> Verified
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <SiteVisitPhotoGallery
+                  photos={photoList}
+                  leadName={lead.name}
+                  leadId={lead.id}
+                  date={sv.date || sv.verifiedAt}
+                  rooms={sv.roomsToRenovate}
+                  measurements={sv.measurements}
+                  compact={false}
+                />
+              </div>
+            );
+          })()}
+
           {/* 5. Document Attachments */}
           {(() => {
             const cf = (lead.customFields as any) || {};
             const currentQuotation = cf.quotation || {};
             const quotationHistory: any[] = Array.isArray(cf.quotationHistory) ? cf.quotationHistory : [];
+            const currentConverted = cf.converted || {};
+            const convertedHistory: any[] = Array.isArray(cf.convertedHistory) ? cf.convertedHistory : [];
+
+            const isExternalDriveUrl = (u: string) =>
+              (u || "").includes("drive.google.com") || (u || "").includes("share.google");
+            const formatDocBytes = (bytes?: number | null) => {
+              if (!bytes || bytes <= 0) return "";
+              if (bytes < 1024) return `${bytes} B`;
+              if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+              return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+            };
 
             const allDocuments: Array<{
               id: string;
@@ -570,19 +653,21 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
               url: string;
               type: "upload" | "drive";
               category: string;
+              sizeLabel?: string;
               createdAt?: Date | string;
               isPrimary?: boolean;
             }> = [];
 
             // Direct attachments from database
             (lead.fileAttachments || []).forEach((file: any) => {
-              const isDrive = (file.url || "").includes("drive.google.com") || (file.url || "").includes("share.google");
+              const isDrive = isExternalDriveUrl(file.url);
               allDocuments.push({
                 id: file.id,
                 name: file.name,
                 url: file.url,
                 type: isDrive ? "drive" : "upload",
-                category: isDrive ? "Quotation / Drive Link" : "Uploaded File",
+                category: isDrive ? "Drive Link" : "Uploaded File",
+                sizeLabel: formatDocBytes(file.size),
                 createdAt: file.createdAt
               });
             });
@@ -591,11 +676,14 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
             if (currentQuotation.docLink && currentQuotation.docLink.trim()) {
               const qUrl = currentQuotation.docLink.trim();
               if (!allDocuments.some(d => d.url === qUrl)) {
+                const isDrive = isExternalDriveUrl(qUrl);
                 allDocuments.push({
                   id: "doc-current-quotation",
-                  name: `Quotation (${currentQuotation.stage || currentQuotation.status || "Estimate"}) - Google Drive`,
+                  name: currentQuotation.docName
+                    ? `${currentQuotation.stage || "Quotation"} - ${currentQuotation.docName}`
+                    : `Quotation (${currentQuotation.stage || currentQuotation.status || "Estimate"}) - ${isDrive ? "Google Drive" : "Uploaded File"}`,
                   url: qUrl,
-                  type: "drive",
+                  type: isDrive ? "drive" : "upload",
                   category: "Current Quotation",
                   createdAt: cf.statusChangedAt || lead.createdAt,
                   isPrimary: true
@@ -608,11 +696,14 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
               if (h.docLink && h.docLink.trim()) {
                 const hUrl = h.docLink.trim();
                 if (!allDocuments.some(d => d.url === hUrl)) {
+                  const isDrive = isExternalDriveUrl(hUrl);
                   allDocuments.push({
                     id: `doc-quote-history-${idx}`,
-                    name: `Quotation Revision (${h.stage || "Estimate"}) - Google Drive`,
+                    name: h.docName
+                      ? `${h.stage || "Quotation"} Revision - ${h.docName}`
+                      : `Quotation Revision (${h.stage || "Estimate"}) - ${isDrive ? "Google Drive" : "Uploaded File"}`,
                     url: hUrl,
-                    type: "drive",
+                    type: isDrive ? "drive" : "upload",
                     category: "Quotation History",
                     createdAt: h.timestamp || lead.createdAt
                   });
@@ -624,16 +715,53 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
             if (cf.floorPlanLink && cf.floorPlanLink.trim()) {
               const fpUrl = cf.floorPlanLink.trim();
               if (!allDocuments.some(d => d.url === fpUrl)) {
+                const isDrive = isExternalDriveUrl(fpUrl);
                 allDocuments.push({
                   id: "doc-floor-plan",
-                  name: "Floor Plan Document - Google Drive",
+                  name: isDrive ? "Floor Plan Document - Google Drive" : "Floor Plan Document",
                   url: fpUrl,
-                  type: "drive",
+                  type: isDrive ? "drive" : "upload",
                   category: "Floor Plan",
                   createdAt: lead.createdAt
                 });
               }
             }
+
+            // Conversion / Payment Proof Links
+            const proofCandidates = [currentConverted, ...convertedHistory];
+            proofCandidates.forEach((c: any, idx: number) => {
+              if (c?.proofLink && String(c.proofLink).trim()) {
+                const pUrl = String(c.proofLink).trim();
+                if (!allDocuments.some(d => d.url === pUrl)) {
+                  const isDrive = isExternalDriveUrl(pUrl);
+                  allDocuments.push({
+                    id: `doc-converted-proof-${idx}`,
+                    name: c.proofName
+                      ? `Payment Proof (${c.status || "Converted"}) - ${c.proofName}`
+                      : `Payment / Conversion Proof (${c.status || "Converted"})`,
+                    url: pUrl,
+                    type: isDrive ? "drive" : "upload",
+                    category: "Payment Proof",
+                    createdAt: c.timestamp || lead.createdAt
+                  });
+                }
+              }
+            });
+
+            // Site Visit Inspection Photos
+            const svPhotos: string[] = Array.isArray(cf.siteVisit?.photos) ? cf.siteVisit.photos : [];
+            svPhotos.forEach((photoUrl: string, idx: number) => {
+              if (photoUrl && !allDocuments.some(d => d.url === photoUrl)) {
+                allDocuments.push({
+                  id: `doc-site-photo-${idx}`,
+                  name: `Site Inspection Photo #${idx + 1} (${cf.siteVisit?.roomsToRenovate || "Site Details"})`,
+                  url: photoUrl,
+                  type: "upload",
+                  category: "Site Inspection Photo",
+                  createdAt: cf.siteVisit?.verifiedAt || lead.createdAt
+                });
+              }
+            });
 
             return (
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -683,6 +811,8 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
                                   ? "bg-purple-50 text-purple-700 border border-purple-200"
                                   : doc.category === "Floor Plan"
                                   ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                  : doc.category === "Payment Proof"
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                   : "bg-gray-100 text-gray-600"
                               }`}>
                                 {doc.category}
@@ -690,6 +820,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
                             </div>
                             <div suppressHydrationWarning className="text-[10px] text-gray-400 mt-0.5">
                               {doc.createdAt ? timeAgo(doc.createdAt) : "Attached"}
+                              {doc.sizeLabel ? ` · ${doc.sizeLabel}` : ""}
                             </div>
                           </div>
                         </div>
@@ -699,7 +830,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors shrink-0 ml-3"
                         >
-                          <span>Open Link</span>
+                          <span>{doc.type === "upload" ? "View File" : "Open Link"}</span>
                           <ExternalLink className="w-3 h-3" />
                         </a>
                       </div>

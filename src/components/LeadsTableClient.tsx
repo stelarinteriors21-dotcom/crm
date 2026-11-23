@@ -8,13 +8,14 @@ import LeadActionsMenu from "@/components/LeadActionsMenu";
 import { triggerSmartCall } from "@/components/SmartCallManager";
 import { updateLeadTag } from "@/app/actions/leadActions";
 import { addCustomTag } from "@/app/actions/settingsActions";
-import { LEAD_STATUS_OPTIONS, LEAD_STATUS_COLORS } from "@/lib/constants";
+import { LEAD_STATUS_OPTIONS, LEAD_STATUS_COLORS, getLeadPastMilestone } from "@/lib/constants";
 
 type Lead = any;
 
 const BASE_COLUMNS = [
   { id: "name", label: "Name", type: "T", defaultVisible: true },
-  { id: "status", label: "Status", type: "🔴", defaultVisible: true },
+  { id: "status", label: "Current Status", type: "🔴", defaultVisible: true },
+  { id: "pastStatus", label: "Past Status", type: "🕒", defaultVisible: true },
   { id: "followUpReason", label: "Follow-up Reason", type: "💬", defaultVisible: true },
   { id: "approximateBudget", label: "Approximate Budget", type: "💰", defaultVisible: true },
   { id: "city", label: "City", type: "T", defaultVisible: true },
@@ -227,10 +228,21 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
     const rows = filteredLeads.map((l: any) => {
       const cf = (l.customFields as any) || {};
       const isStatusFollowUp = (l.status || "").toLowerCase().includes("follow");
-      const isAutoFollowUp = Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
+      const isAutoFollowUp = (l.status === "RNR") && Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
+      const isInactive48h = Boolean(cf.inactivity48hAlert);
+      const isRevisionActive = Boolean(cf.revisionAlertActive);
+      const isQuoteFollowUp = Boolean(cf.quotationFollowUpActive);
+      const isSiteVisitDue = cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt && (Date.now() - new Date(cf.siteVisit.verifiedAt).getTime() > 24 * 60 * 60 * 1000) && !["Quotation shared", "Estimated Quotation", "final Quotation", "Quotation Requested", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(l.status || "");
+      const hasViolation = isInactive48h || isRevisionActive || isQuoteFollowUp || isSiteVisitDue;
+
       let reason = "";
-      if (isStatusFollowUp || isAutoFollowUp) {
+      if (hasViolation || isAutoFollowUp) {
+        reason = "Follow-up";
+      } else if (isStatusFollowUp) {
         reason = cf.lastFollowUpNote || cf.staleFollowUpReason || cf.followUpReason || (Array.isArray(l.notes) ? l.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"))?.content : "") || "";
+        if (/lead remained in/i.test(reason) || /site visit scheduled.*passed/i.test(reason) || reason.toLowerCase() === "follow-up" || reason.toLowerCase() === "follow up") {
+          reason = "Follow-up";
+        }
       }
 
       return {
@@ -239,6 +251,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
         "Alternate Phone": cf?.alternatePhone || (l as any).alternatePhone || "",
         "Email": l.email || "",
         "Status": l.status || "",
+        "Past Status": getLeadPastMilestone(cf, l.status) || "—",
         "Follow-up Reason": reason,
         "Source": l.source || "",
         "City": l.city || "",
@@ -265,10 +278,21 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
       body: filteredLeads.map((l: any) => {
         const cf = (l.customFields as any) || {};
         const isStatusFollowUp = (l.status || "").toLowerCase().includes("follow");
-        const isAutoFollowUp = Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
+        const isAutoFollowUp = (l.status === "RNR") && Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
+        const isInactive48h = Boolean(cf.inactivity48hAlert);
+        const isRevisionActive = Boolean(cf.revisionAlertActive);
+        const isQuoteFollowUp = Boolean(cf.quotationFollowUpActive);
+        const isSiteVisitDue = cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt && (Date.now() - new Date(cf.siteVisit.verifiedAt).getTime() > 24 * 60 * 60 * 1000) && !["Quotation shared", "Estimated Quotation", "final Quotation", "Quotation Requested", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(l.status || "");
+        const hasViolation = isInactive48h || isRevisionActive || isQuoteFollowUp || isSiteVisitDue;
+
         let reason = "";
-        if (isStatusFollowUp || isAutoFollowUp) {
+        if (hasViolation || isAutoFollowUp) {
+          reason = "Follow-up";
+        } else if (isStatusFollowUp) {
           reason = cf.lastFollowUpNote || cf.staleFollowUpReason || cf.followUpReason || (Array.isArray(l.notes) ? l.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"))?.content : "") || "";
+          if (/lead remained in/i.test(reason) || /site visit scheduled.*passed/i.test(reason) || reason.toLowerCase() === "follow-up" || reason.toLowerCase() === "follow up") {
+            reason = "Follow-up";
+          }
         }
 
         return [
@@ -538,45 +562,56 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                       const isRevisionActive = Boolean(cf.revisionAlertActive);
                       const isQuoteFollowUp = Boolean(cf.quotationFollowUpActive);
                       const isSiteVisitDue = cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt && (Date.now() - new Date(cf.siteVisit.verifiedAt).getTime() > 24 * 60 * 60 * 1000) && !["Quotation shared", "Estimated Quotation", "final Quotation", "Quotation Requested", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(lead.status || "");
+                      const hasViolation = isInactive48h || isSiteVisitDue || isRevisionActive || isQuoteFollowUp;
                       
+                      let violationTooltip = "";
                       if (isInactive48h) {
-                        return (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-300">
-                            🚨 48h Inactive
-                          </span>
-                        );
+                        violationTooltip = `Inactivity Alert: ${cf.inactivity48hHours || '>48'} hours with 0 calls in last 48 hours`;
+                      } else if (isSiteVisitDue) {
+                        violationTooltip = "Site visit verified >24h ago without advancing to quotation";
+                      } else if (isRevisionActive) {
+                        violationTooltip = "Quotation revision requested by client";
+                      } else if (isQuoteFollowUp) {
+                        violationTooltip = "Quotation follow-up due (24h cycle)";
                       }
-                      if (isSiteVisitDue) {
+
+                      if (hasViolation) {
                         return (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
-                            ⚠️ Site Visit Done (&gt;24h)
-                          </span>
-                        );
-                      }
-                      if (isRevisionActive) {
-                        return (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-300">
-                            📝 Revision Req.
-                          </span>
-                        );
-                      }
-                      if (isQuoteFollowUp) {
-                        return (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-300">
-                            💬 Quote Follow-up
+                          <span 
+                            className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-800 border border-red-200 inline-flex items-center shadow-2xs"
+                            title={violationTooltip}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse mr-1 shrink-0" />
+                            Follow-up
                           </span>
                         );
                       }
 
                       const isStatusFollowUp = (lead.status || "").toLowerCase().includes("follow");
-                      const isAutoFollowUp = Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
+                      const isAutoFollowUp = (lead.status === "RNR") && Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
                       if (!isStatusFollowUp && !isAutoFollowUp) return null;
+
+                      if (isAutoFollowUp) {
+                        return (
+                          <span 
+                            className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 inline-flex items-center shadow-2xs"
+                            title="Lead remained in 'RNR' for >24 hours"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 shrink-0" />
+                            Follow-up
+                          </span>
+                        );
+                      }
+
                       let reason = cf.lastFollowUpNote || cf.staleFollowUpReason || cf.followUpReason || "";
                       if (!reason && Array.isArray(lead.notes) && lead.notes.length > 0) {
                         const userNote = lead.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"));
                         if (userNote?.content) reason = userNote.content;
                       }
                       if (!reason) return null;
+                      if (/lead remained in/i.test(reason) || /site visit scheduled.*passed/i.test(reason) || reason.toLowerCase() === "follow-up" || reason.toLowerCase() === "follow up") {
+                        reason = "Follow-up";
+                      }
                       return (
                         <span 
                           className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 truncate max-w-[200px]"
@@ -636,7 +671,8 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                 {columnOrder.filter(id => isCol(id)).map(colId => {
                   switch(colId) {
                     case 'name': return <React.Fragment key="name"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Name</th></React.Fragment>;
-                    case 'status': return <React.Fragment key="status"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Status</th></React.Fragment>;
+                    case 'status': return <React.Fragment key="status"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Current Status</th></React.Fragment>;
+                    case 'pastStatus': return <React.Fragment key="pastStatus"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Past Status</th></React.Fragment>;
                     case 'followUpReason': return <React.Fragment key="followUpReason"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Follow-up Reason</th></React.Fragment>;
                     case 'tag': return <React.Fragment key="tag"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Tag</th></React.Fragment>;
                     case 'leadSource': return <React.Fragment key="leadSource"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 border-r border-white/50">Lead Source</th></React.Fragment>;
@@ -688,80 +724,92 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                       {lead.status ?? "Fresh"}
                     </span>
                   </td></React.Fragment>;
+                      case 'pastStatus': {
+                    const cf = (lead.customFields as any) || {};
+                    const pastStatus = getLeadPastMilestone(cf, lead.status);
+                    return (
+                      <React.Fragment key="pastStatus">
+                        <td className="px-4 py-2.5 whitespace-nowrap border-r border-gray-100">
+                          {pastStatus ? (
+                            <span 
+                              title={`Past Milestone: ${pastStatus}`}
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${LEAD_STATUS_COLORS[pastStatus] ?? "bg-gray-100 text-gray-700"} opacity-90 shadow-2xs`}
+                            >
+                              <History className="w-2.5 h-2.5 mr-1 text-white/90" />
+                              {pastStatus}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 text-xs italic">—</span>
+                          )}
+                        </td>
+                      </React.Fragment>
+                    );
+                  };
                       case 'followUpReason': return <React.Fragment key="followUpReason">{(() => {
                     const cf = (lead.customFields as any) || {};
                     const isStatusFollowUp = (lead.status || "").toLowerCase().includes("follow");
-                    const isAutoFollowUp = Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
+                    const isAutoFollowUp = (lead.status === "RNR") && Boolean(cf.isAutoFollowUp || cf.staleConvertingAlert || cf.staleFollowUpReason);
                     const isInactive48h = Boolean(cf.inactivity48hAlert);
                     const isRevisionActive = Boolean(cf.revisionAlertActive);
                     const isQuoteFollowUp = Boolean(cf.quotationFollowUpActive);
                     const isSiteVisitDue = cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt && (Date.now() - new Date(cf.siteVisit.verifiedAt).getTime() > 24 * 60 * 60 * 1000) && !["Quotation shared", "Estimated Quotation", "final Quotation", "Quotation Requested", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(lead.status || "");
 
-                    let violationBadge = null;
+                    const hasViolation = isInactive48h || isSiteVisitDue || isRevisionActive || isQuoteFollowUp;
+
+                    let violationTooltip = "";
                     if (isInactive48h) {
-                      violationBadge = (
-                        <span 
-                          title={`Inactivity Alert: ${cf.inactivity48hHours || '>48'} hours with 0 calls in last 48 hours`}
-                          className="inline-flex items-center text-red-900 bg-red-50 border border-red-300 px-2 py-0.5 rounded text-[11px] font-bold truncate max-w-full cursor-help shadow-2xs"
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse mr-1 shrink-0" />
-                          <span className="truncate">🚨 48h Inactive (0 calls)</span>
-                        </span>
-                      );
+                      violationTooltip = `Inactivity Alert: ${cf.inactivity48hHours || '>48'} hours with 0 calls in last 48 hours`;
                     } else if (isSiteVisitDue) {
-                      violationBadge = (
-                        <span 
-                          title="Site visit verified >24h ago without advancing to quotation"
-                          className="inline-flex items-center text-amber-900 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded text-[11px] font-bold truncate max-w-full cursor-help shadow-2xs"
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse mr-1 shrink-0" />
-                          <span className="truncate">⚠️ Site Visit Done (&gt;24h)</span>
-                        </span>
-                      );
+                      violationTooltip = "Site visit verified >24h ago without advancing to quotation";
                     } else if (isRevisionActive) {
-                      violationBadge = (
-                        <span 
-                          title="Quotation revision requested by client"
-                          className="inline-flex items-center text-purple-900 bg-purple-50 border border-purple-300 px-2 py-0.5 rounded text-[11px] font-bold truncate max-w-full cursor-help shadow-2xs"
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-purple-600 mr-1 shrink-0" />
-                          <span className="truncate">📝 Revision Requested</span>
-                        </span>
-                      );
+                      violationTooltip = "Quotation revision requested by client";
                     } else if (isQuoteFollowUp) {
-                      violationBadge = (
-                        <span 
-                          title="Quotation follow-up due (24h cycle)"
-                          className="inline-flex items-center text-blue-900 bg-blue-50 border border-blue-300 px-2 py-0.5 rounded text-[11px] font-bold truncate max-w-full cursor-help shadow-2xs"
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-1 shrink-0" />
-                          <span className="truncate">💬 Quote Follow-up Due</span>
-                        </span>
+                      violationTooltip = "Quotation follow-up due (24h cycle)";
+                    }
+
+                    // 1. Workflow Violation -> Red Dot "Follow-up"
+                    if (hasViolation) {
+                      return (
+                        <td className="px-4 py-2.5 max-w-[260px] truncate border-r border-gray-100 text-xs">
+                          <span 
+                            title={violationTooltip}
+                            className="inline-flex items-center text-red-800 bg-red-50 border border-red-200/90 px-2.5 py-0.5 rounded-md text-xs font-medium truncate max-w-full cursor-help hover:bg-red-100 transition-colors shadow-2xs"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse mr-1.5 shrink-0" />
+                            <span className="truncate">Follow-up</span>
+                          </span>
+                        </td>
                       );
                     }
 
+                    // 2. 24h Stale Timeout (RNR) -> Yellow/Amber Dot "Follow-up"
+                    if (isAutoFollowUp) {
+                      return (
+                        <td className="px-4 py-2.5 max-w-[260px] truncate border-r border-gray-100 text-xs">
+                          <span 
+                            title="Lead remained in 'RNR' for >24 hours"
+                            className="inline-flex items-center text-amber-800 bg-amber-50 border border-amber-200/90 px-2.5 py-0.5 rounded-md text-xs font-medium truncate max-w-full cursor-help hover:bg-amber-100 transition-colors shadow-2xs"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 shrink-0" />
+                            <span className="truncate">Follow-up</span>
+                          </span>
+                        </td>
+                      );
+                    }
+
+                    // 3. Manual Follow-up Status with custom note
                     let reason = cf.lastFollowUpNote || cf.staleFollowUpReason || cf.followUpReason || "";
                     if (!reason && Array.isArray(lead.notes) && lead.notes.length > 0) {
                       const userNote = lead.notes.find((n: any) => !n.content?.startsWith("[SYSTEM:"));
                       if (userNote?.content) reason = userNote.content;
                     }
-                    const shouldShowReason = (isStatusFollowUp || isAutoFollowUp) && Boolean(reason);
+                    if (/lead remained in/i.test(reason) || /site visit scheduled.*passed/i.test(reason) || reason.toLowerCase() === "follow-up" || reason.toLowerCase() === "follow up") {
+                      reason = "Follow-up";
+                    }
 
-                    return (
-                      <td className="px-4 py-2.5 max-w-[260px] truncate border-r border-gray-100 text-xs">
-                        {violationBadge ? (
-                          <div className="flex flex-col gap-1 items-start">
-                            {violationBadge}
-                            {shouldShowReason && (
-                              <span 
-                                title={reason}
-                                className="inline-flex items-center text-gray-700 text-[11px] truncate max-w-full"
-                              >
-                                {reason}
-                              </span>
-                            )}
-                          </div>
-                        ) : shouldShowReason ? (
+                    if (isStatusFollowUp && reason) {
+                      return (
+                        <td className="px-4 py-2.5 max-w-[260px] truncate border-r border-gray-100 text-xs">
                           <span 
                             title={reason}
                             className="inline-flex items-center text-gray-800 bg-amber-50 border border-amber-200/90 px-2.5 py-0.5 rounded-md text-xs font-medium truncate max-w-full cursor-help hover:bg-amber-100 transition-colors shadow-2xs"
@@ -769,9 +817,14 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 shrink-0" />
                             <span className="truncate">{reason}</span>
                           </span>
-                        ) : (
-                          <span className="text-gray-300 font-mono text-center block">—</span>
-                        )}
+                        </td>
+                      );
+                    }
+
+                    // 4. Default: empty dash
+                    return (
+                      <td className="px-4 py-2.5 max-w-[260px] truncate border-r border-gray-100 text-xs">
+                        <span className="text-gray-300 font-mono text-center block">—</span>
                       </td>
                     );
                   })()}</React.Fragment>;

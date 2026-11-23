@@ -23,6 +23,13 @@ export async function POST(request: Request) {
       return new NextResponse(resolved.error, { status: resolved.status, headers: MOBILE_CORS_HEADERS });
     }
 
+    if (body.checkOnly) {
+      return NextResponse.json(
+        { success: true, leadId: resolved.leadId, userId: resolved.finalUserId },
+        { headers: MOBILE_CORS_HEADERS }
+      );
+    }
+
     const s3Res = await getS3PresignedUploadUrl(resolved.s3Key, resolved.contentType);
     if (!s3Res.success || !s3Res.signedUrl) {
       return NextResponse.json(

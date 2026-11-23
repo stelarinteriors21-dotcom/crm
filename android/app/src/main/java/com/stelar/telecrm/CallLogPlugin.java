@@ -8,6 +8,11 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
+import android.media.MediaCodec;
+import android.media.MediaCodecInfo;
+import android.media.MediaExtractor;
+import android.media.MediaFormat;
+import android.media.MediaMuxer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -37,6 +42,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -538,12 +545,46 @@ public class CallLogPlugin extends Plugin {
                 // 1. Try direct-to-S3 streaming via presigned PUT URL (supports files > 4.5 MB cleanly)
                 boolean shouldTryLegacyMultipart = (resolvedPresignUrl == null);
                 if (resolvedPresignUrl != null) {
+                    // For larger audio (> 350 KB), confirm CRM lead first before spending CPU compressing
+                    if (contentLength > 350 * 1024L) {
+                        PresignResponse leadCheck = requestPresignedS3Upload(
+                            resolvedPresignUrl,
+                            phone,
+                            leadId,
+                            userId,
+                            effectiveFileName,
+                            true
+                        );
+                        if (leadCheck.httpCode == 404) {
+                            JSObject ret = new JSObject();
+                            ret.put("uploaded", false);
+                            ret.put("notLead", true);
+                            ret.put("responseCode", 404);
+                            call.resolve(ret);
+                            return;
+                        }
+                        if (leadCheck.httpCode >= 200 && leadCheck.httpCode < 300) {
+                            File compressedM4a = compressAudioToAacIfSmaller(finalRec, tempCacheFile, contentLength, duration);
+                            if (compressedM4a != null && compressedM4a.exists() && compressedM4a.length() > 1024 && compressedM4a.length() < (long) (contentLength * 0.92)) {
+                                Log.i(TAG, "Compressed audio " + contentLength + " -> " + compressedM4a.length() + " bytes");
+                                if (tempCacheFile != null && tempCacheFile.exists()) {
+                                    try { tempCacheFile.delete(); } catch (Exception ignored) {}
+                                }
+                                tempCacheFile = compressedM4a;
+                                contentLength = compressedM4a.length();
+                                String base = effectiveFileName.replaceFirst("\\.[^.]+$", "");
+                                effectiveFileName = base + ".m4a";
+                            }
+                        }
+                    }
+
                     PresignResponse presign = requestPresignedS3Upload(
                         resolvedPresignUrl,
                         phone,
                         leadId,
                         userId,
-                        effectiveFileName
+                        effectiveFileName,
+                        false
                     );
 
                     if (presign.httpCode == 404) {
@@ -768,7 +809,8 @@ public class CallLogPlugin extends Plugin {
         String phone,
         String leadId,
         String userId,
-        String fileName
+        String fileName,
+        boolean checkOnly
     ) {
         PresignResponse res = new PresignResponse();
         HttpURLConnection conn = null;
@@ -778,6 +820,7 @@ public class CallLogPlugin extends Plugin {
             if (leadId != null) body.put("leadId", leadId);
             if (userId != null) body.put("userId", userId);
             body.put("fileName", fileName);
+            if (checkOnly) body.put("checkOnly", true);
 
             byte[] payloadBytes = body.toString().getBytes(StandardCharsets.UTF_8);
             conn = (HttpURLConnection) new URL(presignUrl).openConnection();
@@ -810,6 +853,242 @@ public class CallLogPlugin extends Plugin {
             if (conn != null) conn.disconnect();
         }
         return res;
+    }
+
+    /**
+     * Hardware-accelerated adaptive AAC (.m4a) voice compression using Android MediaExtractor + MediaCodec + MediaMuxer.
+     * - Medium files (350 KB - 2 MB): 24 kbps mono AAC
+     * - Large files (> 2 MB): 16 kbps (or dynamically lower down to 12 kbps for very long calls)
+     * Safely returns null on any codec issue so the caller seamlessly falls back to the original file.
+     */
+    private File compressAudioToAacIfSmaller(RecordingSource rec, File existingTempFile, long origLength, Long durationHintSec) {
+        MediaExtractor extractor = null;
+        MediaCodec decoder = null;
+        MediaCodec encoder = null;
+        MediaMuxer muxer = null;
+        File outFile = null;
+        int[] muxerState = new int[]{ -1, 0 }; // [0]=trackIdx, [1]=muxerStarted(0/1)
+
+        try {
+            extractor = new MediaExtractor();
+            if (existingTempFile != null && existingTempFile.exists()) {
+                extractor.setDataSource(existingTempFile.getAbsolutePath());
+            } else if (rec.file != null && rec.file.exists()) {
+                extractor.setDataSource(rec.file.getAbsolutePath());
+            } else if (rec.uri != null) {
+                extractor.setDataSource(getContext(), rec.uri, null);
+            } else {
+                return null;
+            }
+
+            int audioTrackIdx = -1;
+            MediaFormat inputFormat = null;
+            for (int i = 0; i < extractor.getTrackCount(); i++) {
+                MediaFormat fmt = extractor.getTrackFormat(i);
+                String mime = fmt.getString(MediaFormat.KEY_MIME);
+                if (mime != null && mime.startsWith("audio/")) {
+                    audioTrackIdx = i;
+                    inputFormat = fmt;
+                    break;
+                }
+            }
+            if (audioTrackIdx < 0 || inputFormat == null) return null;
+
+            extractor.selectTrack(audioTrackIdx);
+            String inputMime = inputFormat.getString(MediaFormat.KEY_MIME);
+            int sampleRate = inputFormat.containsKey(MediaFormat.KEY_SAMPLE_RATE)
+                ? inputFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE) : 44100;
+            int inChannels = inputFormat.containsKey(MediaFormat.KEY_CHANNEL_COUNT)
+                ? inputFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT) : 1;
+
+            long durSec = (durationHintSec != null && durationHintSec > 0)
+                ? durationHintSec
+                : (inputFormat.containsKey(MediaFormat.KEY_DURATION) ? Math.max(1L, inputFormat.getLong(MediaFormat.KEY_DURATION) / 1000000L) : 60L);
+
+            // Adaptive voice bitrate targeting < 3.0 MB even on marathon calls
+            int targetBitrate = (origLength <= 2 * 1024 * 1024L) ? 24000 : 16000;
+            long maxAllowedBits = 3L * 1024L * 1024L * 8L;
+            if (durSec > 0 && (targetBitrate * durSec) > maxAllowedBits) {
+                targetBitrate = Math.max(12000, (int) (maxAllowedBits / durSec));
+            }
+
+            outFile = File.createTempFile("stelar_comp_", ".m4a", getContext().getCacheDir());
+
+            decoder = MediaCodec.createDecoderByType(inputMime);
+            decoder.configure(inputFormat, null, null, 0);
+            decoder.start();
+
+            MediaFormat encFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, 1);
+            encFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
+            encFormat.setInteger(MediaFormat.KEY_BIT_RATE, targetBitrate);
+            encFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 65536);
+
+            encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC);
+            encoder.configure(encFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+            encoder.start();
+
+            muxer = new MediaMuxer(outFile.getAbsolutePath(), MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+
+            MediaCodec.BufferInfo decInfo = new MediaCodec.BufferInfo();
+            MediaCodec.BufferInfo encInfo = new MediaCodec.BufferInfo();
+            boolean extractorDone = false;
+            boolean decoderDone = false;
+            boolean encoderDone = false;
+            long totalSamplesOut = 0;
+            int activeChannels = inChannels;
+            long deadlineMs = System.currentTimeMillis() + 25000L; // 25s hard budget
+
+            while (!encoderDone && System.currentTimeMillis() < deadlineMs) {
+                if (!extractorDone) {
+                    int inIdx = decoder.dequeueInputBuffer(5000);
+                    if (inIdx >= 0) {
+                        ByteBuffer inBuf = decoder.getInputBuffer(inIdx);
+                        if (inBuf != null) {
+                            int sampleSize = extractor.readSampleData(inBuf, 0);
+                            if (sampleSize < 0) {
+                                decoder.queueInputBuffer(inIdx, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                                extractorDone = true;
+                            } else {
+                                decoder.queueInputBuffer(inIdx, 0, sampleSize, extractor.getSampleTime(), 0);
+                                extractor.advance();
+                            }
+                        }
+                    }
+                }
+
+                if (!decoderDone) {
+                    int outIdx = decoder.dequeueOutputBuffer(decInfo, 5000);
+                    if (outIdx == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                        MediaFormat newFmt = decoder.getOutputFormat();
+                        if (newFmt.containsKey(MediaFormat.KEY_CHANNEL_COUNT)) {
+                            activeChannels = Math.max(1, newFmt.getInteger(MediaFormat.KEY_CHANNEL_COUNT));
+                        }
+                    } else if (outIdx >= 0) {
+                        ByteBuffer decBuf = decoder.getOutputBuffer(outIdx);
+                        boolean eos = (decInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
+
+                        if (decBuf != null && decInfo.size > 0) {
+                            decBuf.position(decInfo.offset);
+                            decBuf.limit(decInfo.offset + decInfo.size);
+                            decBuf.order(ByteOrder.LITTLE_ENDIAN);
+
+                            // Convert stereo/multi-channel PCM16 -> mono PCM16 cleanly
+                            byte[] monoBytes;
+                            if (activeChannels > 1) {
+                                int totalShorts = decInfo.size / 2;
+                                int monoFrames = totalShorts / activeChannels;
+                                monoBytes = new byte[monoFrames * 2];
+                                for (int f = 0; f < monoFrames; f++) {
+                                    int sum = 0;
+                                    for (int ch = 0; ch < activeChannels; ch++) {
+                                        sum += decBuf.getShort();
+                                    }
+                                    short avg = (short) (sum / activeChannels);
+                                    monoBytes[f * 2] = (byte) (avg & 0xff);
+                                    monoBytes[f * 2 + 1] = (byte) ((avg >> 8) & 0xff);
+                                }
+                            } else {
+                                monoBytes = new byte[decInfo.size];
+                                decBuf.get(monoBytes);
+                            }
+
+                            int offset = 0;
+                            while (offset < monoBytes.length && System.currentTimeMillis() < deadlineMs) {
+                                int encInIdx = encoder.dequeueInputBuffer(5000);
+                                if (encInIdx >= 0) {
+                                    ByteBuffer encInBuf = encoder.getInputBuffer(encInIdx);
+                                    if (encInBuf != null) {
+                                        encInBuf.clear();
+                                        int chunk = Math.min(encInBuf.remaining(), monoBytes.length - offset);
+                                        encInBuf.put(monoBytes, offset, chunk);
+                                        long ptsUs = (totalSamplesOut * 1000000L) / Math.max(1, sampleRate);
+                                        totalSamplesOut += (chunk / 2);
+                                        offset += chunk;
+                                        boolean finalChunkEos = eos && (offset >= monoBytes.length);
+                                        encoder.queueInputBuffer(encInIdx, 0, chunk, ptsUs, finalChunkEos ? MediaCodec.BUFFER_FLAG_END_OF_STREAM : 0);
+                                    }
+                                } else {
+                                    if (drainEncoderToMuxer(encoder, muxer, encInfo, muxerState)) {
+                                        encoderDone = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (eos && offset >= monoBytes.length) {
+                                decoderDone = true;
+                            }
+                        } else if (eos) {
+                            while (!decoderDone && System.currentTimeMillis() < deadlineMs) {
+                                int encInIdx = encoder.dequeueInputBuffer(5000);
+                                if (encInIdx >= 0) {
+                                    long ptsUs = (totalSamplesOut * 1000000L) / Math.max(1, sampleRate);
+                                    encoder.queueInputBuffer(encInIdx, 0, 0, ptsUs, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                                    decoderDone = true;
+                                } else if (drainEncoderToMuxer(encoder, muxer, encInfo, muxerState)) {
+                                    encoderDone = true;
+                                    break;
+                                }
+                            }
+                        }
+                        decoder.releaseOutputBuffer(outIdx, false);
+                    }
+                }
+
+                if (drainEncoderToMuxer(encoder, muxer, encInfo, muxerState)) {
+                    encoderDone = true;
+                }
+            }
+
+            if (!encoderDone) {
+                Log.w(TAG, "Audio compression did not finish within budget, falling back to original");
+                if (outFile.exists()) outFile.delete();
+                return null;
+            }
+            return outFile;
+        } catch (Exception e) {
+            Log.w(TAG, "Hardware AAC compression fallback (" + e.getMessage() + "), using original");
+            if (outFile != null && outFile.exists()) {
+                try { outFile.delete(); } catch (Exception ignored) {}
+            }
+            return null;
+        } finally {
+            try { if (decoder != null) { decoder.stop(); decoder.release(); } } catch (Exception ignored) {}
+            try { if (encoder != null) { encoder.stop(); encoder.release(); } } catch (Exception ignored) {}
+            try { if (muxer != null) { if (muxerState[1] == 1) muxer.stop(); muxer.release(); } } catch (Exception ignored) {}
+            try { if (extractor != null) extractor.release(); } catch (Exception ignored) {}
+        }
+    }
+
+    private boolean drainEncoderToMuxer(
+        MediaCodec encoder,
+        MediaMuxer muxer,
+        MediaCodec.BufferInfo encInfo,
+        int[] muxerState
+    ) {
+        int encOutIdx = encoder.dequeueOutputBuffer(encInfo, 5000);
+        while (encOutIdx != MediaCodec.INFO_TRY_AGAIN_LATER) {
+            if (encOutIdx == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                if (muxerState[1] == 0) {
+                    muxerState[0] = muxer.addTrack(encoder.getOutputFormat());
+                    muxer.start();
+                    muxerState[1] = 1;
+                }
+            } else if (encOutIdx >= 0) {
+                ByteBuffer encOutBuf = encoder.getOutputBuffer(encOutIdx);
+                if (encOutBuf != null && encInfo.size > 0 && (encInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == 0 && muxerState[1] == 1) {
+                    encOutBuf.position(encInfo.offset);
+                    encOutBuf.limit(encInfo.offset + encInfo.size);
+                    muxer.writeSampleData(muxerState[0], encOutBuf, encInfo);
+                }
+                boolean eos = (encInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
+                encoder.releaseOutputBuffer(encOutIdx, false);
+                if (eos) {
+                    return true;
+                }
+            }
+            encOutIdx = encoder.dequeueOutputBuffer(encInfo, 0);
+        }
+        return false;
     }
 
     private S3PutResult streamFileToS3SignedUrl(

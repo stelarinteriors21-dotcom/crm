@@ -13,6 +13,16 @@ const nextConfig = {
       allowedOrigins: ["*.trycloudflare.com", "*.ngrok-free.dev", "*.ngrok-free.app", "*.ngrok.io", "localhost:3000"],
     },
   },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: "/uploads/:path*",
+          destination: "/api/local-uploads/:path*",
+        },
+      ],
+    };
+  },
 };
 
 export default nextConfig;

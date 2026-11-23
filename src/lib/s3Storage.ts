@@ -31,6 +31,26 @@ const AUDIO_EXT_MIME: Record<string, string> = {
   wav: "audio/wav",
 };
 
+const GENERAL_EXT_MIME: Record<string, string> = {
+  ...AUDIO_EXT_MIME,
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  gif: "image/gif",
+  pdf: "application/pdf",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  csv: "text/csv",
+  txt: "text/plain",
+  zip: "application/zip",
+  dwg: "application/acad",
+};
+
 /**
  * Extracts a safe lowercase extension and MIME type from an audio filename.
  */
@@ -42,6 +62,17 @@ export function resolveAudioFileMeta(filename?: string | null): { ext: string; c
     ext,
     contentType: AUDIO_EXT_MIME[ext] || "audio/mpeg",
   };
+}
+
+/**
+ * Resolves safe extension and MIME type for general CRM documents, images, and audio.
+ */
+export function resolveMediaFileMeta(filename?: string | null, fallbackMime?: string | null): { ext: string; contentType: string } {
+  const match = (filename || "").trim().match(/\.([a-zA-Z0-9]+)$/);
+  const rawExt = match ? match[1].toLowerCase() : "";
+  const safeExt = rawExt.replace(/[^a-z0-9]/g, "") || "bin";
+  const contentType = GENERAL_EXT_MIME[safeExt] || fallbackMime || "application/octet-stream";
+  return { ext: safeExt, contentType };
 }
 
 /**

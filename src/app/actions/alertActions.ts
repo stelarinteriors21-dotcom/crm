@@ -37,9 +37,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
     const activeLeads = await prisma.lead.findMany({
       where: {
         ...(organizationId ? { organizationId } : {}),
-        status: {
-          notIn: EXCLUDED_FROM_AUTO_FOLLOW_UP
-        }
+        status: "RNR"
       },
       include: {
         assignedTo: true,
@@ -70,22 +68,16 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
     const processedLeads = [];
 
     for (const lead of activeLeads) {
-      const sLower = (lead.status || "").trim().toLowerCase();
+      if (lead.status !== "RNR") continue;
       const cf = (lead.customFields as any) || {};
-
-      // Safeguard against excluded statuses (case-insensitive)
-      if (
-        [
-          "won", "advance recieved", "pay pending", 
-          "junk", "lost", "job enquiry", "just curious", "hold", 
-          "follow up", "followup", "fresh", "pending", "new"
-        ].includes(sLower)
-      ) {
-        continue;
-      }
 
       // If already flagged for auto follow-up and pending action, skip to prevent duplicate tasks
       if (cf.staleConvertingAlert === true || cf.isAutoFollowUp === true) {
+        continue;
+      }
+
+      // Exemption: If a future follow-up date is set by the user, skip
+      if (cf.followUpDate && new Date(cf.followUpDate).getTime() > now) {
         continue;
       }
 
@@ -97,92 +89,9 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
         targetUserId = lead.organization?.users?.[0]?.id || null;
       }
 
-      // --- CASE 1: SITE VISIT SCHEDULES / RESCHEDULED ---
-      if (lead.status === "Site visit Schedules" || lead.status === "Site visit Recheduled") {
-        const svDateStr = cf.siteVisit?.date;
-        if (!svDateStr || cf.siteVisit?.type === "Done") {
-          continue; // No scheduled date or visit already done
-        }
-
-        // Parse the scheduled site visit date - only switch to follow-up AFTER the site visit day passes
-        const svDayEnd = new Date(`${svDateStr}T23:59:59.999`).getTime();
-        if (now <= svDayEnd) {
-          // Site visit is today or in 1, 2, 3 weeks. MUST NEVER SWITCH TO FOLLOW-UP!
-          continue;
-        }
-
-        // Site visit day has passed without being marked Done or rescheduled
-        const oldStatus = lead.status;
-        const updatedCustomFields = {
-          ...cf,
-          isAutoFollowUp: true,
-          followUpDate: new Date().toISOString(),
-          stalePreviousStatus: oldStatus,
-          staleConvertingAlert: true,
-          staleConvertingTriggeredAt: new Date().toISOString(),
-          staleFollowUpReason: `Site visit scheduled for ${svDateStr} passed.`
-        };
-
-        const updatedLead = await prisma.lead.update({
-          where: { id: lead.id },
-          data: {
-            customFields: updatedCustomFields
-          }
-        });
-
-        if (targetUserId) {
-          const existingTask = await prisma.task.findFirst({
-            where: {
-              leadId: lead.id,
-              isCompleted: false
-            }
-          });
-
-          if (!existingTask) {
-            await prisma.task.create({
-              data: {
-                title: `Follow-up: ${lead.name} - Site Visit (${svDateStr}) Passed`,
-                dueDate: new Date(Date.now() + 60 * 60 * 1000),
-                leadId: lead.id,
-                userId: targetUserId,
-                isCompleted: false
-              }
-            });
-          }
-        }
-
-        await prisma.note.create({
-          data: {
-            content: `[SYSTEM: Automated Follow-up Triggered]\nSite visit scheduled for ${svDateStr} has passed without being marked completed. Flagged for follow-up and follow-up task created.`,
-            leadId: lead.id,
-            userId: targetUserId || lead.organizationId
-          }
-        });
-
-        processedLeads.push(updatedLead);
-        continue;
-      }
-
-      // --- CASE 2: ALL ACTIVE CONVERTING STATUSES (Contacted, RNR, interested, Quotation shared, Whatsapp Chat, etc.) ---
-      // Exemption A: If a future follow-up date is set by the user, skip
-      if (cf.followUpDate && new Date(cf.followUpDate).getTime() > now) {
-        continue;
-      }
-
-      // Exemption B: If a future site visit is scheduled, skip
-      if (cf.siteVisit && (cf.siteVisit.type === "Scheduled" || cf.siteVisit.type === "Rescheduled") && cf.siteVisit.date) {
-        const svDayEnd = new Date(`${cf.siteVisit.date}T23:59:59.999`).getTime();
-        if (now <= svDayEnd) {
-          continue;
-        }
-      }
-
-      // Determine when the active status was last touched or changed
+      // Determine when RNR was last touched or changed
       const possibleTimestamps: number[] = [new Date(lead.createdAt).getTime()];
       if (cf.statusChangedAt) possibleTimestamps.push(new Date(cf.statusChangedAt).getTime());
-      if (cf.quotation?.timestamp) possibleTimestamps.push(new Date(cf.quotation.timestamp).getTime());
-      if (cf.siteVisit?.timestamp) possibleTimestamps.push(new Date(cf.siteVisit.timestamp).getTime());
-      if (cf.siteVisit?.verifiedAt) possibleTimestamps.push(new Date(cf.siteVisit.verifiedAt).getTime());
       if (lead.notes?.[0]?.createdAt) possibleTimestamps.push(new Date(lead.notes[0].createdAt).getTime());
       if (lead.calls?.[0]?.createdAt) possibleTimestamps.push(new Date(lead.calls[0].createdAt).getTime());
       const validTimestamps = possibleTimestamps.filter(t => !isNaN(t) && t > 0);
@@ -190,18 +99,16 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
 
       const diffMs = now - statusTimestamp;
 
-      // Switch to follow up only after 24 hours of remaining in this status
+      // Flag for follow-up only after 24 hours of remaining in RNR
       if (diffMs >= TWENTY_FOUR_HOURS_MS) {
-        const oldStatus = lead.status;
-
         const updatedCustomFields = {
           ...cf,
           isAutoFollowUp: true,
           followUpDate: new Date().toISOString(),
-          stalePreviousStatus: oldStatus,
+          stalePreviousStatus: "RNR",
           staleConvertingAlert: true,
           staleConvertingTriggeredAt: new Date().toISOString(),
-          staleFollowUpReason: `Lead remained in '${oldStatus}' for >24 hours.`
+          staleFollowUpReason: "Follow-up"
         };
 
         const updatedLead = await prisma.lead.update({
@@ -222,7 +129,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
           if (!existingTask) {
             await prisma.task.create({
               data: {
-                title: `Follow-up: ${lead.name} - ${oldStatus} > 24h`,
+                title: `Follow-up: ${lead.name} - RNR > 24h`,
                 dueDate: new Date(Date.now() + 60 * 60 * 1000),
                 leadId: lead.id,
                 userId: targetUserId,
@@ -234,7 +141,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
 
         await prisma.note.create({
           data: {
-            content: `[SYSTEM: Automated 24h Follow-up Triggered]\nLead remained in "${oldStatus}" for >24 hours without action. Flagged for follow-up and follow-up task created.`,
+            content: `[SYSTEM: Automated 24h Follow-up Triggered]\nLead remained in "RNR" for >24 hours without action. Flagged for follow-up and follow-up task created.`,
             leadId: lead.id,
             userId: targetUserId || lead.organizationId
           }
@@ -245,7 +152,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
             await sendPushNotification(
               lead.assignedTo.fcmToken,
               "Follow-up Required ⚠️",
-              `Lead ${lead.name} remained in "${oldStatus}" for >24h. Follow-up required!`
+              `Lead ${lead.name} remained in "RNR" for >24h. Follow-up required!`
             );
           } catch (e) {
             console.error("Error sending push notification for stale lead:", e);
@@ -254,7 +161,7 @@ export async function checkAndProcessStaleConvertingLeads(organizationId?: strin
 
         processedLeads.push({
           ...updatedLead,
-          stalePreviousStatus: oldStatus
+          stalePreviousStatus: "RNR"
         });
       }
     }
@@ -685,11 +592,12 @@ export async function getWorkflowViolationLeadIds(organizationId: string, assign
       }
     }
 
-    // 3. Stale Converting Stage Leads (24h timeout)
+    // 3. Stale Converting Stage Leads (24h timeout) - strictly RNR
     const staleLeads = await prisma.lead.findMany({
       where: {
         organizationId,
         ...assignedFilter,
+        status: "RNR",
         OR: [
           { customFields: { path: ['staleConvertingAlert'], equals: true } },
           { customFields: { path: ['isAutoFollowUp'], equals: true } }
@@ -840,11 +748,12 @@ export async function getActionRequiredLeads() {
     }
   }
 
-  // 3. Stale Converting Stage Leads (>24h without converting, automatically moved to follow up)
+  // 3. Stale Converting Stage Leads (>24h without converting, strictly RNR)
   const staleLeads = await prisma.lead.findMany({
     where: {
       organizationId: user.organizationId,
       assignedToId: user.id,
+      status: "RNR",
       OR: [
         { customFields: { path: ['staleConvertingAlert'], equals: true } },
         { customFields: { path: ['isAutoFollowUp'], equals: true } }
@@ -856,7 +765,7 @@ export async function getActionRequiredLeads() {
     const cf = (lead.customFields as any) || {};
     alerts.push({
       type: "STALE_CONVERTING_24H",
-      message: `24h Timeout Alert: ${lead.name} remained in "${lead.status || cf.stalePreviousStatus || 'Contacted'}" for >24 hours! Auto follow-up flagged; task created.`,
+      message: `24h Timeout Alert: ${lead.name} remained in "RNR" for >24 hours! Auto follow-up flagged; task created.`,
       lead
     });
   }

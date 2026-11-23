@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { MessageCircle, Send, CheckCheck, Clock, User, ArrowDownLeft, ArrowUpRight, ShieldCheck, Sparkles, Smartphone, RefreshCw } from "lucide-react";
+import { MessageCircle, Send, CheckCheck, Clock, User, ArrowDownLeft, ArrowUpRight, ShieldCheck, Sparkles, Smartphone, RefreshCw, FileText, Image as ImageIcon, Mic, Play } from "lucide-react";
 import { formatDeterministicDateTime } from "@/lib/dateUtils";
 
 interface WhatsAppMessage {
@@ -34,6 +34,8 @@ export default function WhatsAppConversationThread({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isUserScrolledUpRef = useRef(false);
+  const isFirstLoadRef = useRef(true);
 
   const [waPerms, setWaPerms] = useState<{ accessibilityEnabled: boolean; notificationEnabled: boolean } | null>(null);
 
@@ -107,7 +109,15 @@ export default function WhatsAppConversationThread({
     }
   }, [leadId, leadName, phone]);
 
-  // Live polling every 3 seconds to catch messages sent on WhatsApp app or web
+  const handleScroll = () => {
+    if (!scrollContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    // If user is within 70px of the bottom, consider them at the bottom
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 70;
+    isUserScrolledUpRef.current = !isAtBottom;
+  };
+
+  // Live polling every 4 seconds to catch messages sent on WhatsApp app or web
   const fetchLatestMessages = async () => {
     if (!leadId) return;
     try {
@@ -115,7 +125,16 @@ export default function WhatsAppConversationThread({
       if (res.ok) {
         const data = await res.json();
         if (data.messages && Array.isArray(data.messages)) {
-          setChatMessages(data.messages);
+          setChatMessages((prev) => {
+            // Deduplicate: avoid re-triggering state & re-renders if messages haven't changed
+            if (
+              prev.length === data.messages.length &&
+              (prev.length === 0 || prev[prev.length - 1]?.id === data.messages[data.messages.length - 1]?.id)
+            ) {
+              return prev; // Return same reference so useEffect([chatMessages]) won't fire
+            }
+            return data.messages;
+          });
         }
       }
     } catch (e) {
@@ -133,10 +152,15 @@ export default function WhatsAppConversationThread({
     return () => clearInterval(interval);
   }, [leadId]);
 
-  // Auto-scroll to bottom when chat messages change
+  // Auto-scroll to bottom ONLY if initial load or user is not scrolled up reading past history
   useEffect(() => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+      if (isFirstLoadRef.current || !isUserScrolledUpRef.current) {
+        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+        if (isFirstLoadRef.current && chatMessages.length > 0) {
+          isFirstLoadRef.current = false;
+        }
+      }
     }
   }, [chatMessages]);
 
@@ -157,6 +181,7 @@ export default function WhatsAppConversationThread({
   const handleSendDraft = async (textToSend: string) => {
     if (!textToSend.trim() || !formattedPhone) return;
 
+    isUserScrolledUpRef.current = false;
     setSending(true);
     const tempId = "temp-" + Date.now();
     const optimisticMsg: WhatsAppMessage = {
@@ -292,6 +317,7 @@ export default function WhatsAppConversationThread({
       {/* Messages Canvas */}
       <div 
         ref={scrollContainerRef}
+        onScroll={handleScroll}
         className="p-3.5 sm:p-4 space-y-3 overflow-y-auto min-h-[140px] max-h-[380px] bg-[#efeae2]/50"
         style={{
           backgroundImage: "radial-gradient(#0000000d 1px, transparent 1px)",
@@ -337,9 +363,60 @@ export default function WhatsAppConversationThread({
                   </div>
 
                   {/* Message Body */}
-                  <p className="whitespace-pre-wrap leading-relaxed select-text font-normal">
-                    {msg.message}
-                  </p>
+                  {msg.message.startsWith("📄 Document:") ? (
+                    <div className="flex items-center gap-2.5 p-2.5 bg-white/95 border border-slate-200/90 rounded-xl my-1 shadow-2xs">
+                      <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center shrink-0 text-red-600">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[9px] uppercase font-bold text-red-600 tracking-wider">Document / PDF</div>
+                        <div className="text-xs font-semibold text-slate-800 break-all">{msg.message.replace("📄 Document:", "").trim()}</div>
+                      </div>
+                    </div>
+                  ) : msg.message.startsWith("📷 Photo") ? (
+                    <div className="rounded-xl overflow-hidden border border-gray-200/90 bg-white/95 my-1 shadow-2xs min-w-[220px] max-w-[280px]">
+                      {/* Visual Photo Card Representation */}
+                      <div className="h-28 bg-gradient-to-br from-slate-100 via-indigo-50/60 to-slate-200 flex flex-col items-center justify-center p-3 relative select-none">
+                        <div className="w-10 h-10 rounded-full bg-white shadow-xs flex items-center justify-center text-indigo-600 mb-1.5">
+                          <ImageIcon className="w-5 h-5" />
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-700 tracking-tight">Photo / Floor Plan</span>
+                        <span className="text-[9px] text-slate-400">Image attachment</span>
+                      </div>
+                      {msg.message.replace(/^📷 Photo:?\s*/, "").replace("Photo / Drawing Attachment", "").replace("Photo Attachment", "").trim() && (
+                        <div className="p-2 text-xs text-slate-800 bg-white border-t border-slate-100 font-medium">
+                          {msg.message.replace(/^📷 Photo:?\s*/, "").trim()}
+                        </div>
+                      )}
+                    </div>
+                  ) : msg.message.startsWith("🎙️ Voice Note") ? (
+                    <div className="flex items-center gap-3 p-2.5 bg-white/95 border border-emerald-200/90 rounded-2xl my-1 shadow-2xs min-w-[220px]">
+                      {/* WhatsApp-Style Circular Play Button */}
+                      <div className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0 select-none">
+                        <Play className="w-4 h-4 fill-white ml-0.5" />
+                      </div>
+                      {/* Audio Soundwave Bars Representation */}
+                      <div className="flex-1 flex flex-col justify-center select-none">
+                        <div className="flex items-center gap-[2px] h-5 mb-1">
+                          {[40, 75, 30, 95, 60, 100, 45, 80, 50, 90, 35, 75, 60, 85, 40, 70, 90, 50].map((h, i) => (
+                            <div 
+                              key={i} 
+                              className="w-[3px] bg-emerald-500/80 rounded-full" 
+                              style={{ height: `${h}%` }}
+                            />
+                          ))}
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium">
+                          <span className="flex items-center gap-1"><Mic className="w-3 h-3 text-emerald-600" /> Voice Note</span>
+                          <span className="font-semibold text-slate-700">{msg.message.match(/\d+:\d{2}/)?.[0] || "0:23"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="whitespace-pre-wrap leading-relaxed select-text font-normal">
+                      {msg.message}
+                    </p>
+                  )}
 
                   {/* Timestamp & Status */}
                   <div className="flex items-center justify-end gap-1 text-[9px] text-gray-400 mt-1">

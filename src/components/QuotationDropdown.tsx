@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { updateQuotationDetails } from "@/app/actions/leadActions";
 import { recordQuotationFollowUpDone } from "@/app/actions/alertActions";
-import { FileText, Save, Link as LinkIcon, FileCheck, Layers, History } from "lucide-react";
+import { FileText, Save, Upload, FileCheck, Layers, History } from "lucide-react";
+import DirectFileUploader, { normalizeDocumentHref } from "./DirectFileUploader";
 
 export default function QuotationDropdown({ lead }: { lead: any }) {
   const currentQuotation = (lead.customFields as any)?.quotation || {};
@@ -50,6 +51,7 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
     currentQuotation.status === "Quotation without site visit"
   );
   const [docLink, setDocLink] = useState(currentQuotation.docLink || "");
+  const [docName, setDocName] = useState(currentQuotation.docName || "");
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -91,13 +93,13 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
-    // Validation: Require floor plan drive link for Quotation Requested, or document link for Estimate (Sent/Approved/No Visit), Revised, Final
+    // Validation: Require floor plan file for Quotation Requested, or document upload for Estimate (Sent/Approved/No Visit), Revised, Final
     if (isDocMandatory && !docLink.trim()) {
       setHasError(true);
       if (isFloorPlanMandatory) {
-        alert("The Google Drive link for the Floor Plan is mandatory when Quotation is requested. Please paste the floor plan drive link to proceed.");
+        alert("Please upload the Floor Plan file before advancing to Quotation Requested.");
       } else {
-        alert(`Google Drive / Document link is mandatory when advancing to "${stage}". Please paste the link to proceed.`);
+        alert(`Please upload the Quotation document before advancing to "${stage}".`);
       }
       return;
     }
@@ -108,6 +110,7 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
       const payload: any = {
         stage,
         docLink: docLink.trim(),
+        docName: docName.trim() || undefined,
         status: isWithoutVisit ? "Estimate without site visit" : stage
       };
       if (stage === "Estimate") {
@@ -223,12 +226,12 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
               </div>
               {h.docLink && (
                 <a 
-                  href={h.docLink.startsWith("http") ? h.docLink : `https://${h.docLink}`}
+                  href={normalizeDocumentHref(h.docLink)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[10px] text-blue-500 hover:underline truncate block"
                 >
-                  {h.docLink}
+                  {h.docName || h.docLink}
                 </a>
               )}
             </div>
@@ -312,9 +315,9 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
           )}
 
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1 flex items-center justify-between">
+            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center justify-between">
               <span className="flex items-center">
-                <LinkIcon className="w-3 h-3 mr-1" /> {stage === "Quotation Requested" ? "Floor Plan Drive Link" : "Google Drive / Document Link"}
+                <Upload className="w-3 h-3 mr-1" /> {stage === "Quotation Requested" ? "Floor Plan File" : "Quotation / Document File"}
                 {isDocMandatory ? (
                   <span className="text-red-600 font-bold ml-1.5 text-[10px] bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
                     * Mandatory
@@ -325,33 +328,33 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
                   </span>
                 )}
               </span>
-              {docLink && (
-                <a 
-                  href={docLink.startsWith("http") ? docLink : `https://${docLink}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-[10px] text-blue-600 hover:underline flex items-center font-normal"
-                >
-                  Open Link ↗
-                </a>
-              )}
             </label>
-            <textarea
+            <DirectFileUploader
+              leadId={lead.id}
+              category={stage === "Quotation Requested" ? "floor-plan" : "quotation"}
               value={docLink}
-              onChange={e => {
-                setDocLink(e.target.value);
+              fileName={docName}
+              hasError={hasError}
+              mandatory={isDocMandatory}
+              accentColor="blue"
+              helperText={
+                stage === "Quotation Requested"
+                  ? "Upload Floor Plan (PDF / Photo / CAD) — auto-compressed cleanly"
+                  : "Upload Quotation PDF or Photo — auto-compressed to stay under limit"
+              }
+              onUploaded={(res) => {
+                setDocLink(res.url);
+                setDocName(res.fileName);
                 if (hasError) setHasError(false);
               }}
-              placeholder={stage === "Quotation Requested" ? "Paste Google Drive link for the Floor Plan (Mandatory)..." : "Paste Google Drive, Zoho, or PDF link here..."}
-              className={`w-full px-2 py-1.5 text-sm border rounded-md focus:outline-none min-h-[60px] ${
-                hasError 
-                  ? "border-red-400 focus:border-red-500 bg-red-50/20" 
-                  : "border-gray-200 focus:border-blue-500 bg-white"
-              }`}
+              onClear={() => {
+                setDocLink("");
+                setDocName("");
+              }}
             />
             {hasError && (
               <p className="text-[11px] text-red-600 mt-1 font-semibold flex items-center">
-                ⚠️ {stage === "Quotation Requested" ? "Floor plan Google Drive link is required when Quotation is requested." : "A Google Drive or Document link is required for this phase."}
+                ⚠️ {stage === "Quotation Requested" ? "Floor plan file upload is required when Quotation is requested." : "A document file upload is required for this phase."}
               </p>
             )}
           </div>

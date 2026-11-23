@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { MapPin, Phone, Calendar, Clock, KeyRound, CheckCircle2, User, ExternalLink, Check, RefreshCw, ClipboardCheck, Home, Ruler, Camera } from "lucide-react";
 import { updateSiteVisitDetails } from "@/app/actions/leadActions";
 import SiteVisitChecklistModal from "./SiteVisitChecklistModal";
+import SiteVisitPhotoGallery from "./SiteVisitPhotoGallery";
 
 export default function SiteVisitExecutiveCard({ 
   lead, 
@@ -172,9 +173,18 @@ export default function SiteVisitExecutiveCard({
                     </div>
                   )}
                   {sv.photos && sv.photos.length > 0 && (
-                    <div className="flex items-center">
-                      <Camera className="w-3 h-3 mr-1 text-emerald-600 shrink-0" />
-                      <span>{sv.photos.length} Photos Captured</span>
+                    <div className="col-span-2 space-y-1">
+                      <div className="flex items-center text-emerald-800">
+                        <Camera className="w-3 h-3 mr-1 text-emerald-600 shrink-0" />
+                        <span>{sv.photos.length} Photos Captured</span>
+                      </div>
+                      <SiteVisitPhotoGallery
+                        photos={sv.photos}
+                        leadName={lead.name}
+                        leadId={lead.id}
+                        date={sv.date || sv.verifiedAt}
+                        compact={true}
+                      />
                     </div>
                   )}
                   {sv.verifiedOtp && (
@@ -238,9 +248,18 @@ export default function SiteVisitExecutiveCard({
                   </div>
                 )}
                 {sv.photos && sv.photos.length > 0 && (
-                  <div className="flex items-center text-emerald-800">
-                    <Camera className="w-3 h-3 mr-1 text-emerald-600 shrink-0" />
-                    <span>{sv.photos.length} Photo{sv.photos.length !== 1 ? "s" : ""}</span>
+                  <div className="col-span-2 space-y-1">
+                    <div className="flex items-center text-emerald-800">
+                      <Camera className="w-3 h-3 mr-1 text-emerald-600 shrink-0" />
+                      <span>{sv.photos.length} Photo{sv.photos.length !== 1 ? "s" : ""} Captured</span>
+                    </div>
+                    <SiteVisitPhotoGallery
+                      photos={sv.photos}
+                      leadName={lead.name}
+                      leadId={lead.id}
+                      date={sv.date || sv.verifiedAt}
+                      compact={true}
+                    />
                   </div>
                 )}
                 {sv.measurements && (

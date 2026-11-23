@@ -7,7 +7,7 @@ import {
   Users, LayoutDashboard, PhoneCall, MapPin, 
   Briefcase, BarChart3, Settings, 
   Search, ChevronLeft, ChevronRight, 
-  PanelLeftClose, PanelLeftOpen, Sparkles, UploadCloud
+  PanelLeftClose, PanelLeftOpen, Sparkles, UploadCloud, MessageCircle
 } from "lucide-react";
 
 interface SidebarProps {
@@ -36,6 +36,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Leads", href: "/leads", icon: Users, hideForVisitor: true },
       { label: "Daily Workdesk", href: "/dashboard", icon: LayoutDashboard },
+      { label: "WhatsApp", href: "/whatsapp", icon: MessageCircle, badge: "Live" },
       { label: "Site Visits", href: "/site-visits", icon: MapPin, adminOnly: true },
       { label: "Site Visits", href: "/site-visits", icon: MapPin, visitorOnly: true },
       { label: "Calls", href: "/calls", icon: PhoneCall, callerOnly: true },
@@ -59,9 +60,10 @@ const NAV_GROUPS: NavGroup[] = [
 export default function Sidebar({ isAdmin = false, userRole = "", orgName = "Stelar CRM" }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [mounted, setMounted] = useState<boolean>(false);
+  const [waUnreadCount, setWaUnreadCount] = useState<number>(0);
   const pathname = usePathname();
 
-  // Load persistence from localStorage
+  // Load persistence from localStorage and listen to WhatsApp unread updates
   useEffect(() => {
     setMounted(true);
     try {
@@ -72,6 +74,14 @@ export default function Sidebar({ isAdmin = false, userRole = "", orgName = "Ste
     } catch (e) {
       // Ignore localStorage errors
     }
+
+    const handleUnreadUpdate = (e: any) => {
+      if (typeof e.detail?.count === "number") {
+        setWaUnreadCount(e.detail.count);
+      }
+    };
+    window.addEventListener("crm_whatsapp_unread_changed", handleUnreadUpdate);
+    return () => window.removeEventListener("crm_whatsapp_unread_changed", handleUnreadUpdate);
   }, []);
 
   const toggleCollapse = () => {
@@ -187,12 +197,14 @@ export default function Sidebar({ isAdmin = false, userRole = "", orgName = "Ste
                     ? pathname === "/dashboard" 
                     : pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
 
+                  const isWhatsAppItem = item.href === "/whatsapp";
+
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
-                      title={isCollapsed ? item.label : undefined}
-                      className={`flex items-center rounded-xl transition-all ${
+                      title={isCollapsed ? (isWhatsAppItem && waUnreadCount > 0 ? `WhatsApp (${waUnreadCount} unread)` : item.label) : undefined}
+                      className={`relative flex items-center rounded-xl transition-all ${
                         isCollapsed 
                           ? "justify-center p-2.5" 
                           : "px-3 py-2 space-x-3 text-xs"
@@ -202,15 +214,34 @@ export default function Sidebar({ isAdmin = false, userRole = "", orgName = "Ste
                           : "text-gray-600 hover:text-gray-900 hover:bg-gray-100/70 font-medium"
                       }`}
                     >
-                      <Icon 
-                        className={`shrink-0 transition-transform ${
-                          isCollapsed ? "w-5 h-5" : "w-4 h-4"
-                        } ${isActive ? "text-[#4f46e5]" : "text-gray-400 group-hover:text-gray-600"}`} 
-                      />
+                      <div className="relative shrink-0">
+                        <Icon 
+                          className={`transition-transform ${
+                            isCollapsed ? "w-5 h-5" : "w-4 h-4"
+                          } ${
+                            isWhatsAppItem && waUnreadCount > 0 
+                              ? "text-emerald-600" 
+                              : isActive ? "text-[#4f46e5]" : "text-gray-400 group-hover:text-gray-600"
+                          }`} 
+                        />
+                        {isCollapsed && isWhatsAppItem && waUnreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white animate-pulse" />
+                        )}
+                      </div>
                       {!isCollapsed && (
                         <span className="truncate flex-1">{item.label}</span>
                       )}
-                      {!isCollapsed && isActive && (
+                      {!isCollapsed && isWhatsAppItem && waUnreadCount > 0 && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-emerald-600 text-white rounded-full leading-none shadow-xs animate-pulse">
+                          {waUnreadCount}
+                        </span>
+                      )}
+                      {!isCollapsed && isWhatsAppItem && waUnreadCount === 0 && (
+                        <span className="text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded-md leading-none">
+                          Live
+                        </span>
+                      )}
+                      {!isCollapsed && isActive && !isWhatsAppItem && (
                         <span className="w-1.5 h-1.5 rounded-full bg-[#4f46e5] shrink-0" />
                       )}
                     </Link>

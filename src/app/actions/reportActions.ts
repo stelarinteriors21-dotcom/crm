@@ -103,7 +103,13 @@ export async function getTeamTasksData() {
           city: c.lead?.city || cf.city || "—",
           budget: c.lead?.budget || cf["what_is_your_approximate_budget_range?"] || cf.approximateBudget || "—",
           typeOfSpace: cf["what_type_of_space_are_you_looking_to_design?"] || cf.typeOfSpace || "—",
-          followUpReason: cf.lastFollowUpNote || cf.staleFollowUpReason || (c.lead?.status === "follow up" ? "Follow-up" : "—"),
+          followUpReason: (() => {
+            const raw = cf.lastFollowUpNote || (c.lead?.status === "RNR" ? cf.staleFollowUpReason : "") || (c.lead?.status === "follow up" ? "Follow-up" : "—");
+            if (/lead remained in/i.test(raw) || /site visit scheduled.*passed/i.test(raw) || raw.toLowerCase() === "follow-up" || raw.toLowerCase() === "follow up") {
+              return "Follow-up";
+            }
+            return raw;
+          })(),
           followUpDate: cf.followUpDate ? new Date(cf.followUpDate).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "—",
           siteVisit: cf.siteVisit?.date ? `${cf.siteVisit.date} ${cf.siteVisit.time || ""} [${cf.siteVisit.type || "Scheduled"}]` : "—",
           duration: c.duration,

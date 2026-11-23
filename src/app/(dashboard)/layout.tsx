@@ -28,6 +28,7 @@ const DailySiteVisitsModal = nextDynamic(() => import("@/components/DailySiteVis
 const SmartCallManager = nextDynamic(() => import("@/components/SmartCallManager"), { ssr: false });
 const AutoCallLogWatcher = nextDynamic(() => import("@/components/AutoCallLogWatcher"), { ssr: false });
 const GlobalCommandPalette = nextDynamic(() => import("@/components/GlobalCommandPalette"), { ssr: false });
+const WhatsAppNotificationWatcher = nextDynamic(() => import("@/components/WhatsAppNotificationWatcher"), { ssr: false });
 
 export default async function DashboardLayout({
   children,
@@ -93,6 +94,7 @@ export default async function DashboardLayout({
       <AutoCallLogWatcher userId={user?.id} />
       <GlobalCommandPalette isAdmin={isAdmin} userRole={user?.role} />
       <GlobalSoundWatcher initialMuted={globalSoundMuted} />
+      <WhatsAppNotificationWatcher />
       <div className="flex h-screen bg-[#f8fafc] text-[#333333] font-sans flex-col md:flex-row overflow-hidden">
 
       {/* Modern Collapsible Desktop Sidebar */}

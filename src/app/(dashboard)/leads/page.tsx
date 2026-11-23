@@ -24,6 +24,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
   const query = typeof searchParams.query === "string" ? searchParams.query : undefined;
   const searchField = typeof searchParams.searchField === "string" ? searchParams.searchField : undefined;
   const status = searchParams.status as string | string[] | undefined;
+  const pastStatus = searchParams.pastStatus as string | string[] | undefined;
   const city = searchParams.city as string | string[] | undefined;
   const source = typeof searchParams.source === "string" ? searchParams.source : undefined;
   const assigned = typeof searchParams.assigned === "string" ? searchParams.assigned : undefined;
@@ -35,7 +36,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
   const autoFollowUp = searchParams.autoFollowUp === "true" || searchParams.autoFollowUp === "1";
   const violations = searchParams.violations === "true" || searchParams.violations === "1";
 
-  const dbLeads = await getLeads(query, searchField, status, source, assigned, active, startDate, endDate, tag, city, stage, autoFollowUp, violations);
+  const dbLeads = await getLeads(query, searchField, status, source, assigned, active, startDate, endDate, tag, city, stage, autoFollowUp, violations, pastStatus);
   const settings = await getOrganizationSettings();
   const rawCities = await getUniqueCities();
   const uniqueCities = (rawCities || []).filter((c): c is string => typeof c === 'string' && c.length > 0);
