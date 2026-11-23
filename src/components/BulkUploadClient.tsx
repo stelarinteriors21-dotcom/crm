@@ -844,8 +844,10 @@ Deepak Menon,8590601234,deepak@example.com,Kollam,₹1l-₹5l,Fresh,Full home,Re
                       <option value="Contacted">Contacted</option>
                       <option value="follow up">follow up</option>
                       <option value="RNR">RNR</option>
-                      <option value="Site visit Schedules">Site visit Schedules</option>
-                      <option value="Quotation Requested">Quotation Requested</option>
+                      <option value="Site visit Scheduled">Site visit Scheduled</option>
+                      <option value="Site visit Rescheduled">Site visit Rescheduled</option>
+                      <option value="Site visit done">Site visit done</option>
+                      <option value="Quotation shared">Quotation shared</option>
                     </select>
                   </div>
 

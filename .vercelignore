@@ -1,0 +1,12 @@
+.git
+.next
+node_modules
+local-demo-pg
+public/uploads
+android
+backups
+*.zip
+*.log
+*.exe
+scripts/
+stelar-chrome-extension/

@@ -124,7 +124,7 @@ export async function GET(request: Request) {
       if (cf.siteVisit && cf.siteVisit.type === "Done" && cf.siteVisit.verifiedAt) {
         const verifiedTime = new Date(cf.siteVisit.verifiedAt).getTime();
         if (nowTime2 - verifiedTime > 48 * 60 * 60 * 1000) {
-          if (!["Quotation shared", "Estimated Quotation", "final Quotation", "Quotation Requested", "Revised Quotation", "Negotiation", "Won"].includes(lead.status)) {
+          if (!["Quotation shared", "Estimated Quotation", "final Quotation", "Revised Quotation", "Negotiation", "Won"].includes(lead.status)) {
             needsEscalation = true;
             reason = "Post-Site Visit Silence (> 48h with no Quotation)";
           }

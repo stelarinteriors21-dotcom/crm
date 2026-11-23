@@ -257,7 +257,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
       const isInactive48h = Boolean(cf.inactivity48hAlert);
       const isRevisionActive = Boolean(cf.revisionAlertActive);
       const isQuoteFollowUp = Boolean(cf.quotationFollowUpActive);
-      const isSiteVisitDue = cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt && (Date.now() - new Date(cf.siteVisit.verifiedAt).getTime() > 24 * 60 * 60 * 1000) && !["Quotation shared", "Estimated Quotation", "final Quotation", "Quotation Requested", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(l.status || "");
+      const isSiteVisitDue = cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt && (Date.now() - new Date(cf.siteVisit.verifiedAt).getTime() > 24 * 60 * 60 * 1000) && !["Quotation shared", "Estimated Quotation", "final Quotation", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(l.status || "");
       const hasViolation = isInactive48h || isRevisionActive || isQuoteFollowUp || isSiteVisitDue;
 
       let reason = "";
@@ -307,7 +307,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
         const isInactive48h = Boolean(cf.inactivity48hAlert);
         const isRevisionActive = Boolean(cf.revisionAlertActive);
         const isQuoteFollowUp = Boolean(cf.quotationFollowUpActive);
-        const isSiteVisitDue = cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt && (Date.now() - new Date(cf.siteVisit.verifiedAt).getTime() > 24 * 60 * 60 * 1000) && !["Quotation shared", "Estimated Quotation", "final Quotation", "Quotation Requested", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(l.status || "");
+        const isSiteVisitDue = cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt && (Date.now() - new Date(cf.siteVisit.verifiedAt).getTime() > 24 * 60 * 60 * 1000) && !["Quotation shared", "Estimated Quotation", "final Quotation", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(l.status || "");
         const hasViolation = isInactive48h || isRevisionActive || isQuoteFollowUp || isSiteVisitDue;
 
         let reason = "";
@@ -586,7 +586,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                       const isInactive48h = Boolean(cf.inactivity48hAlert);
                       const isRevisionActive = Boolean(cf.revisionAlertActive);
                       const isQuoteFollowUp = Boolean(cf.quotationFollowUpActive);
-                      const isSiteVisitDue = cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt && (Date.now() - new Date(cf.siteVisit.verifiedAt).getTime() > 24 * 60 * 60 * 1000) && !["Quotation shared", "Estimated Quotation", "final Quotation", "Quotation Requested", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(lead.status || "");
+                      const isSiteVisitDue = cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt && (Date.now() - new Date(cf.siteVisit.verifiedAt).getTime() > 24 * 60 * 60 * 1000) && !["Quotation shared", "Estimated Quotation", "final Quotation", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(lead.status || "");
                       const hasViolation = isInactive48h || isSiteVisitDue || isRevisionActive || isQuoteFollowUp;
                       
                       let violationTooltip = "";
@@ -777,7 +777,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                     const isInactive48h = Boolean(cf.inactivity48hAlert);
                     const isRevisionActive = Boolean(cf.revisionAlertActive);
                     const isQuoteFollowUp = Boolean(cf.quotationFollowUpActive);
-                    const isSiteVisitDue = cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt && (Date.now() - new Date(cf.siteVisit.verifiedAt).getTime() > 24 * 60 * 60 * 1000) && !["Quotation shared", "Estimated Quotation", "final Quotation", "Quotation Requested", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(lead.status || "");
+                    const isSiteVisitDue = cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt && (Date.now() - new Date(cf.siteVisit.verifiedAt).getTime() > 24 * 60 * 60 * 1000) && !["Quotation shared", "Estimated Quotation", "final Quotation", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(lead.status || "");
 
                     const hasViolation = isInactive48h || isSiteVisitDue || isRevisionActive || isQuoteFollowUp;
 

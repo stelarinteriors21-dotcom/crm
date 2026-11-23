@@ -94,7 +94,7 @@ export default function DashboardClient({ pendingLeads, allLeads, hotLeads = [],
       const cf = lead.customFields || {};
       const isFollowUp = sLower === 'follow up' || sLower === 'followup';
       const isConvertedOrJunk = ['won', 'advance recieved', 'pay pending', 'junk', 'lost', 'job enquiry', 'just curious', 'hold'].includes(sLower);
-      const isSiteVisit = sLower === 'site visit schedules' || sLower === 'site visit recheduled';
+      const isSiteVisit = sLower === 'site visit scheduled' || sLower === 'site visit rescheduled' || sLower === 'site visit schedules' || sLower === 'site visit recheduled';
       const isFresh = sLower === 'fresh' || sLower === 'pending' || sLower === 'new';
 
       // Determine when this lead entered its current status

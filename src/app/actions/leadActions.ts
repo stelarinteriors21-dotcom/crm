@@ -1146,10 +1146,10 @@ export async function updateSiteVisitDetails(leadId: string, siteVisitData: any)
     let newStatus = lead.status;
     let scoreSiteVisit = lead.scoreSiteVisit;
     if (siteVisitData.type === "Scheduled" || siteVisitData.keepScheduledStatus) {
-      newStatus = "Site visit Schedules";
+      newStatus = "Site visit Scheduled";
       scoreSiteVisit = "Scheduled";
     } else if (siteVisitData.type === "Rescheduled") {
-      newStatus = "Site visit Recheduled";
+      newStatus = "Site visit Rescheduled";
       scoreSiteVisit = "Rescheduled";
     } else if (siteVisitData.type === "Done") {
       newStatus = "Site visit done";
@@ -1170,7 +1170,12 @@ export async function updateSiteVisitDetails(leadId: string, siteVisitData: any)
   delete (updatedCustomFields as any).inactivity48hTriggeredAt;
   delete (updatedCustomFields as any).last48hInactivityEmailedAt;
     } else if (!siteVisitData.type) {
-      if (lead.status === "Site visit Schedules" || lead.status === "Site visit Recheduled") {
+      if (
+        lead.status === "Site visit Scheduled" || 
+        lead.status === "Site visit Schedules" || 
+        lead.status === "Site visit Rescheduled" || 
+        lead.status === "Site visit Recheduled"
+      ) {
         newStatus = "follow up";
       }
       scoreSiteVisit = "None";
@@ -1446,10 +1451,7 @@ export async function updateQuotationDetails(leadId: string, quotationData: any)
       stage === "Estimate without site visit" ||
       stage === "Quotation without site visit";
 
-    if (stage === "Quotation Requested") {
-      newStatus = "Quotation Requested";
-      scoreQuotation = "None";
-    } else if (stage === "Estimate") {
+    if (stage === "Estimate" || stage === "Quotation Requested") {
       scoreQuotation = "Estimate";
       if (isWithoutVisit) {
         newStatus = "Estimate without site visit";
@@ -1470,7 +1472,7 @@ export async function updateQuotationDetails(leadId: string, quotationData: any)
       newStatus = "final Quotation";
     } else if (stage === "Not Started" || stage === "None") {
       scoreQuotation = "None";
-      if (["Quotation Requested", "Estimated Quotation", "Quotation shared", "Estimate without site visit", "Quotation without site visit", "Revised Quotation", "final Quotation"].includes(lead.status)) {
+      if (["Estimated Quotation", "Quotation shared", "Estimate without site visit", "Quotation without site visit", "Revised Quotation", "final Quotation"].includes(lead.status)) {
         newStatus = "follow up";
       }
     }
@@ -1612,8 +1614,6 @@ export async function updateQuotationDetails(leadId: string, quotationData: any)
         const isDrive = docUrl.includes("drive.google.com") || docUrl.includes("share.google");
         const docLabel = quotationData.docName
           ? `${stage || "Quotation"} - ${quotationData.docName}`
-          : stage === "Quotation Requested"
-          ? (isDrive ? "Floor Plan - Google Drive" : "Floor Plan (Uploaded File)")
           : `Quotation (${stage || "Estimate"}) - ${isDrive ? "Google Drive" : "Uploaded File"}`;
 
         const existingAttachment = await prisma.fileAttachment.findFirst({

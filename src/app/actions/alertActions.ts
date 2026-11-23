@@ -602,7 +602,7 @@ export async function getWorkflowViolationLeadIds(organizationId: string, assign
         if (Date.now() - verifiedTime > 24 * 60 * 60 * 1000) {
           if (![
             "Quotation shared", "Estimated Quotation", "final Quotation", 
-            "Quotation Requested", "Revised Quotation", "Quotation without site visit", 
+            "Revised Quotation", "Quotation without site visit", 
             "Won", "Advance recieved", "Pay Pending"
           ].includes(lead.status)) {
             leadIdSet.add(lead.id);
@@ -762,7 +762,7 @@ export async function getActionRequiredLeads() {
     if (cf?.siteVisit?.type === "Done" && cf.siteVisit.verifiedAt) {
       const verifiedTime = new Date(cf.siteVisit.verifiedAt).getTime();
       if (Date.now() - verifiedTime > 24 * 60 * 60 * 1000) {
-        if (!["Quotation shared", "Estimated Quotation", "final Quotation", "Quotation Requested", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(lead.status)) {
+        if (!["Quotation shared", "Estimated Quotation", "final Quotation", "Revised Quotation", "Quotation without site visit", "Won", "Advance recieved", "Pay Pending"].includes(lead.status)) {
           alerts.push({
             type: "POST_SITE_VISIT",
             message: `Site visit for ${lead.name} was completed over 24 hours ago! Call them and move to Quotation phase.`,

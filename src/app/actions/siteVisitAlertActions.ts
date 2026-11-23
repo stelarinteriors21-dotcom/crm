@@ -259,7 +259,7 @@ export async function rescheduleSiteVisitFromAlert(
   await prisma.lead.update({
     where: { id: leadId },
     data: {
-      status: "Site visit Recheduled",
+      status: "Site visit Rescheduled",
       scoreSiteVisit: "Rescheduled",
       customFields: updatedCustomFields
     }

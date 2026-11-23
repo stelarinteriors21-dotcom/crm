@@ -9,6 +9,8 @@ import { formatDeterministicDateTime } from "@/lib/dateUtils";
 const DISPLAY_NAMES: Record<string, string> = {
   "Advance recieved": "Advance Received",
   "final Quotation": "Final Quotation",
+  "Site visit Scheduled": "Site Visit Scheduled",
+  "Site visit Rescheduled": "Site Visit Rescheduled",
   "Site visit Schedules": "Site Visit Scheduled",
   "Site visit Recheduled": "Site Visit Rescheduled",
   "Site visit done": "Site Visit Done",

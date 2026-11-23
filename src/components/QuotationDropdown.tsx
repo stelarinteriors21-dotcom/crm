@@ -23,7 +23,7 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
       if (["Preparing", "Sent", "Approved"].includes(currentQuotation.status)) return "Estimate";
       if (currentQuotation.status === "Revision Requested") return "Revised";
       if (currentQuotation.status === "Final") return "Final";
-      if (currentQuotation.status === "Quotation Requested") return "Quotation Requested";
+      if (currentQuotation.status === "Quotation Requested") return "Estimate";
       return currentQuotation.status;
     }
     return "Not Started";
@@ -57,11 +57,10 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
   const [showHistory, setShowHistory] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  // Requirement: Hide "Quotation Requested", "Revised", "Final" until site visit is successfully completed
+  // Requirement: Hide "Revised", "Final" until site visit is successfully completed
   const availableStages = isSiteVisitCompleted
     ? [
         "Not Started",
-        "Quotation Requested",
         "Estimate",
         "Revised",
         "Final"
@@ -82,10 +81,7 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
     "Estimate without site visit"
   ];
 
-  const isFloorPlanMandatory = stage === "Quotation Requested";
-
   const isDocMandatory = 
-    isFloorPlanMandatory ||
     (stage === "Estimate" && (subStage === "Sent" || subStage === "Approved" || subStage === "Estimate without site visit" || subStage === "Quotation without site visit" || withoutSiteVisit)) ||
     stage === "Revised" ||
     stage === "Final";
@@ -93,14 +89,10 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
-    // Validation: Require floor plan file for Quotation Requested, or document upload for Estimate (Sent/Approved/No Visit), Revised, Final
+    // Validation: Require document upload for Estimate (Sent/Approved/No Visit), Revised, Final
     if (isDocMandatory && !docLink.trim()) {
       setHasError(true);
-      if (isFloorPlanMandatory) {
-        alert("Please upload the Floor Plan file before advancing to Quotation Requested.");
-      } else {
-        alert(`Please upload the Quotation document before advancing to "${stage}".`);
-      }
+      alert(`Please upload the Quotation document before advancing to "${stage}".`);
       return;
     }
 
@@ -145,9 +137,6 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
     if (stage === "Revised") {
       return "text-purple-600 font-bold";
     }
-    if (stage === "Quotation Requested") {
-      return "text-amber-600 font-bold";
-    }
     return "text-gray-500 font-normal";
   };
 
@@ -160,7 +149,7 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
         <div className="flex items-center space-x-2">
           <FileCheck className={`w-4 h-4 ${
             stage === 'Final' || (stage === 'Estimate' && subStage === 'Approved') ? 'text-green-500' : 
-            stage === 'Estimate' || stage === 'Revised' || stage === 'Quotation Requested' ? 'text-blue-500' : 
+            stage === 'Estimate' || stage === 'Revised' ? 'text-blue-500' : 
             'text-gray-400'
           }`} />
           <span className="text-xs font-semibold text-gray-700">
@@ -262,7 +251,7 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
             </select>
             {!isSiteVisitCompleted && (
               <p className="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-1 font-medium">
-                🔒 Quotation Requested, Revised, and Final options unlock once a Site Visit is marked as Done.
+                🔒 Estimate, Revised, and Final options unlock once a Site Visit is marked as Done.
               </p>
             )}
           </div>
@@ -317,7 +306,7 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
           <div>
             <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center justify-between">
               <span className="flex items-center">
-                <Upload className="w-3 h-3 mr-1" /> {stage === "Quotation Requested" ? "Floor Plan File" : "Quotation / Document File"}
+                <Upload className="w-3 h-3 mr-1" /> Quotation / Document File
                 {isDocMandatory ? (
                   <span className="text-red-600 font-bold ml-1.5 text-[10px] bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
                     * Mandatory
@@ -331,17 +320,13 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
             </label>
             <DirectFileUploader
               leadId={lead.id}
-              category={stage === "Quotation Requested" ? "floor-plan" : "quotation"}
+              category="quotation"
               value={docLink}
               fileName={docName}
               hasError={hasError}
               mandatory={isDocMandatory}
               accentColor="blue"
-              helperText={
-                stage === "Quotation Requested"
-                  ? "Upload Floor Plan (PDF / Photo / CAD) — auto-compressed cleanly"
-                  : "Upload Quotation PDF or Photo — auto-compressed to stay under limit"
-              }
+              helperText="Upload Quotation PDF or Photo — auto-compressed to stay under limit"
               onUploaded={(res) => {
                 setDocLink(res.url);
                 setDocName(res.fileName);
@@ -354,7 +339,7 @@ export default function QuotationDropdown({ lead }: { lead: any }) {
             />
             {hasError && (
               <p className="text-[11px] text-red-600 mt-1 font-semibold flex items-center">
-                ⚠️ {stage === "Quotation Requested" ? "Floor plan file upload is required when Quotation is requested." : "A document file upload is required for this phase."}
+                ⚠️ A document file upload is required for this phase.
               </p>
             )}
           </div>
