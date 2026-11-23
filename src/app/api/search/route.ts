@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/app/actions/authActions";
+import { getHiddenFormExclusionWhere } from "@/lib/metaFormFilter";
 
 export const dynamic = 'force-dynamic';
 
@@ -17,9 +18,11 @@ export async function GET(req: NextRequest) {
     }
 
     const isAdmin = user.role === "ADMIN" || user.role === "ROOT";
+    const hiddenExclusion = await getHiddenFormExclusionWhere(user.organizationId);
 
     const leadWhere: any = {
       organizationId: user.organizationId,
+      ...hiddenExclusion,
       OR: [
         { name: { contains: query, mode: 'insensitive' } },
         { phone: { contains: query, mode: 'insensitive' } },

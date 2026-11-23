@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { notifyUser } from '@/app/actions/leadActions';
 import crypto from 'crypto';
+import { getMetaGraphBaseUrl, ingestMetaLead } from '@/lib/metaFormService';
 
 // These should be set in your .env file
 const META_VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || 'stelar_meta_secure_token_2026';
@@ -50,110 +50,34 @@ export async function POST(request: Request) {
         for (const change of entry.changes) {
           if (change.field === 'leadgen') {
             const leadgenId = change.value.leadgen_id;
-            console.log('Processing leadgen_id:', leadgenId);
+            const webhookFormId = change.value.form_id ? String(change.value.form_id) : undefined;
+            console.log('Processing leadgen_id:', leadgenId, 'form_id:', webhookFormId);
             
             // 3. Fetch the actual lead details from Meta Graph API
             if (META_PAGE_ACCESS_TOKEN) {
               console.log('META_PAGE_ACCESS_TOKEN is present, fetching Graph API...');
-              const leadResponse = await fetch(`https://graph.facebook.com/v19.0/${leadgenId}?access_token=${META_PAGE_ACCESS_TOKEN}`);
-              const leadData = await leadResponse.json();
+              const graphBase = getMetaGraphBaseUrl();
+              let leadResponse = await fetch(
+                `${graphBase}/${leadgenId}?fields=id,created_time,field_data,form_id,campaign_name&access_token=${META_PAGE_ACCESS_TOKEN}`
+              );
+              let leadData = await leadResponse.json();
+              if (!leadResponse.ok || leadData?.error) {
+                leadResponse = await fetch(`${graphBase}/${leadgenId}?access_token=${META_PAGE_ACCESS_TOKEN}`);
+                leadData = await leadResponse.json();
+              }
               console.log('Graph API Response:', JSON.stringify(leadData));
               
               if (leadData.field_data) {
-                console.log('Field data found, extracting fields...');
-                // Extract fields dynamically (Meta returns them as an array of name/value pairs)
-                let name = 'Unknown';
-                let phone = '';
-                let email = null;
-                let city = null;
-                let propertyStatus = null;
-                let customFields: Record<string, string> = {};
-                
-                leadData.field_data.forEach((field: { name: string; values: string[] }) => {
-                  const val = field.values?.[0] || '';
-                  if (field.name === 'full_name' || field.name === 'first_name') name = val || 'Unknown';
-                  else if (field.name === 'phone_number') phone = val;
-                  else if (field.name === 'email') email = val || null;
-                  else if (field.name === 'city') city = val || null;
-                  else if (field.name === 'property_status' || field.name === 'status_of_property') propertyStatus = val || null;
-                  else {
-                    customFields[field.name] = val;
-                  }
-                });
-
-                // Clean phone number
-                phone = phone.replace(/[^0-9]/g, '');
-
-                if (phone) {
-                  // Get Org (Assuming single tenant for now)
-                  const org = await prisma.organization.findFirst();
-                  
-                  if (org) {
-                    // Check if lead exists
-                    const existingLead = await prisma.lead.findFirst({ where: { phone, organizationId: org.id } });
-                    
-                    if (!existingLead) {
-                      // Round-robin auto assignment across callers
-                      const callers = await prisma.user.findMany({
-                        where: { 
-                          organizationId: org.id, 
-                          role: "TELECALLER",
-                          leaves: {
-                            none: {
-                              startDate: { lte: new Date() },
-                              endDate: { gte: new Date() }
-                            }
-                          }
-                        },
-                        orderBy: { id: 'asc' }
-                      });
-
-                      let assignedToId = null;
-                      if (callers.length > 0) {
-                        const lastLead = await prisma.lead.findFirst({
-                          where: { assignedToId: { in: callers.map(c => c.id) } },
-                          orderBy: { createdAt: 'desc' }
-                        });
-
-                        let nextIndex = 0;
-                        if (lastLead && lastLead.assignedToId) {
-                          const lastIndex = callers.findIndex(c => c.id === lastLead.assignedToId);
-                          if (lastIndex !== -1) {
-                            nextIndex = (lastIndex + 1) % callers.length;
-                          }
-                        }
-                        assignedToId = callers[nextIndex].id;
-                      }
-
-                      const createdLead = await prisma.lead.create({
-                        data: {
-                          name,
-                          phone,
-                          email,
-                          city,
-                          propertyStatus,
-                          customFields,
-                          source: 'META ADS',
-                          status: 'Fresh',
-                          fbAd: leadData.campaign_name || 'Facebook Ad',
-                          organizationId: org.id,
-                          assignedToId,
-                          assignedStatus: 'PENDING',
-                          assignedAt: new Date()
-                        }
-                      });
-                      console.log(`Successfully ingested and assigned Meta Lead: ${name} (${phone}) to caller ${assignedToId}`);
-
-                      // Trigger Push Notification!
-                      if (assignedToId) {
-                        try {
-                          await notifyUser(assignedToId, 'New Lead Assigned', `You have a new Meta lead: ${name}`, true);
-                        } catch (pushErr) {
-                          console.error('Failed to send push notification:', pushErr);
-                        }
-                      }
-                    }
-                  }
+                const org = await prisma.organization.findFirst();
+                if (org) {
+                  await ingestMetaLead({
+                    organizationId: org.id,
+                    formId: webhookFormId || leadData.form_id,
+                    leadgenId,
+                    campaignName: leadData.campaign_name,
+                    fieldData: leadData.field_data,
+                    logPrefix: 'Meta Webhook',
+                  });
                 }
               }
             } else {

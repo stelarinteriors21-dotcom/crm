@@ -6,6 +6,7 @@ import { sendPushNotification } from "@/lib/firebaseAdmin";
 import { revalidatePath } from "next/cache";
 import nodemailer from "nodemailer";
 import { EMAILS_ENABLED } from "@/lib/emailConfig";
+import { getHiddenFormExclusionWhere, getHiddenLeadIdsAllOrgs } from "@/lib/metaFormFilter";
 
 const CONVERTED_STATUSES = ["Won", "Advance recieved", "Pay Pending", "WON", "ADVANCE RECIEVED", "PAY PENDING"];
 const JUNK_STATUSES = ["Junk", "Lost", "Job enquiry", "just curious", "Hold", "JUNK", "LOST", "HOLD", "JOB ENQUIRY", "JUST CURIOUS"];
@@ -34,9 +35,17 @@ const EXCLUDED_FROM_AUTO_FOLLOW_UP = [
  */
 export async function checkAndProcessStaleConvertingLeads(organizationId?: string) {
   try {
+    const hiddenIds = organizationId
+      ? undefined
+      : await getHiddenLeadIdsAllOrgs();
+    const hiddenExclusion = organizationId
+      ? await getHiddenFormExclusionWhere(organizationId)
+      : (hiddenIds && hiddenIds.length > 0 ? { id: { notIn: hiddenIds } } : {});
+
     const activeLeads = await prisma.lead.findMany({
       where: {
         ...(organizationId ? { organizationId } : {}),
+        ...hiddenExclusion,
         status: "RNR"
       },
       include: {
@@ -275,10 +284,17 @@ export async function checkAndEscalateInactiveLeads(organizationId?: string) {
     const now = Date.now();
     const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
     const fortyEightHoursAgo = new Date(now - FORTY_EIGHT_HOURS_MS);
+    const hiddenIds = organizationId
+      ? undefined
+      : await getHiddenLeadIdsAllOrgs();
+    const hiddenExclusion = organizationId
+      ? await getHiddenFormExclusionWhere(organizationId)
+      : (hiddenIds && hiddenIds.length > 0 ? { id: { notIn: hiddenIds } } : {});
 
     const activeLeads = await prisma.lead.findMany({
       where: {
         ...(organizationId ? { organizationId } : {}),
+        ...hiddenExclusion,
         status: {
           notIn: [
             ...CONVERTED_STATUSES,
@@ -543,6 +559,7 @@ export async function getWorkflowViolationLeadIds(organizationId: string, assign
   try {
     const leadIdSet = new Set<string>();
     const assignedFilter = assignedToId ? { assignedToId } : {};
+    const hiddenExclusion = await getHiddenFormExclusionWhere(organizationId);
 
     // 1. Ghosted First Contact (>2h without call)
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
@@ -550,6 +567,7 @@ export async function getWorkflowViolationLeadIds(organizationId: string, assign
       where: {
         organizationId,
         ...assignedFilter,
+        ...hiddenExclusion,
         assignedAt: { lte: twoHoursAgo },
         calls: { none: {} },
         status: { notIn: ["Junk", "Lost", "Won"] }
@@ -571,6 +589,7 @@ export async function getWorkflowViolationLeadIds(organizationId: string, assign
       where: {
         organizationId,
         ...assignedFilter,
+        ...hiddenExclusion,
         status: { notIn: ["Junk", "Lost", "Won"] }
       },
       select: { id: true, status: true, customFields: true }
@@ -597,6 +616,7 @@ export async function getWorkflowViolationLeadIds(organizationId: string, assign
       where: {
         organizationId,
         ...assignedFilter,
+        ...hiddenExclusion,
         status: "RNR",
         OR: [
           { customFields: { path: ['staleConvertingAlert'], equals: true } },
@@ -612,6 +632,7 @@ export async function getWorkflowViolationLeadIds(organizationId: string, assign
       where: {
         organizationId,
         ...assignedFilter,
+        ...hiddenExclusion,
         status: {
           notIn: ["Junk", "Lost", "Job enquiry", "just curious", "Hold", "Won", "Advance recieved", "Pay Pending", "JUNK", "LOST", "HOLD", "JOB ENQUIRY", "JUST CURIOUS"]
         }
@@ -649,6 +670,7 @@ export async function getWorkflowViolationLeadIds(organizationId: string, assign
       where: {
         organizationId,
         ...assignedFilter,
+        ...hiddenExclusion,
         status: {
           notIn: [
             ...CONVERTED_STATUSES,
@@ -692,6 +714,7 @@ export async function getActionRequiredLeads() {
   }
 
   const alerts = [];
+  const hiddenExclusion = await getHiddenFormExclusionWhere(user.organizationId);
 
   // 1. Ghosted First Contact
   const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
@@ -701,7 +724,8 @@ export async function getActionRequiredLeads() {
       assignedToId: user.id,
       assignedAt: { lte: twoHoursAgo },
       calls: { none: {} },
-      status: { notIn: ["Junk", "Lost", "Won"] }
+      status: { notIn: ["Junk", "Lost", "Won"] },
+      ...hiddenExclusion,
     }
   });
 
@@ -728,7 +752,8 @@ export async function getActionRequiredLeads() {
     where: {
       organizationId: user.organizationId,
       assignedToId: user.id,
-      status: { notIn: ["Junk", "Lost", "Won"] }
+      status: { notIn: ["Junk", "Lost", "Won"] },
+      ...hiddenExclusion,
     }
   });
 
@@ -753,6 +778,7 @@ export async function getActionRequiredLeads() {
     where: {
       organizationId: user.organizationId,
       assignedToId: user.id,
+      ...hiddenExclusion,
       status: "RNR",
       OR: [
         { customFields: { path: ['staleConvertingAlert'], equals: true } },
@@ -775,6 +801,7 @@ export async function getActionRequiredLeads() {
     where: {
       organizationId: user.organizationId,
       assignedToId: user.id,
+      ...hiddenExclusion,
       status: {
         notIn: ["Junk", "Lost", "Job enquiry", "just curious", "Hold", "Won", "Advance recieved", "Pay Pending", "JUNK", "LOST", "HOLD", "JOB ENQUIRY", "JUST CURIOUS"]
       }
@@ -828,6 +855,7 @@ export async function getActionRequiredLeads() {
     where: {
       organizationId: user.organizationId,
       assignedToId: user.id,
+      ...hiddenExclusion,
       status: {
         notIn: [
           ...CONVERTED_STATUSES,

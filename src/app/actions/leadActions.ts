@@ -7,14 +7,23 @@ import { logActivity } from "./activityActions";
 import { getWorkflowViolationLeadIds } from "./alertActions";
 import { EMAILS_ENABLED } from "@/lib/emailConfig";
 import { computeLeadMilestones } from "@/lib/constants";
+import { getHiddenLeadIdsForOrg, getHiddenFormExclusionWhere } from "@/lib/metaFormFilter";
 
-export async function getLeads(query?: string, searchField?: string, status?: string | string[], source?: string, assigned?: string, active?: boolean, startDate?: string, endDate?: string, tag?: string, city?: string | string[], stage?: string, autoFollowUp?: boolean | string, violations?: boolean | string, pastStatus?: string | string[]) {
+export async function getLeads(query?: string, searchField?: string, status?: string | string[], source?: string, assigned?: string, active?: boolean, startDate?: string, endDate?: string, tag?: string, city?: string | string[], stage?: string, autoFollowUp?: boolean | string, violations?: boolean | string, pastStatus?: string | string[], includeHiddenForms?: boolean) {
   const user = await getCurrentUser();
   if (!user) return [];
 
   const where: any = {
     organizationId: user.organizationId,
   };
+
+  const allowHidden = Boolean(includeHiddenForms) && (user.role === "ADMIN" || user.role === "ROOT");
+  if (!allowHidden) {
+    const hiddenLeadIds = await getHiddenLeadIdsForOrg(user.organizationId);
+    if (hiddenLeadIds.length > 0) {
+      where.AND = [...(where.AND || []), { id: { notIn: hiddenLeadIds } }];
+    }
+  }
 
   if (tag && tag !== "All") {
     where.tag = tag;
@@ -559,14 +568,17 @@ export async function snoozeRnrLead(leadId: string, minutes: number = 15) {
 export async function getPendingLeadForUser(): Promise<any> {
   const user = await getCurrentUser();
   if (!user || user.role !== "TELECALLER") return null;
-  
+
+  const hiddenExclusion = await getHiddenFormExclusionWhere(user.organizationId);
+
   // 1. Check if any snoozed lead is ready to wake up
   const snoozedLead = await prisma.lead.findFirst({
     where: {
       organizationId: user.organizationId,
       assignedStatus: 'SNOOZED',
       assignedToId: user.id,
-      snoozedUntil: { lte: new Date() }
+      snoozedUntil: { lte: new Date() },
+      ...hiddenExclusion,
     },
     orderBy: { snoozedUntil: 'asc' }
   });
@@ -587,7 +599,8 @@ export async function getPendingLeadForUser(): Promise<any> {
     where: { 
       organizationId: user.organizationId,
       assignedStatus: 'PENDING',
-      assignedToId: user.id
+      assignedToId: user.id,
+      ...hiddenExclusion,
     },
     orderBy: { assignedAt: 'desc' }
   });
@@ -602,6 +615,8 @@ export async function getPendingLeadForUser(): Promise<any> {
         organizationId: user.organizationId,
         status: 'RNR',
         assignedToId: user.id,
+        assignedStatus: { not: 'HIDDEN_FORM' },
+        ...hiddenExclusion,
       },
       orderBy: { createdAt: 'desc' },
       take: 50,
@@ -1040,8 +1055,9 @@ export async function updateLeadDetails(leadId: string, data: {
 export async function getUniqueCities() {
   const user = await getCurrentUser();
   if (!user) return [];
+  const hiddenExclusion = await getHiddenFormExclusionWhere(user.organizationId);
   const leads = await prisma.lead.findMany({
-    where: { organizationId: user.organizationId },
+    where: { organizationId: user.organizationId, ...hiddenExclusion },
     select: { city: true },
     distinct: ['city']
   });
@@ -1051,9 +1067,11 @@ export async function getUniqueCities() {
 export async function getAutoFollowUpCount(): Promise<number> {
   const user = await getCurrentUser();
   if (!user) return 0;
+  const hiddenExclusion = await getHiddenFormExclusionWhere(user.organizationId);
   const where: any = {
     organizationId: user.organizationId,
     status: "RNR",
+    ...hiddenExclusion,
     OR: [
       { customFields: { path: ['staleConvertingAlert'], equals: true } },
       { customFields: { path: ['isAutoFollowUp'], equals: true } }

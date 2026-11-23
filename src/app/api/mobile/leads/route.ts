@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getHiddenFormExclusionWhere } from '@/lib/metaFormFilter';
 
 // Simple API for the mobile app to fetch assigned leads
 export async function GET(request: Request) {
@@ -12,12 +13,22 @@ export async function GET(request: Request) {
       return new NextResponse('User ID is required', { status: 400 });
     }
 
+    const caller = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true },
+    });
+    const hiddenExclusion = caller?.organizationId
+      ? await getHiddenFormExclusionWhere(caller.organizationId)
+      : {};
+
     const leads = await prisma.lead.findMany({
       where: {
         assignedToId: userId,
+        assignedStatus: { not: 'HIDDEN_FORM' },
         status: {
           not: 'DEAD'
-        }
+        },
+        ...hiddenExclusion,
       },
       orderBy: {
         createdAt: 'desc'

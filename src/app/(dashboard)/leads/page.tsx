@@ -11,6 +11,9 @@ import LeadsFilterTracker from "@/components/LeadsFilterTracker";
 import { getCurrentUser } from "@/app/actions/authActions";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function LeadsPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
   const user = await getCurrentUser();
   if (!user) {
@@ -35,8 +38,9 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
   const stage = typeof searchParams.stage === "string" ? searchParams.stage : undefined;
   const autoFollowUp = searchParams.autoFollowUp === "true" || searchParams.autoFollowUp === "1";
   const violations = searchParams.violations === "true" || searchParams.violations === "1";
+  const includeHiddenForms = isAdmin && (searchParams.includeHiddenForms === "true" || searchParams.includeHiddenForms === "1");
 
-  const dbLeads = await getLeads(query, searchField, status, source, assigned, active, startDate, endDate, tag, city, stage, autoFollowUp, violations, pastStatus);
+  const dbLeads = await getLeads(query, searchField, status, source, assigned, active, startDate, endDate, tag, city, stage, autoFollowUp, violations, pastStatus, includeHiddenForms);
   const settings = await getOrganizationSettings();
   const rawCities = await getUniqueCities();
   const uniqueCities = (rawCities || []).filter((c): c is string => typeof c === 'string' && c.length > 0);
@@ -46,7 +50,18 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
   return (
     <div className="w-full max-w-full min-h-full bg-white flex flex-col md:-m-6">
       <LeadsFilterTracker />
-      <LeadsHeaderActions />
+      <LeadsHeaderActions isAdmin={isAdmin} includeHiddenForms={includeHiddenForms} />
+
+      {includeHiddenForms && (
+        <div className="mx-3 sm:mx-4 md:mx-6 mt-2.5 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2">
+          <span>
+            <strong>Admin Audit View:</strong> Including leads from hidden Meta Lead Forms. Callers do not see hidden forms.
+          </span>
+          <a href="/leads" className="font-bold text-[#4f46e5] hover:underline shrink-0">
+            Show Visible Only
+          </a>
+        </div>
+      )}
 
       {/* Stage Tabs (ROOT only) */}
       {user?.role === "ROOT" && (

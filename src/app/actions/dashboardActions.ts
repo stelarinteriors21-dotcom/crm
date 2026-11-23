@@ -2,18 +2,20 @@
 
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "./authActions";
+import { getHiddenFormExclusionWhere } from "@/lib/metaFormFilter";
 
 export async function getDashboardStats() {
   const user = await getCurrentUser();
   if (!user) return { totalLeads: 0, statuses: [], activity: [] };
 
   const orgId = user.organizationId;
+  const hiddenExclusion = await getHiddenFormExclusionWhere(orgId);
 
-  const totalLeads = await prisma.lead.count({ where: { organizationId: orgId } });
+  const totalLeads = await prisma.lead.count({ where: { organizationId: orgId, ...hiddenExclusion } });
   
   const statusGroups = await prisma.lead.groupBy({
     by: ['status'],
-    where: { organizationId: orgId },
+    where: { organizationId: orgId, ...hiddenExclusion },
     _count: true
   });
 

@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "./authActions";
+import { getHiddenFormExclusionWhere } from "@/lib/metaFormFilter";
 
 export type PeriodFilter = "DAILY" | "WEEKLY" | "MONTHLY" | "ALL_TIME";
 export type LeadCohortFilter = "ALL" | "NEW_ONLY" | "EXISTING";
@@ -55,8 +56,10 @@ export async function getAdminComprehensiveReport(
   });
 
   // 3. Fetch All Leads with filters
+  const hiddenExclusion = await getHiddenFormExclusionWhere(orgId);
   const leadWhere: any = {
     organizationId: orgId,
+    ...hiddenExclusion,
   };
 
   if (leadCohort === "NEW_ONLY") {
@@ -176,6 +179,7 @@ export async function getAdminComprehensiveReport(
     where: {
       organizationId: orgId,
       status: { notIn: ["JUNK", "LOST"] },
+      ...hiddenExclusion,
     },
     include: {
       assignedTo: { select: { id: true, name: true, role: true } },
