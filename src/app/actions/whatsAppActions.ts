@@ -360,3 +360,50 @@ export async function simulateIncomingWhatsAppAction(params: {
     return { success: false, error: err.message };
   }
 }
+
+/**
+ * Clear all WhatsApp conversation messages for a specific lead
+ */
+export async function clearLeadWhatsAppChatAction(
+  leadId: string
+): Promise<{ success: boolean; count?: number; error?: string }> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const res = await prisma.whatsAppLog.deleteMany({
+      where: { leadId }
+    });
+
+    revalidatePath(`/leads/${leadId}`);
+    revalidatePath("/whatsapp");
+
+    return { success: true, count: res.count };
+  } catch (err: any) {
+    console.error("Failed to clear WhatsApp chat:", err);
+    return { success: false, error: err.message || "Failed to clear chat." };
+  }
+}
+
+/**
+ * Clear all WhatsApp logs across all leads (admin reset)
+ */
+export async function clearAllWhatsAppLogsAction(): Promise<{ success: boolean; count?: number; error?: string }> {
+  try {
+    const user = await getCurrentUser();
+    if (!user || (user.role !== "ADMIN" && user.role !== "ROOT")) {
+      return { success: false, error: "Unauthorized. Admin permissions required." };
+    }
+
+    const res = await prisma.whatsAppLog.deleteMany({});
+    revalidatePath("/whatsapp");
+    revalidatePath("/leads");
+
+    return { success: true, count: res.count };
+  } catch (err: any) {
+    console.error("Failed to clear all WhatsApp logs:", err);
+    return { success: false, error: err.message || "Failed to clear all logs." };
+  }
+}

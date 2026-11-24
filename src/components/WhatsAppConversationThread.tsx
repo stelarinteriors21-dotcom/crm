@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { MessageCircle, Send, CheckCheck, Clock, User, ArrowDownLeft, ArrowUpRight, ShieldCheck, Sparkles, Smartphone, RefreshCw, FileText, Image as ImageIcon, Mic, Play } from "lucide-react";
+import { MessageCircle, Send, CheckCheck, Clock, User, ArrowDownLeft, ArrowUpRight, ShieldCheck, Sparkles, Smartphone, RefreshCw, FileText, Image as ImageIcon, Mic, Play, Trash2, ExternalLink } from "lucide-react";
 import { formatDeterministicDateTime } from "@/lib/dateUtils";
+import { clearLeadWhatsAppChatAction, sendWhatsAppMessageAction, getWhatsAppApiConfig, WhatsAppApiConfig } from "@/app/actions/whatsAppActions";
 
 interface WhatsAppMessage {
   id: string;
@@ -31,13 +32,19 @@ export default function WhatsAppConversationThread({
   const [chatMessages, setChatMessages] = useState<WhatsAppMessage[]>(messages);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [apiConfig, setApiConfig] = useState<WhatsAppApiConfig | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isUserScrolledUpRef = useRef(false);
   const isFirstLoadRef = useRef(true);
 
   const [waPerms, setWaPerms] = useState<{ accessibilityEnabled: boolean; notificationEnabled: boolean } | null>(null);
+
+  useEffect(() => {
+    getWhatsAppApiConfig().then((cfg) => setApiConfig(cfg)).catch(() => {});
+  }, []);
 
   const checkSyncPerms = async () => {
     if (typeof window !== "undefined") {
@@ -178,7 +185,27 @@ export default function WhatsAppConversationThread({
   const cleanPhone = (phone || "").replace(/[^0-9]/g, "");
   const formattedPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
 
-  const handleSendDraft = async (textToSend: string) => {
+  const handleClearChat = async () => {
+    if (!confirm(`Are you sure you want to clear the entire WhatsApp chat history for ${leadName}? This cannot be undone.`)) {
+      return;
+    }
+    setClearing(true);
+    try {
+      const res = await clearLeadWhatsAppChatAction(leadId);
+      if (res.success) {
+        setChatMessages([]);
+      } else {
+        alert(res.error || "Failed to clear chat");
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert("Error clearing chat.");
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  const handleSendDraft = async (textToSend: string, forceWebOpen: boolean = false) => {
     if (!textToSend.trim() || !formattedPhone) return;
 
     isUserScrolledUpRef.current = false;
@@ -198,30 +225,24 @@ export default function WhatsAppConversationThread({
     setDraft("");
 
     try {
-      // 2. Record outbound in database
-      const res = await fetch("/api/mobile/whatsapp-sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: formattedPhone,
-          contactName: leadName,
-          message: textToSend.trim(),
-          direction: "OUTBOUND",
-        }),
+      // 2. Dispatch via Cloud API if connected, and persist to database
+      const res = await sendWhatsAppMessageAction({
+        leadId,
+        phone: formattedPhone,
+        message: textToSend.trim(),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.log) {
-          setChatMessages((prev) =>
-            prev.map((m) => (m.id === tempId ? data.log : m))
-          );
-        }
+      if (res.success && res.log) {
+        setChatMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? res.log : m))
+        );
       }
 
-      // 3. Open official WhatsApp Web / Mobile chat
-      const waUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(textToSend.trim())}`;
-      window.open(waUrl, "_blank");
+      // 3. If API is not connected or user explicitly asked for web open, open WhatsApp Web/App
+      if (!apiConfig?.isConnected || forceWebOpen) {
+        const waUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(textToSend.trim())}`;
+        window.open(waUrl, "_blank");
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -260,10 +281,36 @@ export default function WhatsAppConversationThread({
         </div>
 
         <div className="flex items-center space-x-2">
+          {apiConfig?.isConnected ? (
+            <span 
+              className="text-[10px] font-semibold bg-emerald-700 text-emerald-200 px-2 py-0.5 rounded-full border border-emerald-400/40 flex items-center gap-1 cursor-default"
+              title="Cloud API Active - messages sent automatically from company API number"
+            >
+              <Sparkles className="w-2.5 h-2.5 text-amber-300" /> Cloud API
+            </span>
+          ) : (
+            <span 
+              className="text-[10px] text-emerald-200 bg-white/10 px-2 py-0.5 rounded-full border border-white/10 flex items-center gap-1 cursor-default"
+              title="Web Mode - messages open via WhatsApp Web or mobile app"
+            >
+              Web Mode
+            </span>
+          )}
+
+          <button
+            type="button"
+            onClick={handleClearChat}
+            disabled={clearing || chatMessages.length === 0}
+            className="p-1.5 rounded-lg bg-white/10 hover:bg-red-500/90 text-emerald-100 hover:text-white transition-colors disabled:opacity-30 disabled:hover:bg-white/10 cursor-pointer"
+            title="Clear WhatsApp Chat History"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+
           <button
             type="button"
             onClick={handleManualRefresh}
-            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-emerald-100 transition-colors"
+            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-emerald-100 transition-colors cursor-pointer"
             title="Refresh WhatsApp Messages"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
@@ -473,15 +520,29 @@ export default function WhatsAppConversationThread({
             }
           }}
         />
-        <button
-          type="button"
-          onClick={() => handleSendDraft(draft)}
-          disabled={sending || !draft.trim() || !phone}
-          className="bg-[#25D366] hover:bg-emerald-600 active:scale-95 text-white font-bold h-11 w-11 rounded-xl transition-all disabled:opacity-40 shadow-sm shrink-0 flex items-center justify-center mb-0.5"
-          title="Send on WhatsApp"
-        >
-          <Send className="w-5 h-5" />
-        </button>
+        <div className="flex flex-col gap-1 shrink-0 mb-0.5 items-center">
+          <button
+            type="button"
+            onClick={() => handleSendDraft(draft, false)}
+            disabled={sending || !draft.trim() || !phone}
+            className="bg-[#25D366] hover:bg-emerald-600 active:scale-95 text-white font-bold h-11 w-11 rounded-xl transition-all disabled:opacity-40 shadow-sm flex items-center justify-center cursor-pointer"
+            title={apiConfig?.isConnected ? "Send directly via WhatsApp Cloud API" : "Send on WhatsApp (opens Web/App)"}
+          >
+            <Send className="w-5 h-5" />
+          </button>
+          
+          {apiConfig?.isConnected && (
+            <button
+              type="button"
+              onClick={() => handleSendDraft(draft, true)}
+              disabled={sending || !draft.trim() || !phone}
+              className="text-[9px] font-semibold text-gray-500 hover:text-emerald-700 hover:bg-emerald-50 rounded px-1.5 py-0.5 flex items-center justify-center transition-colors cursor-pointer"
+              title="Send and also open WhatsApp Web"
+            >
+              <ExternalLink className="w-2.5 h-2.5 mr-0.5" /> Web
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
