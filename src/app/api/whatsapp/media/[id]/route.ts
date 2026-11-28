@@ -47,12 +47,23 @@ export async function GET(
     const contentType = metaData.mime_type || mediaBinaryRes.headers.get("content-type") || "application/octet-stream";
     const body = mediaBinaryRes.body;
 
+    const isDownload = req.nextUrl.searchParams.get("download") === "1";
+    let defaultFilename = "WhatsApp_Media";
+    if (contentType.includes("pdf")) {
+      defaultFilename = "Document.pdf";
+    } else if (contentType.includes("image")) {
+      defaultFilename = "WhatsApp_Photo.jpg";
+    } else if (contentType.includes("audio")) {
+      defaultFilename = "Voice_Note.ogg";
+    }
+    const filename = req.nextUrl.searchParams.get("filename") || defaultFilename;
+
     return new NextResponse(body, {
       status: 200,
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "public, max-age=86400, immutable",
-        "Content-Disposition": "inline"
+        "Content-Disposition": isDownload ? `attachment; filename="${filename}"` : "inline"
       }
     });
   } catch (err: any) {

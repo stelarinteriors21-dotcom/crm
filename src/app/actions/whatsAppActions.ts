@@ -277,9 +277,12 @@ export async function uploadWhatsAppMediaAction(formData: FormData): Promise<{
       };
     } else {
       console.error("Meta media upload error:", data);
+      const isAuthErr = data?.error?.code === 190 || data?.error?.type === "OAuthException" || (data?.error?.message || "").includes("expired");
       return {
         success: false,
-        error: data?.error?.message || "Failed to upload media to WhatsApp Cloud API"
+        error: isAuthErr
+          ? "Meta Access Token has expired (Authentication Error). Please update it in 'Connect API'."
+          : (data?.error?.message || "Failed to upload media to WhatsApp Cloud API")
       };
     }
   } catch (err: any) {
@@ -380,7 +383,10 @@ export async function sendWhatsAppMessageAction(params: {
           metaDelivered = true;
         } else if (metaData?.error) {
           console.warn("Meta Cloud API warning:", metaData.error.message);
-          metaError = metaData.error.message;
+          const isAuthErr = metaData.error.code === 190 || metaData.error.type === "OAuthException" || (metaData.error.message || "").includes("expired");
+          metaError = isAuthErr
+            ? "Meta Access Token has expired (Authentication Error). Please update it in 'Connect API'."
+            : metaData.error.message;
         }
       } catch (metaErr: any) {
         console.error("Meta dispatch error:", metaErr);

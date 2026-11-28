@@ -279,6 +279,26 @@ export default function WhatsAppHubClient({
     );
   }, [selectedLeadId]);
 
+  // Helper to directly download media to device
+  const triggerDownload = async (url: string, defaultFilename: string) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Fetch failed");
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = defaultFilename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 2000);
+    } catch {
+      const downloadUrl = url.includes("?") ? `${url}&download=1` : `${url}?download=1`;
+      window.open(downloadUrl, "_blank");
+    }
+  };
+
   // Handle sending text or draft
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || draft).trim();
@@ -382,7 +402,12 @@ export default function WhatsAppHubClient({
 
       const uploadRes = await uploadWhatsAppMediaAction(formData);
       if (!uploadRes.success || !uploadRes.mediaId) {
-        alert(uploadRes.error || "Failed to upload document to WhatsApp.");
+        const uploadErr = uploadRes.error || "Failed to upload document to WhatsApp.";
+        if (uploadErr.includes("expired") || uploadErr.includes("token") || uploadErr.includes("OAuthException") || uploadErr.toLowerCase().includes("authentication")) {
+          alert("⚠️ Meta Access Token has expired!\nPlease generate a permanent token in Meta Developer Portal and update it in 'Connect API'.");
+        } else {
+          alert(`Document Upload Failed: ${uploadErr}`);
+        }
         return;
       }
 
@@ -396,6 +421,15 @@ export default function WhatsAppHubClient({
         mediaType: "document",
         filename
       });
+
+      if (!res.success) {
+        const errMsg = res.error || "Failed to dispatch document";
+        if (errMsg.includes("expired") || errMsg.includes("token") || errMsg.includes("OAuthException") || errMsg.toLowerCase().includes("authentication")) {
+          alert("⚠️ Meta Access Token has expired!\nPlease generate a permanent token in Meta Developer Portal and update it in 'Connect API'.");
+        } else {
+          alert(`⚠️ WhatsApp Send Error: ${errMsg}`);
+        }
+      }
 
       if (res.success && res.log) {
         setConversations((prev) => {
@@ -441,7 +475,12 @@ export default function WhatsAppHubClient({
 
       const uploadRes = await uploadWhatsAppMediaAction(formData);
       if (!uploadRes.success || !uploadRes.mediaId) {
-        alert(uploadRes.error || "Failed to upload photo to WhatsApp.");
+        const uploadErr = uploadRes.error || "Failed to upload photo to WhatsApp.";
+        if (uploadErr.includes("expired") || uploadErr.includes("token") || uploadErr.includes("OAuthException") || uploadErr.toLowerCase().includes("authentication")) {
+          alert("⚠️ Meta Access Token has expired!\nPlease generate a permanent token in Meta Developer Portal and update it in 'Connect API'.");
+        } else {
+          alert(`Photo Upload Failed: ${uploadErr}`);
+        }
         return;
       }
 
@@ -455,6 +494,15 @@ export default function WhatsAppHubClient({
         mediaType: "image",
         filename
       });
+
+      if (!res.success) {
+        const errMsg = res.error || "Failed to dispatch photo";
+        if (errMsg.includes("expired") || errMsg.includes("token") || errMsg.includes("OAuthException") || errMsg.toLowerCase().includes("authentication")) {
+          alert("⚠️ Meta Access Token has expired!\nPlease generate a permanent token in Meta Developer Portal and update it in 'Connect API'.");
+        } else {
+          alert(`⚠️ WhatsApp Send Error: ${errMsg}`);
+        }
+      }
 
       if (res.success && res.log) {
         setConversations((prev) => {
@@ -828,9 +876,20 @@ export default function WhatsAppHubClient({
                       </div>
 
                       <div className="text-[11px] text-gray-500 truncate flex items-center gap-1">
-                        {c.lastMessageDirection === "OUTBOUND" && (
-                          <CheckCheck className="w-3 h-3 text-emerald-600 shrink-0" />
-                        )}
+                        {c.lastMessageDirection === "OUTBOUND" && (() => {
+                          const lastMsg = c.messages?.[c.messages.length - 1];
+                          const s = (lastMsg?.status || "").toUpperCase();
+                          if (s === "READ") {
+                            return <CheckCheck className="w-3 h-3 text-[#53bdeb] shrink-0" title="Read" />;
+                          }
+                          if (s === "DELIVERED") {
+                            return <CheckCheck className="w-3 h-3 text-gray-400 shrink-0" title="Delivered" />;
+                          }
+                          if (s === "FAILED") {
+                            return <AlertCircle className="w-3 h-3 text-red-500 shrink-0" title="Failed" />;
+                          }
+                          return <Check className="w-3 h-3 text-gray-400 shrink-0" title="Sent" />;
+                        })()}
                         <span className="truncate">
                           {c.lastMessage.startsWith("📷 Photo")
                             ? "📷 Photo"
@@ -1007,10 +1066,12 @@ export default function WhatsAppHubClient({
                                   const parts = msg.message.split("|");
                                   url = parts[1]?.trim() || "#";
                                 }
-                                window.open(url, "_blank");
+                                const docName = msg.message.replace("📄 Document:", "").split("|")[0].trim() || "Document.pdf";
+                                const filename = docName.endsWith(".pdf") ? docName : `${docName}.pdf`;
+                                triggerDownload(url, filename);
                               }}
                               className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors shrink-0 cursor-pointer"
-                              title="Download / View Document"
+                              title="Download Document"
                             >
                               <Download className="w-3.5 h-3.5" />
                             </button>
@@ -1053,34 +1114,34 @@ export default function WhatsAppHubClient({
                                     <Eye className="w-4 h-4" />
                                   </span>
                                   {resolvedPhotoSrc && (
-                                    <a
-                                      href={resolvedPhotoSrc}
-                                      download="WhatsApp_Photo.jpg"
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={(e) => e.stopPropagation()}
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        triggerDownload(resolvedPhotoSrc, "WhatsApp_Photo.jpg");
+                                      }}
                                       className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors cursor-pointer"
                                       title="Download Photo"
                                     >
                                       <Download className="w-4 h-4" />
-                                    </a>
+                                    </button>
                                   )}
                                 </div>
                               </div>
                               <div className="p-2 text-[11px] text-gray-700 font-medium flex items-center justify-between gap-2">
                                 <span className="truncate">{msg.message.replace(/^📷 Photo:?\s*/, "").split("|")[0].trim() || "Photo Attachment"}</span>
                                 {resolvedPhotoSrc && (
-                                  <a
-                                    href={resolvedPhotoSrc}
-                                    download="WhatsApp_Photo.jpg"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="text-gray-400 hover:text-gray-700 transition-colors shrink-0 p-1"
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      triggerDownload(resolvedPhotoSrc, "WhatsApp_Photo.jpg");
+                                    }}
+                                    className="text-gray-400 hover:text-gray-700 transition-colors shrink-0 p-1 cursor-pointer"
                                     title="Download image"
                                   >
                                     <Download className="w-3.5 h-3.5" />
-                                  </a>
+                                  </button>
                                 )}
                               </div>
                             </div>
