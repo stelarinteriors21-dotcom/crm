@@ -22,7 +22,6 @@ import ReassignButton from "@/components/ReassignButton";
 import { getCurrentUser } from "@/app/actions/authActions";
 import { formatDeterministicDate, formatDeterministicDateTime, formatDeterministicTimeAgo } from "@/lib/dateUtils";
 import SmartCallButton from "@/components/SmartCallButton";
-import WhatsAppConversationThread from "@/components/WhatsAppConversationThread";
 import BackToLeadsButton from "@/components/BackToLeadsButton";
 import LeadTagSelector from "@/components/LeadTagSelector";
 import SiteVisitPhotoGallery from "@/components/SiteVisitPhotoGallery";
@@ -522,24 +521,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
             </div>
           </div>
 
-          {/* 2. WhatsApp Chat Widget */}
-          <div>
-            {(() => {
-              const cf = (lead.customFields as any) || {};
-              const svOtp = cf.siteVisit?.otp || null;
-              return (
-                <WhatsAppConversationThread
-                  leadId={lead.id}
-                  leadName={lead.name}
-                  phone={lead.phone}
-                  siteVisitOtp={svOtp}
-                  messages={lead.whatsAppLogs as any}
-                />
-              );
-            })()}
-          </div>
-
-          {/* 3. Consolidated Notes Section (Human Notes: General & Calls) */}
+          {/* 2. Consolidated Notes Section (Human Notes: General & Calls) */}
           <ConsolidatedNotesSection
             leadId={lead.id}
             notes={lead.notes || []}
