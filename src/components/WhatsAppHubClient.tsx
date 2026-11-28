@@ -335,6 +335,27 @@ export default function WhatsAppHubClient({
             return c;
           })
         );
+      } else {
+        // Update optimistic message to show FAILED status
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.leadId === activeConversation.leadId) {
+              return {
+                ...c,
+                messages: c.messages.map((m) =>
+                  m.id === tempId ? { ...m, status: "FAILED" } : m
+                )
+              };
+            }
+            return c;
+          })
+        );
+        const errMsg = res.error || "Failed to send message";
+        if (errMsg.includes("expired") || errMsg.includes("token") || errMsg.includes("OAuthException")) {
+          alert("⚠️ Meta Access Token has expired!\nPlease generate a permanent token in Meta Developer Portal and update it in 'Connect API'.");
+        } else {
+          alert(`⚠️ WhatsApp Send Error: ${errMsg}`);
+        }
       }
     } catch (e) {
       console.error("Error sending message:", e);

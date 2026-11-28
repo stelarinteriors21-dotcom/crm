@@ -315,6 +315,7 @@ export async function sendWhatsAppMessageAction(params: {
     // 1. Check if Meta Cloud API is configured to dispatch real message
     const config = await getWhatsAppApiConfig();
     let metaDelivered = false;
+    let metaError: string | null = null;
 
     if (config.isConnected && config.phoneNumberId && config.accessToken) {
       try {
@@ -371,10 +372,14 @@ export async function sendWhatsAppMessageAction(params: {
           metaDelivered = true;
         } else if (metaData?.error) {
           console.warn("Meta Cloud API warning:", metaData.error.message);
+          metaError = metaData.error.message;
         }
-      } catch (metaErr) {
+      } catch (metaErr: any) {
         console.error("Meta dispatch error:", metaErr);
+        metaError = metaErr.message;
       }
+    } else {
+      metaError = "WhatsApp Cloud API is not configured or access token is missing.";
     }
 
     // 2. Persist in database
@@ -383,7 +388,7 @@ export async function sendWhatsAppMessageAction(params: {
         leadId,
         direction: "OUTBOUND",
         message: finalMessage,
-        status: metaDelivered ? "DELIVERED" : "SENT"
+        status: metaError ? "FAILED" : (metaDelivered ? "DELIVERED" : "SENT")
       }
     });
 
@@ -401,6 +406,10 @@ export async function sendWhatsAppMessageAction(params: {
           }
         }).catch(() => {});
       }
+    }
+
+    if (metaError) {
+      return { success: false, log, metaDelivered: false, error: metaError };
     }
 
     return { success: true, log, metaDelivered };
