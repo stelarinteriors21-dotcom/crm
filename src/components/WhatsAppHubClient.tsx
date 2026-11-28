@@ -121,12 +121,14 @@ interface WhatsAppHubClientProps {
   initialConversations: ConversationItem[];
   initialConfig: WhatsAppApiConfig;
   initialLeadId?: string;
+  isAdmin?: boolean;
 }
 
 export default function WhatsAppHubClient({
   initialConversations = [],
   initialConfig,
-  initialLeadId
+  initialLeadId,
+  isAdmin = false
 }: WhatsAppHubClientProps) {
   const [conversations, setConversations] = useState<ConversationItem[]>(() =>
     sortConversations(initialConversations)
@@ -168,8 +170,17 @@ export default function WhatsAppHubClient({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const selectedItemRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-resize composer textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 140)}px`;
+    }
+  }, [draft]);
 
   // Find active conversation
   const activeConversation = useMemo(() => {
@@ -644,53 +655,55 @@ export default function WhatsAppHubClient({
           </div>
         </div>
 
-        {/* Action Toolbar */}
-        <div className="flex items-center space-x-2">
-          {/* Test Sound & Inbound Alert */}
-          <button
-            type="button"
-            onClick={handleTestNotification}
-            className="flex items-center px-2.5 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
-            title="Test WhatsApp audio chime, desktop push, and floating notification"
-          >
-            <Bell className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-            <span>Test Alert</span>
-          </button>
-
-          {/* Simulate Client Response (Testing tool) */}
-          {activeConversation && (
+        {/* Action Toolbar (Admin Only) */}
+        {isAdmin && (
+          <div className="flex items-center space-x-2">
+            {/* Test Sound & Inbound Alert */}
             <button
               type="button"
-              onClick={() => setShowSimulateModal(true)}
-              className="hidden lg:flex items-center px-2.5 py-1.5 rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
-              title="Simulate incoming client reply or document"
+              onClick={handleTestNotification}
+              className="flex items-center px-2.5 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
+              title="Test WhatsApp audio chime, desktop push, and floating notification"
             >
-              <Sparkles className="w-3.5 h-3.5 mr-1 text-purple-600" />
-              Simulate Inbound
+              <Bell className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+              <span>Test Alert</span>
             </button>
-          )}
 
-          {/* Launch Web Companion */}
-          <button
-            type="button"
-            onClick={handleLaunchWebCompanion}
-            className="flex items-center px-3 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
-            title="Open WhatsApp Web desktop popup"
-          >
-            <Smartphone className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-            <span className="hidden sm:inline">WhatsApp Web</span>
-          </button>
+            {/* Simulate Client Response (Testing tool) */}
+            {activeConversation && (
+              <button
+                type="button"
+                onClick={() => setShowSimulateModal(true)}
+                className="hidden lg:flex items-center px-2.5 py-1.5 rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
+                title="Simulate incoming client reply or document"
+              >
+                <Sparkles className="w-3.5 h-3.5 mr-1 text-purple-600" />
+                Simulate Inbound
+              </button>
+            )}
 
-          {/* Connect API Settings Button */}
-          <button
-            type="button"
-            onClick={() => setShowConfigModal(true)}
-            className="flex items-center px-3 py-1.5 rounded-lg bg-gray-900 hover:bg-black text-white text-xs font-semibold transition-colors cursor-pointer shadow-xs"
-          >
-            <Settings className="w-3.5 h-3.5 mr-1" />
-            <span>Connect API</span>
-          </button>
-        </div>
+            {/* Launch Web Companion */}
+            <button
+              type="button"
+              onClick={handleLaunchWebCompanion}
+              className="flex items-center px-3 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
+              title="Open WhatsApp Web desktop popup"
+            >
+              <Smartphone className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+              <span className="hidden sm:inline">WhatsApp Web</span>
+            </button>
+
+            {/* Connect API Settings Button */}
+            <button
+              type="button"
+              onClick={() => setShowConfigModal(true)}
+              className="flex items-center px-3 py-1.5 rounded-lg bg-gray-900 hover:bg-black text-white text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+            >
+              <Settings className="w-3.5 h-3.5 mr-1" />
+              <span>Connect API</span>
+            </button>
+          </div>
+        )}
       </header>
 
       {/* 2. Main Two-Column WhatsApp Layout */}
@@ -1101,47 +1114,12 @@ export default function WhatsAppHubClient({
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Templates Bar */}
-            <div className="px-4 py-1.5 bg-white border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto text-[11px]">
-              <span className="text-gray-400 font-bold text-[10px] uppercase tracking-wider shrink-0 flex items-center mr-1">
-                <Sparkles className="w-3 h-3 text-amber-500 mr-1" /> Quick:
-              </span>
-              <button
-                type="button"
-                onClick={() => applyTemplate("welcome")}
-                className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium shrink-0 transition-colors cursor-pointer"
-              >
-                👋 Welcome
-              </button>
-              <button
-                type="button"
-                onClick={() => applyTemplate("otp")}
-                className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium shrink-0 transition-colors cursor-pointer"
-              >
-                🔑 Site Visit OTP
-              </button>
-              <button
-                type="button"
-                onClick={() => applyTemplate("quote")}
-                className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium shrink-0 transition-colors cursor-pointer"
-              >
-                📄 Quotation Ready
-              </button>
-              <button
-                type="button"
-                onClick={() => applyTemplate("followup")}
-                className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium shrink-0 transition-colors cursor-pointer"
-              >
-                ⏰ Follow-up
-              </button>
-            </div>
-
             {/* Message Composer Footer */}
-            <div className="p-3 bg-white border-t border-gray-200 relative">
+            <div className="p-2 sm:p-3 bg-white border-t border-gray-200 relative">
               
               {/* Attachment Dropdown Menu */}
               {attachmentMenuOpen && (
-                <div className="absolute bottom-16 left-3 bg-white rounded-2xl shadow-xl border border-gray-200 p-2 space-y-1 w-52 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                <div className="absolute bottom-16 left-2 sm:left-3 bg-white rounded-2xl shadow-xl border border-gray-200 p-2 space-y-1 w-52 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
@@ -1182,19 +1160,19 @@ export default function WhatsAppHubClient({
                 className="hidden"
               />
 
-              {/* Composer Input Bar */}
+              {/* Responsive Composer Input Bar */}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                className="flex items-end space-x-2"
+                className="flex items-end gap-1.5 sm:gap-2 w-full min-w-0"
               >
                 {/* Paperclip Button */}
                 <button
                   type="button"
                   onClick={() => setAttachmentMenuOpen(!attachmentMenuOpen)}
-                  className={`p-2.5 rounded-xl border transition-colors cursor-pointer ${
+                  className={`p-2 sm:p-2.5 rounded-xl border transition-colors cursor-pointer shrink-0 ${
                     attachmentMenuOpen
                       ? "bg-emerald-50 text-emerald-700 border-emerald-300"
                       : "border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
@@ -1204,9 +1182,10 @@ export default function WhatsAppHubClient({
                   <Paperclip className="w-4 h-4" />
                 </button>
 
-                {/* Draft Textarea */}
-                <div className="flex-1 relative">
+                {/* Auto-responsive Draft Textarea */}
+                <div className="flex-1 min-w-0 relative">
                   <textarea
+                    ref={textareaRef}
                     rows={1}
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
@@ -1216,12 +1195,12 @@ export default function WhatsAppHubClient({
                         handleSendMessage();
                       }
                     }}
-                    placeholder={`Message ${activeConversation.name}... (Press Enter to send)`}
-                    className="w-full max-h-32 p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-none"
+                    placeholder={`Message ${activeConversation.name}...`}
+                    className="w-full min-w-0 min-h-[38px] max-h-36 py-2 px-3 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-none overflow-y-auto leading-relaxed"
                   />
                   {compressing && (
-                    <span className="absolute right-3 top-2.5 text-[10px] text-indigo-600 font-semibold flex items-center">
-                      <Sparkles className="w-3 h-3 animate-spin mr-1" /> Compressing photo...
+                    <span className="absolute right-3 top-2 text-[10px] text-indigo-600 font-semibold flex items-center bg-white/90 px-1 rounded">
+                      <Sparkles className="w-3 h-3 animate-spin mr-1" /> Compressing...
                     </span>
                   )}
                 </div>
@@ -1230,7 +1209,7 @@ export default function WhatsAppHubClient({
                 <button
                   type="submit"
                   disabled={sending || (!draft.trim() && !compressing)}
-                  className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all disabled:opacity-50 active:scale-95 shadow-xs cursor-pointer"
+                  className="p-2 sm:p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all disabled:opacity-40 active:scale-95 shadow-xs cursor-pointer shrink-0 flex items-center justify-center"
                   title="Send message"
                 >
                   <Send className="w-4 h-4" />

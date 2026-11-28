@@ -9,16 +9,20 @@ interface WhatsAppPageProps {
 }
 
 export default async function WhatsAppPage({ searchParams }: WhatsAppPageProps) {
-  const [conversations, config] = await Promise.all([
+  const [conversations, config, user] = await Promise.all([
     getWhatsAppConversationsAction(),
-    getWhatsAppApiConfig()
+    getWhatsAppApiConfig(),
+    getCurrentUser()
   ]);
+
+  const isAdmin = user?.role === "ADMIN" || user?.role === "ROOT";
 
   return (
     <WhatsAppHubClient 
       initialConversations={conversations} 
       initialConfig={config} 
       initialLeadId={searchParams?.leadId}
+      isAdmin={isAdmin}
     />
   );
 }
