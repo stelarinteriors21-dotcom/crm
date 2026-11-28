@@ -11,6 +11,21 @@ export async function POST(request: Request) {
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
 
+  // COMPLETE CUTOFF: Disabled permanently in favor of official Meta WhatsApp Cloud API
+  console.log('[whatsapp-sync] Ignored: Screen reading & companion sync permanently disabled in favor of Meta WhatsApp Cloud API.');
+  return NextResponse.json(
+    { success: true, ignored: true, reason: 'screen_reading_disabled_cloud_api_active' },
+    { headers: corsHeaders }
+  );
+}
+
+export async function POST_DISABLED(request: Request) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
   try {
     let body: any = {};
     const contentType = request.headers.get('content-type') || '';

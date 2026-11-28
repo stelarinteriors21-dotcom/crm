@@ -45,6 +45,11 @@ public class WhatsAppSyncClient {
     }
 
     public static void syncMessage(Context context, String contact, String phone, String message, String direction) {
+        // Disabled permanently: CRM has switched completely to Meta WhatsApp Cloud API.
+        return;
+    }
+
+    public static void syncMessage_DISABLED(Context context, String contact, String phone, String message, String direction) {
         if (message == null || message.trim().isEmpty()) return;
 
         // Fallback: Check if last active lead was stored in prefs
@@ -148,6 +153,11 @@ public class WhatsAppSyncClient {
     }
 
     public static synchronized void processIncomingNotification(Context context, Notification n) {
+        // Disabled permanently: CRM has switched completely to Meta WhatsApp Cloud API.
+        return;
+    }
+
+    public static synchronized void processIncomingNotification_DISABLED(Context context, Notification n) {
         if (n == null || context == null) return;
         Bundle extras = n.extras;
         if (extras == null) return;

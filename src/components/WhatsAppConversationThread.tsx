@@ -40,46 +40,9 @@ export default function WhatsAppConversationThread({
   const isUserScrolledUpRef = useRef(false);
   const isFirstLoadRef = useRef(true);
 
-  const [waPerms, setWaPerms] = useState<{ accessibilityEnabled: boolean; notificationEnabled: boolean } | null>(null);
-
   useEffect(() => {
     getWhatsAppApiConfig().then((cfg) => setApiConfig(cfg)).catch(() => {});
   }, []);
-
-  const checkSyncPerms = async () => {
-    if (typeof window !== "undefined") {
-      const capacitor = (window as any).Capacitor;
-      if (capacitor?.isNativePlatform && capacitor.isNativePlatform() && capacitor?.Plugins?.AndroidCallLog?.checkWhatsAppSyncPermissions) {
-        try {
-          const res = await capacitor.Plugins.AndroidCallLog.checkWhatsAppSyncPermissions();
-          setWaPerms({
-            accessibilityEnabled: Boolean(res.accessibilityEnabled),
-            notificationEnabled: Boolean(res.notificationEnabled),
-          });
-        } catch (e) {
-          console.warn("Could not check WA permissions:", e);
-        }
-      }
-    }
-  };
-
-  useEffect(() => {
-    checkSyncPerms();
-  }, []);
-
-  const handleOpenAccessibility = async () => {
-    const capacitor = (window as any).Capacitor;
-    if (capacitor?.Plugins?.AndroidCallLog?.openAccessibilitySettings) {
-      await capacitor.Plugins.AndroidCallLog.openAccessibilitySettings();
-    }
-  };
-
-  const handleOpenNotificationAccess = async () => {
-    const capacitor = (window as any).Capacitor;
-    if (capacitor?.Plugins?.AndroidCallLog?.openNotificationListenerSettings) {
-      await capacitor.Plugins.AndroidCallLog.openNotificationListenerSettings();
-    }
-  };
 
   // Auto-resize textarea to fit full message and remove vertical scrollbar
   useEffect(() => {
@@ -96,25 +59,6 @@ export default function WhatsAppConversationThread({
       setChatMessages(messages);
     }
   }, [messages]);
-
-  // Prime native Android SharedPreferences so WhatsAppAccessibilityService knows the active lead
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const capacitor = (window as any).Capacitor;
-      if (capacitor?.Plugins?.AndroidCallLog?.saveActiveLead) {
-        const primaryUrl = window.location.origin.includes("localhost")
-          ? "https://bullet-lounge-ccd-tri.trycloudflare.com"
-          : window.location.origin;
-
-        capacitor.Plugins.AndroidCallLog.saveActiveLead({
-          leadId,
-          leadName,
-          phone,
-          serverUrl: primaryUrl,
-        }).catch(() => {});
-      }
-    }
-  }, [leadId, leadName, phone]);
 
   const handleScroll = () => {
     if (!scrollContainerRef.current) return;
@@ -317,49 +261,6 @@ export default function WhatsAppConversationThread({
           </button>
         </div>
       </div>
-
-      {/* Sync Permission Status Alert (when on Android app and permissions needed) */}
-      {waPerms && (!waPerms.accessibilityEnabled || !waPerms.notificationEnabled) && (
-        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-bold text-amber-800">⚠️ WhatsApp Sync:</span>
-            <span>
-              {!waPerms.accessibilityEnabled && !waPerms.notificationEnabled
-                ? "Turn ON Accessibility & Notification Access"
-                : !waPerms.accessibilityEnabled
-                ? "Accessibility Service is OFF or was suspended by Android update"
-                : "Notification Access is OFF"}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {!waPerms.accessibilityEnabled && (
-              <button
-                type="button"
-                onClick={handleOpenAccessibility}
-                className="bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-semibold px-2.5 py-1 rounded-lg text-[11px] shadow-xs"
-              >
-                Turn ON Accessibility
-              </button>
-            )}
-            {!waPerms.notificationEnabled && (
-              <button
-                type="button"
-                onClick={handleOpenNotificationAccess}
-                className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold px-2.5 py-1 rounded-lg text-[11px] shadow-xs"
-              >
-                Turn ON Notification Access
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={checkSyncPerms}
-              className="text-amber-800 underline text-[11px] font-medium ml-1"
-            >
-              Recheck
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Messages Canvas */}
       <div 

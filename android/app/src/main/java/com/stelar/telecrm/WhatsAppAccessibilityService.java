@@ -100,6 +100,12 @@ public class WhatsAppAccessibilityService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        // Disabled permanently: CRM has switched completely to Meta WhatsApp Cloud API.
+        // Screen reading and accessibility interception are completely turned off.
+        return;
+    }
+
+    public void onAccessibilityEvent_DISABLED(AccessibilityEvent event) {
         try {
             if (event == null || event.getPackageName() == null) return;
             String pkg = event.getPackageName().toString().toLowerCase();
