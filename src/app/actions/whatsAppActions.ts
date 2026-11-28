@@ -209,6 +209,61 @@ export async function getWhatsAppConversationsAction(): Promise<any[]> {
 }
 
 /**
+ * Upload a media file directly to Meta WhatsApp Cloud API
+ */
+export async function uploadWhatsAppMediaAction(formData: FormData): Promise<{
+  success: boolean;
+  mediaId?: string;
+  url?: string;
+  filename?: string;
+  error?: string;
+}> {
+  try {
+    const file = formData.get("file") as File;
+    if (!file) {
+      return { success: false, error: "No file provided" };
+    }
+
+    const config = await getWhatsAppApiConfig();
+    if (!config.isConnected || !config.phoneNumberId || !config.accessToken) {
+      return { success: false, error: "WhatsApp Cloud API is not configured" };
+    }
+
+    const metaFormData = new FormData();
+    metaFormData.append("file", file, file.name);
+    metaFormData.append("messaging_product", "whatsapp");
+    metaFormData.append("type", file.type || "application/octet-stream");
+
+    const res = await fetch(`https://graph.facebook.com/v19.0/${config.phoneNumberId}/media`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.accessToken}`
+      },
+      body: metaFormData
+    });
+
+    const data = await res.json();
+    if (data?.id) {
+      return {
+        success: true,
+        mediaId: data.id,
+        url: `/api/whatsapp/media/${data.id}`,
+        filename: file.name
+      };
+    } else {
+      console.error("Meta media upload error:", data);
+      return {
+        success: false,
+        error: data?.error?.message || "Failed to upload media to WhatsApp Cloud API"
+      };
+    }
+  } catch (err: any) {
+    console.error("Upload media action failed:", err);
+    return { success: false, error: err.message || "Failed to process media upload" };
+  }
+}
+
+/**
  * Send an outbound WhatsApp message or document
  */
 export async function sendWhatsAppMessageAction(params: {
@@ -216,20 +271,23 @@ export async function sendWhatsAppMessageAction(params: {
   phone: string;
   message: string;
   mediaUrl?: string;
+  mediaId?: string;
   mediaType?: "document" | "image" | "audio";
   filename?: string;
 }): Promise<{ success: boolean; log?: any; metaDelivered?: boolean; error?: string }> {
   try {
-    const { leadId, phone, message, mediaUrl, mediaType, filename } = params;
+    const { leadId, phone, message, mediaUrl, mediaId, mediaType, filename } = params;
     const cleanPhone = phone.replace(/[^0-9]/g, "");
     const formattedPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
 
     let finalMessage = message.trim();
-    if (mediaUrl) {
+    const effectiveUrl = mediaUrl || (mediaId ? `/api/whatsapp/media/${mediaId}` : "");
+
+    if (effectiveUrl) {
       if (mediaType === "document") {
-        finalMessage = `📄 Document: ${filename || "Document.pdf"} | ${mediaUrl}${finalMessage ? `\n\n${finalMessage}` : ""}`;
+        finalMessage = `📄 Document: ${filename || "Document.pdf"} | ${effectiveUrl}${finalMessage ? `\n\n${finalMessage}` : ""}`;
       } else if (mediaType === "image") {
-        finalMessage = `📷 Photo: ${filename || "Photo.jpg"} | ${mediaUrl}${finalMessage ? `\n\n${finalMessage}` : ""}`;
+        finalMessage = `📷 Photo: ${filename || "Photo.jpg"} | ${effectiveUrl}${finalMessage ? `\n\n${finalMessage}` : ""}`;
       }
     }
 
@@ -249,19 +307,34 @@ export async function sendWhatsAppMessageAction(params: {
           to: formattedPhone,
         };
 
-        if (mediaUrl && mediaType === "document") {
+        if (mediaType === "document") {
           payload.type = "document";
-          payload.document = {
-            link: mediaUrl.startsWith("http") ? mediaUrl : `${process.env.NEXTAUTH_URL || ""}${mediaUrl}`,
-            caption: message.trim() || undefined,
-            filename: filename || "Document.pdf"
-          };
-        } else if (mediaUrl && mediaType === "image") {
+          if (mediaId) {
+            payload.document = {
+              id: mediaId,
+              caption: message.trim() || undefined,
+              filename: filename || "Document.pdf"
+            };
+          } else if (mediaUrl) {
+            payload.document = {
+              link: mediaUrl.startsWith("http") ? mediaUrl : `${process.env.NEXTAUTH_URL || ""}${mediaUrl}`,
+              caption: message.trim() || undefined,
+              filename: filename || "Document.pdf"
+            };
+          }
+        } else if (mediaType === "image") {
           payload.type = "image";
-          payload.image = {
-            link: mediaUrl.startsWith("http") ? mediaUrl : `${process.env.NEXTAUTH_URL || ""}${mediaUrl}`,
-            caption: message.trim() || undefined
-          };
+          if (mediaId) {
+            payload.image = {
+              id: mediaId,
+              caption: message.trim() || undefined
+            };
+          } else if (mediaUrl) {
+            payload.image = {
+              link: mediaUrl.startsWith("http") ? mediaUrl : `${process.env.NEXTAUTH_URL || ""}${mediaUrl}`,
+              caption: message.trim() || undefined
+            };
+          }
         } else {
           payload.type = "text";
           payload.text = { body: finalMessage };

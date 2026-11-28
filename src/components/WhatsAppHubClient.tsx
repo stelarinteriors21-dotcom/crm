@@ -39,6 +39,7 @@ import {
   saveWhatsAppApiConfig,
   testWhatsAppApiConnection,
   sendWhatsAppMessageAction,
+  uploadWhatsAppMediaAction,
   simulateIncomingWhatsAppAction,
   getWhatsAppConversationsAction
 } from "@/app/actions/whatsAppActions";
@@ -278,13 +279,24 @@ export default function WhatsAppHubClient({
     try {
       const filename = file.name;
       const sizeStr = formatBytes(file.size);
-      const fakeUrl = `/uploads/whatsapp/${filename}`;
 
+      // 1. Upload directly to Meta WhatsApp Cloud API
+      const formData = new FormData();
+      formData.append("file", file, filename);
+
+      const uploadRes = await uploadWhatsAppMediaAction(formData);
+      if (!uploadRes.success || !uploadRes.mediaId) {
+        alert(uploadRes.error || "Failed to upload document to WhatsApp.");
+        return;
+      }
+
+      // 2. Dispatch document message via Cloud API using media ID
       const res = await sendWhatsAppMessageAction({
         leadId: activeConversation.leadId,
         phone: activeConversation.phone || "",
         message: `Attached: ${filename} (${sizeStr})`,
-        mediaUrl: fakeUrl,
+        mediaId: uploadRes.mediaId,
+        mediaUrl: uploadRes.url,
         mediaType: "document",
         filename
       });
@@ -304,9 +316,9 @@ export default function WhatsAppHubClient({
           })
         );
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to upload document:", err);
-      alert("Failed to send document.");
+      alert("Failed to send document: " + (err.message || "Unknown error"));
     } finally {
       setSending(false);
       e.target.value = "";
@@ -322,18 +334,25 @@ export default function WhatsAppHubClient({
     setAttachmentMenuOpen(false);
 
     try {
-      const compressed = await compressImage(file, {
-        maxWidth: 1280,
-        maxHeight: 1280,
-        quality: 0.74
-      });
-
       const filename = file.name;
+
+      // 1. Upload photo directly to Meta WhatsApp Cloud API
+      const formData = new FormData();
+      formData.append("file", file, filename);
+
+      const uploadRes = await uploadWhatsAppMediaAction(formData);
+      if (!uploadRes.success || !uploadRes.mediaId) {
+        alert(uploadRes.error || "Failed to upload photo to WhatsApp.");
+        return;
+      }
+
+      // 2. Dispatch photo message via Cloud API using media ID
       const res = await sendWhatsAppMessageAction({
         leadId: activeConversation.leadId,
         phone: activeConversation.phone || "",
-        message: `Photo (${formatBytes(compressed.compressedSize)}, Saved ${compressed.savingsPercent}%)`,
-        mediaUrl: compressed.dataUrl,
+        message: `Photo: ${filename}`,
+        mediaId: uploadRes.mediaId,
+        mediaUrl: uploadRes.url,
         mediaType: "image",
         filename
       });
@@ -353,9 +372,9 @@ export default function WhatsAppHubClient({
           })
         );
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to upload photo:", err);
-      alert("Failed to compress and send photo.");
+      alert("Failed to send photo: " + (err.message || "Unknown error"));
     } finally {
       setCompressing(false);
       e.target.value = "";
@@ -865,51 +884,65 @@ export default function WhatsAppHubClient({
                             <button
                               type="button"
                               onClick={() => {
-                                const parts = msg.message.split("|");
-                                const url = parts[1]?.trim() || "#";
+                                const metaIdMatch = msg.message.match(/(?:\[Meta Media ID:\s*|\/api\/whatsapp\/media\/)([0-9]+)/i);
+                                let url = "#";
+                                if (metaIdMatch) {
+                                  url = `/api/whatsapp/media/${metaIdMatch[1]}`;
+                                } else {
+                                  const parts = msg.message.split("|");
+                                  url = parts[1]?.trim() || "#";
+                                }
                                 window.open(url, "_blank");
                               }}
-                              className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors shrink-0"
+                              className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors shrink-0 cursor-pointer"
                               title="Download / View Document"
                             >
                               <Download className="w-3.5 h-3.5" />
                             </button>
                           </div>
-                        ) : isPhoto ? (
-                          // Photo Bubble
-                          <div className="rounded-xl overflow-hidden border border-gray-200 bg-white my-1 shadow-2xs max-w-xs">
-                            <div
-                              onClick={() => {
-                                const match = msg.message.match(/data:image\/[a-zA-Z0-9+]+;base64,[^|\s]+/);
-                                if (match) setPreviewPhotoUrl(match[0]);
-                                else {
-                                  const urlPart = msg.message.split("|")[1]?.trim();
-                                  if (urlPart) setPreviewPhotoUrl(urlPart);
-                                }
-                              }}
-                              className="relative aspect-4/3 bg-gray-900/5 group cursor-pointer flex items-center justify-center overflow-hidden"
-                            >
-                              {msg.message.includes("data:image/") || msg.message.includes("http") ? (
-                                <img
-                                  src={msg.message.match(/data:image\/[a-zA-Z0-9+]+;base64,[^|\s]+/)?.[0] || msg.message.split("|")[1]?.trim()}
-                                  alt="WhatsApp Photo"
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                />
-                              ) : (
-                                <div className="text-center p-3 text-indigo-600">
-                                  <ImageIcon className="w-8 h-8 mx-auto mb-1" />
-                                  <span className="text-[10px] font-bold">Photo Attachment</span>
+                        ) : isPhoto ? (() => {
+                          const metaIdMatch = msg.message.match(/(?:\[Meta Media ID:\s*|\/api\/whatsapp\/media\/)([0-9]+)/i);
+                          const base64Match = msg.message.match(/data:image\/[a-zA-Z0-9+]+;base64,[^|\s]+/);
+                          const urlMatch = msg.message.match(/(https?:\/\/[^\s|]+|\/api\/[^\s|]+)/);
+                          const resolvedPhotoSrc = base64Match
+                            ? base64Match[0]
+                            : metaIdMatch
+                            ? `/api/whatsapp/media/${metaIdMatch[1]}`
+                            : urlMatch
+                            ? urlMatch[1]
+                            : "";
+
+                          return (
+                            // Photo Bubble
+                            <div className="rounded-xl overflow-hidden border border-gray-200 bg-white my-1 shadow-2xs max-w-xs">
+                              <div
+                                onClick={() => {
+                                  if (resolvedPhotoSrc) setPreviewPhotoUrl(resolvedPhotoSrc);
+                                }}
+                                className="relative aspect-4/3 bg-gray-900/5 group cursor-pointer flex items-center justify-center overflow-hidden"
+                              >
+                                {resolvedPhotoSrc ? (
+                                  <img
+                                    src={resolvedPhotoSrc}
+                                    alt="WhatsApp Photo"
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                  />
+                                ) : (
+                                  <div className="text-center p-3 text-indigo-600">
+                                    <ImageIcon className="w-8 h-8 mx-auto mb-1" />
+                                    <span className="text-[10px] font-bold">Photo Attachment</span>
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                  <Eye className="w-5 h-5" />
                                 </div>
-                              )}
-                              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                                <Eye className="w-5 h-5" />
+                              </div>
+                              <div className="p-2 text-[11px] text-gray-700 font-medium">
+                                {msg.message.replace(/^📷 Photo:?\s*/, "").split("|")[0].trim() || "Inspection photo"}
                               </div>
                             </div>
-                            <div className="p-2 text-[11px] text-gray-700 font-medium">
-                              {msg.message.replace(/^📷 Photo:?\s*/, "").split("|")[0].trim() || "Inspection photo"}
-                            </div>
-                          </div>
-                        ) : (
+                          );
+                        })() : (
                           // Normal Text
                           <p className="whitespace-pre-wrap leading-relaxed font-normal select-text">
                             {msg.message}

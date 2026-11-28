@@ -321,23 +321,51 @@ export default function WhatsAppConversationThread({
                         <div className="text-xs font-semibold text-slate-800 break-all">{msg.message.replace("📄 Document:", "").trim()}</div>
                       </div>
                     </div>
-                  ) : msg.message.startsWith("📷 Photo") ? (
-                    <div className="rounded-xl overflow-hidden border border-gray-200/90 bg-white/95 my-1 shadow-2xs min-w-[220px] max-w-[280px]">
-                      {/* Visual Photo Card Representation */}
-                      <div className="h-28 bg-gradient-to-br from-slate-100 via-indigo-50/60 to-slate-200 flex flex-col items-center justify-center p-3 relative select-none">
-                        <div className="w-10 h-10 rounded-full bg-white shadow-xs flex items-center justify-center text-indigo-600 mb-1.5">
-                          <ImageIcon className="w-5 h-5" />
-                        </div>
-                        <span className="text-[11px] font-bold text-slate-700 tracking-tight">Photo / Floor Plan</span>
-                        <span className="text-[9px] text-slate-400">Image attachment</span>
+                  ) : msg.message.startsWith("📷 Photo") ? (() => {
+                    const metaIdMatch = msg.message.match(/(?:\[Meta Media ID:\s*|\/api\/whatsapp\/media\/)([0-9]+)/i);
+                    const base64Match = msg.message.match(/data:image\/[a-zA-Z0-9+]+;base64,[^|\s]+/);
+                    const urlMatch = msg.message.match(/(https?:\/\/[^\s|]+|\/api\/[^\s|]+)/);
+                    const resolvedPhotoSrc = base64Match
+                      ? base64Match[0]
+                      : metaIdMatch
+                      ? `/api/whatsapp/media/${metaIdMatch[1]}`
+                      : urlMatch
+                      ? urlMatch[1]
+                      : "";
+
+                    return (
+                      <div className="rounded-xl overflow-hidden border border-gray-200/90 bg-white/95 my-1 shadow-2xs min-w-[220px] max-w-[280px]">
+                        {resolvedPhotoSrc ? (
+                          <div
+                            onClick={() => window.open(resolvedPhotoSrc, "_blank")}
+                            className="aspect-4/3 bg-gray-100 cursor-pointer overflow-hidden group relative flex items-center justify-center"
+                          >
+                            <img
+                              src={resolvedPhotoSrc}
+                              alt="WhatsApp Photo"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                            <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                              <ExternalLink className="w-5 h-5" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="h-28 bg-gradient-to-br from-slate-100 via-indigo-50/60 to-slate-200 flex flex-col items-center justify-center p-3 relative select-none">
+                            <div className="w-10 h-10 rounded-full bg-white shadow-xs flex items-center justify-center text-indigo-600 mb-1.5">
+                              <ImageIcon className="w-5 h-5" />
+                            </div>
+                            <span className="text-[11px] font-bold text-slate-700 tracking-tight">Photo / Floor Plan</span>
+                            <span className="text-[9px] text-slate-400">Image attachment</span>
+                          </div>
+                        )}
+                        {msg.message.replace(/^📷 Photo:?\s*/, "").replace("Photo / Drawing Attachment", "").replace("Photo Attachment", "").trim() && (
+                          <div className="p-2 text-xs text-slate-800 bg-white border-t border-slate-100 font-medium">
+                            {msg.message.replace(/^📷 Photo:?\s*/, "").trim()}
+                          </div>
+                        )}
                       </div>
-                      {msg.message.replace(/^📷 Photo:?\s*/, "").replace("Photo / Drawing Attachment", "").replace("Photo Attachment", "").trim() && (
-                        <div className="p-2 text-xs text-slate-800 bg-white border-t border-slate-100 font-medium">
-                          {msg.message.replace(/^📷 Photo:?\s*/, "").trim()}
-                        </div>
-                      )}
-                    </div>
-                  ) : msg.message.startsWith("🎙️ Voice Note") ? (
+                    );
+                  })() : msg.message.startsWith("🎙️ Voice Note") ? (
                     <div className="flex items-center gap-3 p-2.5 bg-white/95 border border-emerald-200/90 rounded-2xl my-1 shadow-2xs min-w-[220px]">
                       {/* WhatsApp-Style Circular Play Button */}
                       <div className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0 select-none">

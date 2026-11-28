@@ -47,12 +47,12 @@ export async function POST(req: NextRequest) {
           messageText = message.text?.body || "";
         } else if (messageType === "document") {
           const doc = message.document;
-          messageText = `📄 Document: ${doc?.filename || "Client_Document.pdf"} | [Meta Media ID: ${doc?.id}] ${doc?.caption ? `\n${doc.caption}` : ""}`;
+          messageText = `📄 Document: ${doc?.filename || "Client_Document.pdf"} | /api/whatsapp/media/${doc?.id}${doc?.caption ? `\n${doc.caption}` : ""}`;
         } else if (messageType === "image") {
           const img = message.image;
-          messageText = `📷 Photo: Image Attachment | [Meta Media ID: ${img?.id}] ${img?.caption ? `\n${img.caption}` : ""}`;
+          messageText = `📷 Photo: Image Attachment | /api/whatsapp/media/${img?.id}${img?.caption ? `\n${img.caption}` : ""}`;
         } else if (messageType === "audio") {
-          messageText = `🎙️ Voice Note: Audio Message | [Meta Media ID: ${message.audio?.id}]`;
+          messageText = `🎙️ Voice Note: Audio Message | /api/whatsapp/media/${message.audio?.id}`;
         }
 
         if (messageText && fromPhone) {
