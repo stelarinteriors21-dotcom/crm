@@ -71,19 +71,71 @@ interface ConversationItem {
   messages: WhatsAppMessage[];
 }
 
+function sortConversations(items: ConversationItem[]): ConversationItem[] {
+  return [...items].sort((a, b) => {
+    const aHas = (a.messageCount || a.messages?.length || 0) > 0;
+    const bHas = (b.messageCount || b.messages?.length || 0) > 0;
+
+    if (aHas && !bHas) return -1;
+    if (!aHas && bHas) return 1;
+
+    const timeA = new Date(a.lastMessageTime || 0).getTime();
+    const timeB = new Date(b.lastMessageTime || 0).getTime();
+    return timeB - timeA;
+  });
+}
+
+function formatWhatsAppChatTimestamp(dateStr?: string | Date | null, hasMessages?: boolean): string {
+  if (!dateStr || !hasMessages) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "";
+  const now = new Date();
+
+  const isToday =
+    d.getDate() === now.getDate() &&
+    d.getMonth() === now.getMonth() &&
+    d.getFullYear() === now.getFullYear();
+  if (isToday) {
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday =
+    d.getDate() === yesterday.getDate() &&
+    d.getMonth() === yesterday.getMonth() &&
+    d.getFullYear() === yesterday.getFullYear();
+  if (isYesterday) {
+    return "Yesterday";
+  }
+
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays < 7 && diffDays > 0) {
+    return d.toLocaleDateString([], { weekday: "short" });
+  }
+
+  return d.toLocaleDateString([], { day: "numeric", month: "short" });
+}
+
 interface WhatsAppHubClientProps {
   initialConversations: ConversationItem[];
   initialConfig: WhatsAppApiConfig;
+  initialLeadId?: string;
 }
 
 export default function WhatsAppHubClient({
   initialConversations = [],
-  initialConfig
+  initialConfig,
+  initialLeadId
 }: WhatsAppHubClientProps) {
-  const [conversations, setConversations] = useState<ConversationItem[]>(initialConversations);
-  const [selectedLeadId, setSelectedLeadId] = useState<string>(
-    initialConversations[0]?.leadId || ""
+  const [conversations, setConversations] = useState<ConversationItem[]>(() =>
+    sortConversations(initialConversations)
   );
+  const [selectedLeadId, setSelectedLeadId] = useState<string>(() => {
+    if (initialLeadId) return initialLeadId;
+    const sorted = sortConversations(initialConversations);
+    return sorted[0]?.leadId || "";
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<"ALL" | "UNREAD" | "SITE_VISITS" | "QUOTATIONS">("ALL");
 
@@ -115,6 +167,7 @@ export default function WhatsAppHubClient({
   const [previewPhotoUrl, setPreviewPhotoUrl] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const selectedItemRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
@@ -125,7 +178,7 @@ export default function WhatsAppHubClient({
 
   // Filter conversations
   const filteredConversations = useMemo(() => {
-    return conversations.filter((c) => {
+    const list = conversations.filter((c) => {
       const q = searchQuery.toLowerCase().trim();
       const matchSearch =
         !q ||
@@ -149,6 +202,8 @@ export default function WhatsAppHubClient({
 
       return true;
     });
+
+    return sortConversations(list);
   }, [conversations, searchQuery, activeFilter]);
 
   // Scroll to bottom when active conversation or messages change
@@ -172,11 +227,18 @@ export default function WhatsAppHubClient({
     return () => clearInterval(refreshInterval);
   }, []);
 
+  // Auto-scroll selected lead in the left sidebar
+  useEffect(() => {
+    if (selectedItemRef.current) {
+      selectedItemRef.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [selectedLeadId]);
+
   // Listen to select lead events & check URL params
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      const urlLeadId = params.get("leadId");
+      const urlLeadId = params.get("leadId") || initialLeadId;
       if (urlLeadId) {
         setSelectedLeadId(urlLeadId);
       }
@@ -189,7 +251,7 @@ export default function WhatsAppHubClient({
       window.addEventListener("crm_whatsapp_select_lead", handleSelectLead);
       return () => window.removeEventListener("crm_whatsapp_select_lead", handleSelectLead);
     }
-  }, []);
+  }, [initialLeadId]);
 
   // When active conversation changes, mark as read
   useEffect(() => {
@@ -223,20 +285,22 @@ export default function WhatsAppHubClient({
     };
 
     // Optimistically update conversation
-    setConversations((prev) =>
-      prev.map((c) => {
+    setConversations((prev) => {
+      const updated = prev.map((c) => {
         if (c.leadId === activeConversation.leadId) {
           return {
             ...c,
             lastMessage: text,
             lastMessageTime: new Date().toISOString(),
             lastMessageDirection: "OUTBOUND",
+            messageCount: (c.messageCount || 0) + 1,
             messages: [...c.messages, optimisticMsg]
           };
         }
         return c;
-      })
-    );
+      });
+      return sortConversations(updated);
+    });
 
     setDraft("");
     setTemplatesMenuOpen(false);
@@ -302,19 +366,22 @@ export default function WhatsAppHubClient({
       });
 
       if (res.success && res.log) {
-        setConversations((prev) =>
-          prev.map((c) => {
+        setConversations((prev) => {
+          const updated = prev.map((c) => {
             if (c.leadId === activeConversation.leadId) {
               return {
                 ...c,
                 lastMessage: `📄 Document: ${filename}`,
                 lastMessageTime: new Date().toISOString(),
+                lastMessageDirection: "OUTBOUND",
+                messageCount: (c.messageCount || 0) + 1,
                 messages: [...c.messages, res.log]
               };
             }
             return c;
-          })
-        );
+          });
+          return sortConversations(updated);
+        });
       }
     } catch (err: any) {
       console.error("Failed to upload document:", err);
@@ -358,19 +425,22 @@ export default function WhatsAppHubClient({
       });
 
       if (res.success && res.log) {
-        setConversations((prev) =>
-          prev.map((c) => {
+        setConversations((prev) => {
+          const updated = prev.map((c) => {
             if (c.leadId === activeConversation.leadId) {
               return {
                 ...c,
                 lastMessage: `📷 Photo: ${filename}`,
                 lastMessageTime: new Date().toISOString(),
+                lastMessageDirection: "OUTBOUND",
+                messageCount: (c.messageCount || 0) + 1,
                 messages: [...c.messages, res.log]
               };
             }
             return c;
-          })
-        );
+          });
+          return sortConversations(updated);
+        });
       }
     } catch (err: any) {
       console.error("Failed to upload photo:", err);
@@ -468,20 +538,22 @@ export default function WhatsAppHubClient({
       });
 
       if (res.success && res.log) {
-        setConversations((prev) =>
-          prev.map((c) => {
+        setConversations((prev) => {
+          const updated = prev.map((c) => {
             if (c.leadId === activeConversation.leadId) {
               return {
                 ...c,
                 lastMessage: res.log.message,
                 lastMessageTime: new Date().toISOString(),
                 lastMessageDirection: "INBOUND",
+                messageCount: (c.messageCount || 0) + 1,
                 messages: [...c.messages, res.log]
               };
             }
             return c;
-          })
-        );
+          });
+          return sortConversations(updated);
+        });
 
         // Instantly trigger the WhatsApp notification chime and toast
         window.dispatchEvent(
@@ -694,6 +766,7 @@ export default function WhatsAppHubClient({
                 return (
                   <div
                     key={c.leadId}
+                    ref={isSelected ? selectedItemRef : null}
                     onClick={() => setSelectedLeadId(c.leadId)}
                     className={`p-3 flex items-start space-x-3 transition-colors cursor-pointer relative ${
                       isSelected
@@ -716,7 +789,7 @@ export default function WhatsAppHubClient({
                           {c.name}
                         </span>
                         <span className="text-[10px] text-gray-400 shrink-0 ml-1" suppressHydrationWarning>
-                          {c.lastMessageTime ? new Date(c.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+                          {formatWhatsAppChatTimestamp(c.lastMessageTime, (c.messageCount || c.messages?.length || 0) > 0)}
                         </span>
                       </div>
 

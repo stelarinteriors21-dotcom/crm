@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import { getDueFollowUps } from "@/app/actions/followUpActions";
 import { 
   Phone, Clock, AlertCircle, MessageCircle, ExternalLink, 
@@ -294,18 +295,16 @@ export default function FollowUpWatcher() {
                           </button>
                         )}
                         {lead.phone && (
-                          <a
-                            href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent("Hello " + lead.name + ", following up on our scheduled discussion.")}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <Link
+                            href={`/whatsapp?leadId=${lead.id}`}
                             onClick={(e) => {
                               e.stopPropagation();
                             }}
                             className="flex items-center justify-center bg-[#25D366] hover:bg-green-600 active:scale-95 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-lg shadow-sm transition-all"
-                            title="WhatsApp"
+                            title="Chat on WhatsApp"
                           >
                             <MessageCircle className="w-3.5 h-3.5" />
-                          </a>
+                          </Link>
                         )}
                         <button
                           type="button"
@@ -398,18 +397,16 @@ export default function FollowUpWatcher() {
                         </button>
                       )}
                       {lead.phone && (
-                        <a
-                          href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent("Hello " + lead.name + ", following up on our scheduled discussion.")}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <Link
+                          href={`/whatsapp?leadId=${lead.id}`}
                           onClick={(e) => {
                             e.stopPropagation();
                           }}
                           className="flex items-center justify-center bg-[#25D366] hover:bg-green-600 active:scale-95 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-lg shadow-sm transition-all"
-                          title="WhatsApp"
+                          title="Chat on WhatsApp"
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
-                        </a>
+                        </Link>
                       )}
                       <button 
                         type="button"

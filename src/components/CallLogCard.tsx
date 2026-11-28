@@ -203,9 +203,13 @@ export default function CallLogCard({ log, leadPhone }: { log: any; leadPhone: s
   };
 
   const sendWhatsApp = () => {
-    const phone = leadPhone.replace(/[^0-9]/g, "");
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(whatsappDraft)}`;
-    window.open(url, "_blank");
+    if (log.leadId) {
+      router.push(`/whatsapp?leadId=${log.leadId}`);
+    } else {
+      const phone = leadPhone.replace(/[^0-9]/g, "");
+      const url = `https://wa.me/${phone}?text=${encodeURIComponent(whatsappDraft)}`;
+      window.open(url, "_blank");
+    }
   };
 
   function timeAgo(d: Date | string | number) { return formatDeterministicTimeAgo(d); }

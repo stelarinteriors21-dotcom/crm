@@ -386,15 +386,13 @@ export default function SiteVisitorWorkdesk({
                         >
                           {lead.phone}
                         </a>
-                        <a
-                          href={`https://wa.me/${String(lead.phone).replace(/[^0-9]/g, "")}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <Link
+                          href={`/whatsapp?leadId=${lead.id}`}
                           className="p-1 rounded-md text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-colors"
                           title="Chat on WhatsApp"
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
-                        </a>
+                        </Link>
                       </div>
                     ) : (
                       <span className="text-gray-400">No phone</span>

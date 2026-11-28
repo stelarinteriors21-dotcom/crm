@@ -290,17 +290,15 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
                           label={f.value}
                           className="text-[#4f46e5] hover:underline font-medium truncate text-left p-0 bg-transparent shadow-none" 
                         />
-                        <a 
-                          href={`https://wa.me/${String(f.rawPhone).replace(/[^0-9]/g, '')}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          title={`WhatsApp ${f.value}`} 
+                        <Link 
+                          href={`/whatsapp?leadId=${lead.id}`} 
+                          title={`Chat on WhatsApp with ${f.value}`} 
                           className="p-1 text-[#25D366] hover:bg-emerald-50 rounded inline-flex items-center justify-center transition-colors"
                         >
                           <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                             <path d="M12.031 2c-5.508 0-9.985 4.477-9.985 9.985 0 1.761.459 3.477 1.332 4.992L2 22l5.166-1.354a9.96 9.96 0 0 0 4.865 1.259h.004c5.508 0 9.985-4.477 9.985-9.985 0-2.668-1.039-5.176-2.925-7.062A9.923 9.923 0 0 0 12.031 2zm0 18.232c-1.492 0-2.955-.4-4.232-1.157l-.304-.18-3.146.825.839-3.067-.198-.315a8.21 8.21 0 0 1-1.258-4.354c0-4.564 3.713-8.277 8.283-8.277 2.213 0 4.293.862 5.858 2.428a8.23 8.23 0 0 1 2.424 5.857c0 4.565-3.714 8.283-8.284 8.283zm4.538-6.195c-.249-.125-1.472-.727-1.7-.81-.229-.083-.395-.125-.561.125-.166.249-.644.81-.789.977-.145.166-.291.187-.54.062-.249-.125-1.053-.388-2.006-1.238-.742-.662-1.243-1.479-1.389-1.728-.145-.249-.015-.384.109-.508.112-.112.249-.291.374-.436.125-.145.166-.249.249-.415.083-.166.042-.312-.021-.436-.062-.125-.561-1.352-.769-1.851-.202-.486-.408-.42-.561-.428l-.478-.008c-.166 0-.436.062-.664.312-.229.249-.873.853-.873 2.08s.894 2.413 1.019 2.58c.125.166 1.758 2.685 4.26 3.765.595.257 1.06.41 1.423.526.598.19 1.142.163 1.572.099.479-.072 1.472-.602 1.68-1.185.207-.582.207-1.081.145-1.185-.062-.104-.228-.166-.477-.291z" />
                           </svg>
-                        </a>
+                        </Link>
                       </div>
                     ) : f.link ? (
                       <a href={f.link} className="text-[#4f46e5] hover:underline font-medium truncate">{f.value}</a>

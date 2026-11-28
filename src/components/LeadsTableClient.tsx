@@ -950,7 +950,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
       <History className="w-3.5 h-3.5" />
     </button>
                       <button type="button" onClick={() => triggerSmartCall(lead.id, lead.name, lead.phone)} title="Smart Call" className="p-1 bg-green-50 text-green-600 rounded hover:bg-green-100 flex items-center justify-center">📞</button>
-                      <a href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" title="WhatsApp" className="p-1 bg-green-50 text-emerald-500 rounded hover:bg-green-100 flex items-center justify-center">💬</a>
+                      <Link href={`/whatsapp?leadId=${lead.id}`} title="Chat on WhatsApp" className="p-1 bg-green-50 text-emerald-500 rounded hover:bg-green-100 flex items-center justify-center">💬</Link>
                       <div className="relative flex items-center justify-center">
                         <LeadActionsMenu leadId={lead.id} />
                       </div>
@@ -971,7 +971,7 @@ export default function LeadsTableClient({ leads, totalLeads, customTags = [], i
                                       <History className="w-3.5 h-3.5" />
                                     </button>
                                     <button type="button" onClick={() => triggerSmartCall(lead.id, `${lead.name} (Alt)`, altPhone)} title="Smart Call" className="p-1 bg-green-50 text-green-600 rounded hover:bg-green-100 flex items-center justify-center">📞</button>
-                                    <a href={`https://wa.me/${String(altPhone).replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" title="WhatsApp" className="p-1 bg-green-50 text-emerald-500 rounded hover:bg-green-100 flex items-center justify-center">💬</a>
+                                    <Link href={`/whatsapp?leadId=${lead.id}`} title="Chat on WhatsApp" className="p-1 bg-green-50 text-emerald-500 rounded hover:bg-green-100 flex items-center justify-center">💬</Link>
                                   </div>
                                 </div>
                               ) : (

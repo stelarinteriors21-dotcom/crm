@@ -176,7 +176,7 @@ export async function getWhatsAppConversationsAction(): Promise<any[]> {
       orderBy: { createdAt: "desc" }
     });
 
-    return leads.map((l) => {
+    const mapped = leads.map((l) => {
       const logs = l.whatsAppLogs || [];
       const lastLog = logs[0] || null;
       const unreadCount = logs.filter(
@@ -202,6 +202,23 @@ export async function getWhatsAppConversationsAction(): Promise<any[]> {
         messages: logs.slice().reverse()
       };
     });
+
+    // Order like normal WhatsApp:
+    // 1. Leads with messages come first, sorted by the latest message time (newest on top).
+    // 2. Leads without messages come after, sorted by their creation date.
+    mapped.sort((a, b) => {
+      const aHas = (a.messageCount || 0) > 0;
+      const bHas = (b.messageCount || 0) > 0;
+
+      if (aHas && !bHas) return -1;
+      if (!aHas && bHas) return 1;
+
+      const timeA = new Date(a.lastMessageTime || 0).getTime();
+      const timeB = new Date(b.lastMessageTime || 0).getTime();
+      return timeB - timeA;
+    });
+
+    return mapped;
   } catch (err) {
     console.error("Failed to get WhatsApp conversations:", err);
     return [];
