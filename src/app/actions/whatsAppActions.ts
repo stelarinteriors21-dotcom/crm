@@ -156,13 +156,21 @@ export async function getWhatsAppConversationsAction(): Promise<any[]> {
   try {
     const user = await getCurrentUser();
     const orgId = user?.organizationId;
+    const isAdmin = user?.role === "ADMIN" || user?.role === "ROOT";
+
+    const where: any = {
+      ...(orgId ? { organizationId: orgId } : {}),
+      phone: { not: "" }
+    };
+
+    // Non-admin callers only see WhatsApp messages of leads assigned to them
+    if (!isAdmin && user?.id) {
+      where.assignedToId = user.id;
+    }
 
     // Fetch leads with their phone numbers & recent WhatsApp messages
     const leads = await prisma.lead.findMany({
-      where: {
-        ...(orgId ? { organizationId: orgId } : {}),
-        phone: { not: "" }
-      },
+      where,
       include: {
         whatsAppLogs: {
           orderBy: { createdAt: "desc" },

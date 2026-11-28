@@ -10,9 +10,16 @@ export async function GET(req: NextRequest) {
 
     const user = await getCurrentUser();
     const orgId = user?.organizationId;
+    const isAdmin = user?.role === "ADMIN" || user?.role === "ROOT";
 
-    // Filter leads belonging to organization if scoped
-    const leadScope = orgId ? { organizationId: orgId } : {};
+    // Filter leads belonging to organization if scoped, and restrict non-admin callers to their assigned leads
+    const leadScope: any = {
+      ...(orgId ? { organizationId: orgId } : {})
+    };
+
+    if (!isAdmin && user?.id) {
+      leadScope.assignedToId = user.id;
+    }
 
     // 1. Total unread inbound messages
     const unreadCount = await prisma.whatsAppLog.count({
