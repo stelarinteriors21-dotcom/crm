@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getWhatsAppApiConfig } from "@/app/actions/whatsAppActions";
+import prisma from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
@@ -11,15 +11,18 @@ export async function GET(
       return new NextResponse("Missing media ID", { status: 400 });
     }
 
-    const config = await getWhatsAppApiConfig();
-    if (!config.accessToken) {
+    const org = await prisma.organization.findFirst({ select: { customFieldLabels: true } });
+    const config = (org?.customFieldLabels as any)?.whatsAppApiConfig;
+    const accessToken = config?.accessToken;
+
+    if (!accessToken) {
       return new NextResponse("WhatsApp API not configured", { status: 503 });
     }
 
     // 1. Get media URL and metadata from Meta Graph API
     const metaRes = await fetch(`https://graph.facebook.com/v19.0/${mediaId}`, {
       headers: {
-        Authorization: `Bearer ${config.accessToken}`
+        Authorization: `Bearer ${accessToken}`
       }
     });
 
@@ -32,7 +35,7 @@ export async function GET(
     // 2. Stream the raw media binary with Bearer authorization
     const mediaBinaryRes = await fetch(metaData.url, {
       headers: {
-        Authorization: `Bearer ${config.accessToken}`
+        Authorization: `Bearer ${accessToken}`
       }
     });
 
