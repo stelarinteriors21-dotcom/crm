@@ -100,6 +100,45 @@ export async function POST(req: NextRequest) {
           }
         }
       }
+
+      // Handle message delivery & read status updates (Blue Ticks)
+      const statuses = value?.statuses;
+      if (statuses && Array.isArray(statuses)) {
+        for (const st of statuses) {
+          const rawStatus = (st.status || "").toUpperCase(); // "SENT", "DELIVERED", "READ", "FAILED"
+          const recipientPhone = st.recipient_id || "";
+          const corePhone = recipientPhone.slice(-10);
+
+          if (corePhone && (rawStatus === "READ" || rawStatus === "DELIVERED" || rawStatus === "FAILED" || rawStatus === "SENT")) {
+            const lead = await prisma.lead.findFirst({
+              where: { phone: { contains: corePhone } },
+              select: { id: true }
+            });
+
+            if (lead) {
+              const latestOutbound = await prisma.whatsAppLog.findFirst({
+                where: {
+                  leadId: lead.id,
+                  direction: "OUTBOUND"
+                },
+                orderBy: { createdAt: "desc" }
+              });
+
+              if (latestOutbound) {
+                // Never downgrade READ to DELIVERED
+                if (latestOutbound.status === "READ" && rawStatus === "DELIVERED") {
+                  continue;
+                }
+                await prisma.whatsAppLog.update({
+                  where: { id: latestOutbound.id },
+                  data: { status: rawStatus }
+                });
+                console.log(`[WhatsApp Webhook Status] Lead ${lead.id} message updated to: ${rawStatus}`);
+              }
+            }
+          }
+        }
+      }
     }
 
     return NextResponse.json({ status: "success" }, { status: 200 });
